@@ -16,14 +16,9 @@ class HtmlTableScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final document = html.parse(htmlContent); // HTML parsen
-    final rows = document.getElementsByTagName('tr'); // Alle Zeilen extrahieren
+    final document = html.parse(htmlContent);
+    final rows = document.getElementsByTagName('tr');
 
-    // Header aus der ersten Zeile extrahieren
-    final headerRow = rows.first.getElementsByTagName('th');
-    final headers = headerRow.map((e) => e.text).toList();
-
-    // Tabellen-Daten (außer Header)
     final tableData =
         rows.skip(1).map((row) {
           final columns = row.getElementsByTagName('td');
