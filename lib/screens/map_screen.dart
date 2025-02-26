@@ -33,9 +33,7 @@ class _MapScreenState extends State<MapScreen> {
       );
 
       final prompt = Content.multi([
-        TextPart(
-          'beschreibe mir kurz wie ich zu Raum $room komme und beginne jede antwort mit einem sächsischen spruch',
-        ),
+        TextPart('beschreibe mir kurz wie ich zu Raum $room komme'),
         DataPart('image/png', imageBytes),
       ]);
 
