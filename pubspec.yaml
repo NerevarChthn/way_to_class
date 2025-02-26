@@ -37,6 +37,9 @@ dependencies:
   curved_navigation_bar: ^1.0.3
   flutter_dotenv: ^5.2.1
   google_generative_ai: ^0.4.6
+  flutter_markdown: ^0.7.6+2
+  animated_text_kit: ^4.2.3
+  html: ^0.15.5
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +67,7 @@ flutter:
   assets:
     - .env
     - assets/old/map1.png
+    - assets/e_gebaeude.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

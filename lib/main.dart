@@ -1,12 +1,13 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:way_to_class/service/gemini_service.dart';
+import 'package:way_to_class/pages/home_page.dart';
+import 'package:way_to_class/pages/search_page.dart';
+import 'package:way_to_class/pages/profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-  await GeminiService.testGemini();
 
   runApp(const MyApp());
 }
@@ -62,11 +63,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _pageIndex = 0;
+  final List<Widget> _pages = [HomePage(), SearchPage(), ProfilePage()];
 
-  void _incrementCounter() {
+  void _onNavBarTapped(int index) {
     setState(() {
-      _counter++;
+      _pageIndex = index;
     });
   }
 
@@ -79,31 +81,11 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+      body: _pages[_pageIndex],
       bottomNavigationBar: CurvedNavigationBar(
         backgroundColor: Colors.white,
-        color: Colors.deepPurple,
-        buttonBackgroundColor: Colors.deepPurple,
+        color: Colors.blueGrey,
+        buttonBackgroundColor: Colors.blueGrey,
         height: 60,
         animationDuration: const Duration(milliseconds: 300),
         items: <Widget>[
@@ -111,6 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Icon(Icons.search, size: 30, color: Colors.white),
           Icon(Icons.person, size: 30, color: Colors.white),
         ],
+        onTap: _onNavBarTapped,
       ),
     );
   }
