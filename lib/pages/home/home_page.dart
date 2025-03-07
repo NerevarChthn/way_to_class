@@ -67,6 +67,11 @@ class _HomePageState extends State<HomePage> {
     try {
       final Graph graph = _graphService.currentGraph!;
       final String startId = _getStartNodeId();
+
+      if (startId.isEmpty) {
+        setState(() => resultText = 'Bitte wähle einen Startpunkt aus.');
+        return;
+      }
       final String nearestBathroomId = graph.findNearestBathroomId(startId);
 
       await _findeWeg(startId, nearestBathroomId);
@@ -79,6 +84,11 @@ class _HomePageState extends State<HomePage> {
     try {
       final Graph graph = _graphService.currentGraph!;
       final String startId = _getStartNodeId();
+
+      if (startId.isEmpty) {
+        setState(() => resultText = 'Bitte wähle einen Startpunkt aus.');
+        return;
+      }
       final String nearestExit = graph.findNearestEmergencyExitId(startId);
 
       await _findeWeg(startId, nearestExit);
@@ -224,7 +234,7 @@ class _HomePageState extends State<HomePage> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                theme.colorScheme.primaryContainer.withOpacity(0.5),
+                theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
                 theme.colorScheme.surface,
               ],
             ),
