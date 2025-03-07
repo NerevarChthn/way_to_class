@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:way_to_class/pages/graph_view_page.dart';
 
 class QuickAccessPanel extends StatelessWidget {
   final VoidCallback onBathroomPressed;
   final VoidCallback onExitPressed;
+  final VoidCallback onCanteenPressed;
 
   const QuickAccessPanel({
     super.key,
     required this.onBathroomPressed,
     required this.onExitPressed,
+    required this.onCanteenPressed,
   });
 
   @override
@@ -43,16 +44,9 @@ class QuickAccessPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 _buildQuickAccessButton(
-                  icon: Icons.map,
-                  label: 'Karte',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const GraphViewScreen(),
-                      ),
-                    );
-                  },
+                  icon: Icons.restaurant,
+                  label: 'Mensa',
+                  onPressed: onCanteenPressed,
                   color: Colors.green,
                 ),
               ],

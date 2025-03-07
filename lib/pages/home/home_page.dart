@@ -9,6 +9,7 @@ import 'package:way_to_class/pages/home/components/quick_access_panel.dart';
 import 'package:way_to_class/pages/home/components/route_desc_panel.dart';
 import 'package:way_to_class/pages/home/components/search_panel.dart';
 import 'package:way_to_class/core/components/graph.dart' show Graph;
+import 'package:way_to_class/pages/prof_page.dart';
 import 'package:way_to_class/service/graph_service.dart';
 import 'package:way_to_class/theme/manager.dart';
 
@@ -171,11 +172,7 @@ class _HomePageState extends State<HomePage> {
         onPageChanged: (index) {
           setState(() => _currentIndex = index);
         },
-        children: [
-          _buildNavigationPage(),
-          GraphViewScreen(),
-          Container(child: Text('data')),
-        ],
+        children: [_buildNavigationPage(), GraphViewScreen(), ProfTablePage()],
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
@@ -263,6 +260,7 @@ class _HomePageState extends State<HomePage> {
                 QuickAccessPanel(
                   onBathroomPressed: _findNearestBathroom,
                   onExitPressed: _findNearestEmergencyExit,
+                  onCanteenPressed: () => log('Mensa'),
                 ),
 
                 const SizedBox(height: 16),
