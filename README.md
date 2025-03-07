@@ -5,29 +5,101 @@ Diese Flutter-App bietet eine Navigation innerhalb eines Campus-Gebäudes. Mithi
 ## Projektstruktur
 
 - **main.dart:**  
-  Der Einstiegspunkt der App, in dem die MaterialApp initialisiert und der `WegFinderScreen` als Startseite gesetzt wird.
+  Der Einstiegspunkt der App, in dem die MaterialApp initialisiert und das Provider-basierte Theme-Management eingerichtet wird. Die HomePage wird als Startseite gesetzt.
 
-- **WegFinderScreen:**  
-  Die Hauptseite, auf der der Nutzer über Autocomplete-Felder den Start- und Zielpunkt eingeben kann. Hier werden die Buttons für die Wegfindung, das Auffinden von Toiletten oder Notausgängen sowie der Zugriff auf den Graph angezeigt.
+- **HomePage:**  
+  Die Hauptseite der App mit reaktiver Benutzeroberfläche zum Navigieren auf dem Campus. Bietet Eingabefelder für Start- und Zielpunkt, Schnellzugriffsfunktionen und die Wegbeschreibungsanzeige.
+
+- **Service Layer:**
+  - **GraphService:**  
+    Implementiert als Singleton, stellt eine zentrale Zugriffsschnittstelle für Graph-Funktionalitäten bereit. Verwaltet das Laden, Caching und die Wiederverwendung von Graph-Daten.
+  - **SecurityManager:**  
+    Bietet Verschlüsselungsfunktionalität für sensible Daten wie Cache-Inhalte und API-Keys.
 
 - **Graph & Node:**  
   - **Graph:**  
-    Verwaltet den gesamten Campus-Graphen, implementiert den A\*-Algorithmus zur Pfadfindung, das Caching der Routenstrukturen und das Laden der Graphdaten aus JSON-Dateien.
+    Enthält die Kernlogik der Navigation - implementiert den A*-Algorithmus zur Pfadfindung, verwaltet das Caching der Routenstrukturen (mit Verschlüsselung) und lädt Graphdaten aus JSON-Dateien.
   - **Node:**  
-    Repräsentiert einzelne Knoten im Graphen (z. B. Räume, Flure, Treppen) mit Typinformationen, Koordinaten und Gewichtungen für die Pfadberechnung.
+    Repräsentiert einzelne Knoten im Graphen mit Typinformationen (implementiert als Bitmasken), Koordinaten und Gewichtungen für die Pfadberechnung.
 
 - **NavigationHelper & RouteSegment:**  
   - **NavigationHelper:**  
-    Wandelt den berechneten Pfad in eine Liste von strukturierten `RouteSegment`-Objekten um und generiert damit die Wegbeschreibungen.
+    Wandelt berechnete Pfade in strukturierte RouteSegment-Objekte um und generiert natürlichsprachliche Wegbeschreibungen.
   - **RouteSegment:**  
-    Definiert die einzelnen Segmente (z. B. „geradeaus gehen“, „links abbiegen“, „Treppe hoch“), die dann zu natürlichen Anweisungen zusammengefasst werden.
+    Definiert einzelne Abschnitte einer Route (z.B. "geradeaus gehen", "links abbiegen", "Treppe hoch") mit typsicheren Segmenttypen und zugehörigen Metadaten.
+
+- **UI-Komponenten:**
+  - **SearchPanel:** Eingabefelder und Suche für Start- und Zielorte
+  - **QuickAccessPanel:** Schnellzugriff auf häufig verwendete Funktionen
+  - **RouteDescriptionPanel:** Anzeige der generierten Wegbeschreibungen
+  - **DeveloperPanel:** Entwicklerwerkzeuge für Debugging und Tests
+  - **GraphViewScreen:** Visualisierung des Campus-Graphen
+
+- **Theme Management:**
+  - **ThemeManager:** ChangeNotifier-basierte Klasse zur Verwaltung des App-Themes
+  - **LightTheme & DarkTheme:** Separate Konfigurationen für helles und dunkles Erscheinungsbild
 
 - **Hilfsfunktionen:**  
-  Zusätzliche Methoden zur Berechnung von Distanzen, Richtungen und zur Erkennung von Übergängen (z. B. bei Etagenwechseln).
+  Zusätzliche Methoden zur Berechnung von Distanzen, Richtungen, Erkennung von Übergängen und zur Optimierung der Cache-Verwaltung.
 
 ## Erweiterung
 **TODO:**
 korrekte daten ins json, system hinter koordinaten und weights erläutern
+
+## Qualitätssicherung und Entwicklungskontrolle
+
+Um sicherzustellen, dass unsere Lösung stets auf dem richtigen Weg bleibt und nicht in falsche Richtungen entwickelt wird, haben wir folgende Maßnahmen implementiert:
+
+### Kontinuierliche Validierung
+
+- **Automatisierte Routentests**: 
+  - Implementierung von Tests für alle möglichen Routen im Graphen
+  - Validierung der Pfadfindung mit bekannten Start- und Zielpunkten
+  - Überprüfung der Wegbeschreibungen auf Korrektheit und Verständlichkeit
+
+  ```dart
+  void testAllRoutes() {
+    final allNodes = graph.nodeMap.keys.toList();
+    int totalRoutes = 0;
+    int failedRoutes = 0;
+    
+    for (String start in allNodes) {
+      for (String target in allNodes) {
+        if (start != target) {
+          totalRoutes++;
+          try {
+            final path = graph.findPath(start, target);
+            if (path.isEmpty) failedRoutes++;
+          } catch (e) {
+            failedRoutes++;
+            print('Fehler bei Route $start -> $target: $e');
+          }
+        }
+      }
+    }
+    
+    print('Getestet: $totalRoutes Routen, Fehler: $failedRoutes');
+  }
+
+### Manuelle Feldvalidierung
+- Regelmäßige Gebäude-Begehungen zur Datenprüfung
+- Sofortige Dokumentation und Korrektur von Abweichungen
+
+### Iterative Entwicklung
+- Kurze Zyklen mit realem Nutzerfeedback
+- Anpassung auf Basis gesammelter Nutzerbedürfnisse
+
+### Modularität und Architektur
+- Klare Trennung von Datenmodell, Algorithmus und UI
+- Nutzung austauschbarer, unabhängiger Komponenten
+
+### Code-Qualität
+- Regelmäßige Code-Reviews und Pair Programming
+- Proaktives Refactoring zur Vermeidung technischer Schulden
+
+### Validierung und Fehlerdokumentation
+- Visuelle Pfadprüfung zur Validierung berechneter Ergebnisse
+- Dokumentation erkannter Fehler und frühzeitige Reparatur
 
 ## Entwicklungstagebuch
 
@@ -169,3 +241,56 @@ Aufgrund mangelhafter Ergebnisse bei großen Bildern Erleichterung der Arbeit f�
 - Test aller möglichen Routen implementiert
 - langes Debugging wegen Routen-Errors:
 ![Routenvalidierung](docs/error_routes.png)
+
+
+### 7. März 2025
+---
+#### Implementierung von Dark Mode und Theme Management
+
+- **Theme-Manager Architektur**:
+  - Implementierung eines `ThemeManager` als ChangeNotifier für reaktives State-Management
+  - Integration mit dem Provider-Pattern zur appweiten Theme-Nutzung
+  - Methoden zum dynamischen Umschalten zwischen Light- und Darkmode
+
+  ```dart
+  class ThemeManager with ChangeNotifier {
+    ThemeMode _themeMode = ThemeMode.light;
+
+    ThemeMode get themeMode => _themeMode;
+    bool get isDarkMode => _themeMode == ThemeMode.dark;
+
+    void toggleTheme() {
+      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+      notifyListeners();
+    }
+  }
+
+- **Modularer Aufbau**:
+  - Erstellung separater Dateien `light_theme.dart` und `dark_theme.dart`.
+  - Vereinfachte Wartbarkeit und Anpassbarkeit durch klare Trennung.
+  - Definition zentraler Farbkonstanten für konsistente und leicht verwaltbare Farbpaletten.
+
+- **Light Theme Design**:
+  - Basis: Blaugraue Farbpalette (Material Blue Grey) mit Teal-Akzenten.
+  - Optimierte Kontraste zur Sicherstellung optimaler Lesbarkeit.
+  - Leicht getönter Hintergrund (`#F5F7F9`) für angenehme visuelle Tiefe.
+  - Einsatz von subtilen Schatten und erhöhter Elevation zur Schaffung einer klaren visuellen Hierarchie.
+
+- **Dark Theme Design**:
+  - Basis: Tiefe dunkle Farbtöne (`#121212`) ergänzt durch helle Akzentfarben.
+  - Angepasste Farbkontraste zur Reduktion der Augenermüdung.
+  - Orientierung an Material Design Dark Theme Guidelines für optimale Lesbarkeit.
+  - Reduzierte Elevation-Effekte für ein flacheres und modernes Erscheinungsbild.
+
+- **UI-Komponenten für Theme-Wechsel**:
+  - Implementierung eines Icon-Buttons in der AppBar zum schnellen Wechsel zwischen Themes.
+  - Kontextabhängige Icons (Sonne/Mond) zur klaren visuellen Indikation des aktuellen Modus.
+  - Zusätzlicher Theme-Toggle im Schnellzugriffsbereich der Anwendung für eine intuitive Bedienung.
+
+- **Gestaltung der Tabelle der Professoren:**
+    - HTML-Seite einlesen
+    - Die Daten der Tabelle extrahieren -> schauen, wo genau die Daten sind in html-Code- Ansicht
+    - zunächst als Liste ausgeben lassen -> Erst nur Name
+    - Umbau zu Tabelle
+    - Drop-Down, weil Tabelle zu breit -> nur Anzeige Name und Raum, dann weitere Infos
+    - Automatische Anpassung an Breite der Seite

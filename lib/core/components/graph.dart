@@ -7,6 +7,7 @@ import 'package:way_to_class/core/components/navigation.dart';
 import 'package:way_to_class/core/components/node.dart';
 import 'package:way_to_class/core/components/route_segment.dart';
 import 'package:way_to_class/service/security/security_manager.dart';
+import 'package:way_to_class/utils/load.dart';
 
 class Graph {
   final Map<String, Node> nodeMap;
@@ -17,13 +18,39 @@ class Graph {
   // Ersetze den Text-Cache durch einen strukturierten Cache
   Map<String, List<RouteSegment>> _routeStructureCache = {};
 
+  final Map<String, String> nameToIdCache = {};
+
   int _cacheHits = 0;
   int _cacheMisses = 0;
   bool _enableCache = true;
   static const int _maxCacheSize = 200;
 
+  static Future<Graph> load(String assetPath) async {
+    final String jsonData = await loadAsset(assetPath);
+    return parseGraph(jsonData);
+  }
+
   Graph(this.nodeMap) {
     _loadCacheFromDisk(); // Lade den Cache beim Erstellen des Graphen
+  }
+
+  String? getNodeIdByName(String name) {
+    if (nameToIdCache.containsKey(name)) {
+      return nameToIdCache[name];
+    }
+
+    if (nodeMap.containsKey(name)) {
+      return name;
+    }
+
+    for (var entry in nodeMap.entries) {
+      if (entry.value.name == name) {
+        nameToIdCache[name] = entry.key;
+        return entry.key;
+      }
+    }
+
+    return null;
   }
 
   // Ersetzte Methode zum Holen von Navigationsinstruktionen

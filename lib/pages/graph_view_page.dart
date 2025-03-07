@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:google_fonts/google_fonts.dart';
 
 class GraphViewScreen extends StatefulWidget {
   const GraphViewScreen({super.key});
@@ -91,284 +90,222 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Theme(
-      data: ThemeData.light().copyWith(
-        colorScheme: ColorScheme.light(
-          primary: const Color(0xFF3F51B5),
-          secondary: const Color(0xFF2196F3),
-          surface: const Color(0xFFF5F5F7),
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFF3F51B5),
-          elevation: 0,
-          foregroundColor: Colors.white,
-          titleTextStyle: GoogleFonts.montserrat(
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
-            color: Colors.white,
-          ),
-        ),
-        textTheme: GoogleFonts.montserratTextTheme(theme.textTheme),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF3F51B5),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F7),
-        appBar: AppBar(
-          title: Text('Building Map Visualization'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.info_outline),
-              tooltip: 'Toggle Legend',
-              onPressed: () => setState(() => showLegend = !showLegend),
-            ),
-            IconButton(
-              icon: const Icon(Icons.home),
-              tooltip: 'Return to Home',
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            // Main Interactive Graph
-            isLoading
-                ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF3F51B5)),
-                )
-                : InteractiveViewer(
-                  transformationController: transformationController,
-                  boundaryMargin: const EdgeInsets.all(double.infinity),
-                  minScale: 0.01,
-                  maxScale: 10.0,
-                  constrained: false,
-                  child: Container(
-                    width: 5000,
-                    height: 3000,
-                    color: const Color(0xFFFAFAFA),
-                    child: CustomPaint(painter: ModernGraphPainter(graphData!)),
-                  ),
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Main Interactive Graph
+          isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF3F51B5)),
+              )
+              : InteractiveViewer(
+                transformationController: transformationController,
+                boundaryMargin: const EdgeInsets.all(double.infinity),
+                minScale: 0.01,
+                maxScale: 10.0,
+                constrained: false,
+                child: SizedBox(
+                  width: 5000,
+                  height: 3000,
+                  child: CustomPaint(painter: ModernGraphPainter(graphData!)),
                 ),
+              ),
 
-            // Control panel
+          // Control panel
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Map Controls',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Building:'),
+                            const SizedBox(height: 4),
+                            DropdownButton<String>(
+                              value: selectedBuilding,
+                              underline: Container(
+                                height: 2,
+                                color: theme.primaryColor,
+                              ),
+                              items:
+                                  ['a', 'b', 'c', 'd'].map((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text('Building $value'),
+                                    );
+                                  }).toList(),
+                              onChanged: (String? value) {
+                                if (value != null) {
+                                  setState(() {
+                                    selectedBuilding = value;
+                                    loadGraphData();
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 24),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Floor:'),
+                            const SizedBox(height: 4),
+                            DropdownButton<String>(
+                              value: selectedFloor,
+                              underline: Container(
+                                height: 2,
+                                color: theme.primaryColor,
+                              ),
+                              items:
+                                  ['f0', 'f1', 'f2', 'f3', 'f4'].map((
+                                    String value,
+                                  ) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(
+                                        'Floor ${value.substring(1)}',
+                                      ),
+                                    );
+                                  }).toList(),
+                              onChanged: (String? value) {
+                                if (value != null) {
+                                  setState(() {
+                                    selectedFloor = value;
+                                    loadGraphData();
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        FloatingActionButton.small(
+                          heroTag: 'refresh',
+                          tooltip: 'Refresh Map',
+                          onPressed: loadGraphData,
+                          child: const Icon(Icons.refresh),
+                        ),
+                        const SizedBox(width: 12),
+                        FloatingActionButton.small(
+                          heroTag: 'zoomIn',
+                          tooltip: 'Zoom In',
+                          onPressed: () {
+                            transformationController.value =
+                                transformationController.value.scaled(1.2);
+                          },
+                          child: const Icon(Icons.zoom_in),
+                        ),
+                        const SizedBox(width: 12),
+                        FloatingActionButton.small(
+                          heroTag: 'zoomOut',
+                          tooltip: 'Zoom Out',
+                          onPressed: () {
+                            transformationController.value =
+                                transformationController.value.scaled(0.8);
+                          },
+                          child: const Icon(Icons.zoom_out),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Legend Panel
+          if (showLegend)
             Positioned(
+              left: 16,
               top: 16,
-              right: 16,
               child: Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Map Controls',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Building:'),
-                              const SizedBox(height: 4),
-                              DropdownButton<String>(
-                                value: selectedBuilding,
-                                dropdownColor: Colors.white,
-                                underline: Container(
-                                  height: 2,
-                                  color: const Color(0xFF3F51B5),
-                                ),
-                                items:
-                                    ['a', 'b', 'c', 'd'].map((String value) {
-                                      return DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text('Building $value'),
-                                      );
-                                    }).toList(),
-                                onChanged: (String? value) {
-                                  if (value != null) {
-                                    setState(() {
-                                      selectedBuilding = value;
-                                      loadGraphData();
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
+                          const Text(
+                            'Map Legend',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
-                          const SizedBox(width: 24),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Floor:'),
-                              const SizedBox(height: 4),
-                              DropdownButton<String>(
-                                value: selectedFloor,
-                                dropdownColor: Colors.white,
-                                underline: Container(
-                                  height: 2,
-                                  color: const Color(0xFF3F51B5),
-                                ),
-                                items:
-                                    ['f0', 'f1', 'f2', 'f3', 'f4'].map((
-                                      String value,
-                                    ) {
-                                      return DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(
-                                          'Floor ${value.substring(1)}',
-                                        ),
-                                      );
-                                    }).toList(),
-                                onChanged: (String? value) {
-                                  if (value != null) {
-                                    setState(() {
-                                      selectedFloor = value;
-                                      loadGraphData();
-                                    });
-                                  }
-                                },
-                              ),
-                            ],
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => setState(() => showLegend = false),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            splashRadius: 20,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          FloatingActionButton.small(
-                            heroTag: 'refresh',
-                            tooltip: 'Refresh Map',
-                            backgroundColor: const Color(0xFF3F51B5),
-                            onPressed: loadGraphData,
-                            child: const Icon(
-                              Icons.refresh,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          FloatingActionButton.small(
-                            heroTag: 'zoomIn',
-                            tooltip: 'Zoom In',
-                            backgroundColor: const Color(0xFF3F51B5),
-                            onPressed: () {
-                              transformationController.value =
-                                  transformationController.value.scaled(1.2);
-                            },
-                            child: const Icon(
-                              Icons.zoom_in,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          FloatingActionButton.small(
-                            heroTag: 'zoomOut',
-                            tooltip: 'Zoom Out',
-                            backgroundColor: const Color(0xFF3F51B5),
-                            onPressed: () {
-                              transformationController.value =
-                                  transformationController.value.scaled(0.8);
-                            },
-                            child: const Icon(
-                              Icons.zoom_out,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                      const SizedBox(height: 12),
+                      _buildLegendItem('Room', Colors.blue[200]!),
+                      _buildLegendItem('Corridor', Colors.grey[300]!),
+                      _buildLegendItem('Staircase', Colors.green[200]!),
+                      _buildLegendItem('Elevator', Colors.amber[300]!),
+                      _buildLegendItem('Door', Colors.orange[200]!),
+                      _buildLegendItem('Toilet', Colors.cyan[200]!),
+                      _buildLegendItem('Machine', Colors.brown[200]!),
+                      _buildLegendItem('Emergency Exit', Colors.red[600]!),
+                      _buildLegendItem('Coffee Station', Colors.brown[300]!),
+                      _buildLegendItem('Other', Colors.purple[200]!),
                     ],
                   ),
                 ),
               ),
             ),
-
-            // Legend Panel
-            if (showLegend)
-              Positioned(
-                left: 16,
-                top: 16,
-                child: Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            const Text(
-                              'Map Legend',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed:
-                                  () => setState(() => showLegend = false),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              splashRadius: 20,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _buildLegendItem('Room', Colors.blue[200]!),
-                        _buildLegendItem('Corridor', Colors.grey[300]!),
-                        _buildLegendItem('Staircase', Colors.green[200]!),
-                        _buildLegendItem('Elevator', Colors.amber[300]!),
-                        _buildLegendItem('Door', Colors.orange[200]!),
-                        _buildLegendItem('Toilet', Colors.cyan[200]!),
-                        _buildLegendItem('Machine', Colors.brown[200]!),
-                        _buildLegendItem('Emergency Exit', Colors.red[600]!),
-                        _buildLegendItem('Coffee Station', Colors.brown[300]!),
-                        _buildLegendItem('Other', Colors.purple[200]!),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: const Color(0xFF3F51B5),
-          foregroundColor: Colors.white,
-          elevation: 4,
-          tooltip: 'Reset View',
-          onPressed: () {
-            transformationController.value = Matrix4.identity();
-            // Better starting position
-            transformationController.value =
-                Matrix4.translationValues(-1000, -600, 0) *
-                transformationController.value;
-          },
-          child: const Icon(Icons.center_focus_strong),
-        ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF3F51B5),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        tooltip: 'Reset View',
+        onPressed: () {
+          transformationController.value = Matrix4.identity();
+          // Better starting position
+          transformationController.value =
+              Matrix4.translationValues(-1000, -600, 0) *
+              transformationController.value;
+        },
+        child: const Icon(Icons.center_focus_strong),
       ),
     );
   }

@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:way_to_class/pages/home/home_page.dart';
 import 'package:way_to_class/service/security/security_manager.dart';
+import 'package:way_to_class/theme/manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SecurityManager.initialize();
 
-  runApp(const CampusNavigator());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeManager(),
+      child: const CampusNavigator(),
+    ),
+  );
 }
 
 class CampusNavigator extends StatelessWidget {
@@ -14,10 +21,13 @@ class CampusNavigator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Way2Class',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeManager.getLightTheme(),
+      darkTheme: ThemeManager.getDarkTheme(),
+      themeMode: themeManager.themeMode,
       home: const HomePage(),
     );
   }

@@ -4,6 +4,7 @@ import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
 import 'package:way_to_class/core/components/graph.dart' show Graph;
+import 'package:way_to_class/service/security/security_manager.dart';
 
 class DeveloperPanel extends StatelessWidget {
   final Graph graph;
@@ -216,8 +217,266 @@ class DeveloperPanel extends StatelessWidget {
 
   // Verschlüsselungstest
   void _verifyEncryption(BuildContext context) async {
-    // Implementierung aus dem Original-Code, aber als separater Dialog
-    // ... (umfangreicher Dialog-Code)
+    // Zeige Ladeanzeige
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => const Center(
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text("Überprüfe Verschlüsselung..."),
+                  ],
+                ),
+              ),
+            ),
+          ),
+    );
+
+    // Cache inspizieren und detaillierte Ergebnisse erhalten
+    final inspectionResults = await graph.inspectEncryptedCache();
+
+    // Verschlüsselungstest durchführen
+    final success = await SecurityManager.verifyEncryption();
+
+    // Lade-Dialog schließen
+    Navigator.pop(context);
+
+    // Modernes Dialog-Design
+    showDialog(
+      context: context,
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.9,
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header mit Icon und Titel
+                    Row(
+                      children: [
+                        Icon(
+                          success
+                              ? Icons.security
+                              : Icons.security_update_warning,
+                          color: success ? Colors.green : Colors.orange,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Verschlüsselungstest',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(),
+
+                    // Hauptinhalt
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Status der Verschlüsselung
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color:
+                                    success
+                                        ? Colors.green[50]
+                                        : Colors.orange[50],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    success ? Icons.check_circle : Icons.error,
+                                    color: success ? Colors.green : Colors.red,
+                                    size: 48,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    success
+                                        ? "Verschlüsselung funktioniert"
+                                        : "Verschlüsselungstest fehlgeschlagen",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          success
+                                              ? Colors.green[800]
+                                              : Colors.red[800],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Überschrift für die Details
+                            const Text(
+                              "Technische Details:",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Struktur-Cache Card
+                            if (inspectionResults['hasStructureCache'] == true)
+                              _buildEncryptionDetailsCard(
+                                title: "Struktur-Cache",
+                                entries: [
+                                  "Größe: ${inspectionResults['structureCacheLength']} Bytes",
+                                  "Format: ${inspectionResults['structureCacheFormat']}",
+                                  if (inspectionResults['decryptionSuccess'] ==
+                                      true)
+                                    "Entschlüsselung: Erfolgreich",
+                                  if (inspectionResults['jsonValid'] == true)
+                                    "Einträge: ${inspectionResults['jsonEntryCount']}",
+                                ],
+                                icon: Icons.storage,
+                                isExpanded: true,
+                              ),
+
+                            const SizedBox(height: 8),
+
+                            // Zwei Cards nebeneinander mit Row und Expanded
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Pfad-Cache Card
+                                if (inspectionResults['hasPathCache'] == true)
+                                  Expanded(
+                                    child: _buildEncryptionDetailsCard(
+                                      title: "Pfad-Cache",
+                                      entries: [
+                                        "Größe: ${inspectionResults['pathCacheLength']} Bytes",
+                                        if (inspectionResults['pathDecryptionSuccess'] ==
+                                            true)
+                                          "Einträge: ${inspectionResults['pathEntryCount']}",
+                                      ],
+                                      icon: Icons.route,
+                                    ),
+                                  ),
+
+                                // Trennabstand
+                                if (inspectionResults['hasPathCache'] == true &&
+                                    inspectionResults.containsKey('savedHits'))
+                                  const SizedBox(width: 8),
+
+                                // Cache-Statistik Card
+                                if (inspectionResults.containsKey('savedHits'))
+                                  Expanded(
+                                    child: _buildEncryptionDetailsCard(
+                                      title: "Cache-Statistik",
+                                      entries: [
+                                        "Hits: ${inspectionResults['savedHits']}",
+                                        "Misses: ${inspectionResults['savedMisses']}",
+                                      ],
+                                      icon: Icons.query_stats,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const Divider(),
+
+                    // Action Buttons
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Schließen'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+    );
+  }
+
+  Widget _buildEncryptionDetailsCard({
+    required String title,
+    required List<String> entries,
+    required IconData icon,
+    bool isExpanded = false,
+  }) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hier liegt der Überfluss - die Row braucht Flexibilität
+            Row(
+              children: [
+                Icon(icon, size: 16, color: Colors.blue[700]), // Kleinere Icons
+                const SizedBox(width: 6), // Weniger Abstand
+                Flexible(
+                  // Hinzugefügt für Überfluss-Vermeidung
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[800],
+                      fontSize: 13, // Etwas kleinere Schrift
+                    ),
+                    overflow: TextOverflow.ellipsis, // Verhindert Überfluss
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 16),
+            ...entries.map(
+              (entry) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0),
+                child: Text(
+                  entry,
+                  style: const TextStyle(fontSize: 12), // Kleinere Schriftgröße
+                ),
+              ),
+            ),
+            if (isExpanded && title == "Struktur-Cache")
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  "Der Struktur-Cache speichert strukturierte Wegbeschreibungen für häufig genutzte Routen.",
+                  style: TextStyle(
+                    fontSize: 11, // Noch kleinere Erklärungen
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   // Routenvalidierung
