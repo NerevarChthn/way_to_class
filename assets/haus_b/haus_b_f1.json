@@ -1,0 +1,899 @@
+{
+    "pc_b11": {
+        "name": "Computerraum B11",
+        "data": 18433,
+        "x": 10,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_3": 2.2
+        }
+    },
+    "pc_b12": {
+        "name": "Computerraum B12",
+        "data": 18433,
+        "x": 14,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_4": 2.2
+        }
+    },
+    "room_b13": {
+        "name": "Seminarraum B13",
+        "data": 18433,
+        "x": 24,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_6": 1.0
+        }
+    },
+    "room_b14": {
+        "name": "Seminarraum B14",
+        "data": 18433,
+        "x": 35,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_7": 1.4
+        }
+    },
+    "room_123": {
+        "name": "Raum 123",
+        "data": 18433,
+        "x": 15,
+        "y": 69,
+        "weights": {
+            "hall_b_f1_4": 3.2
+        }
+    },
+    "room_122": {
+        "name": "Raum 122",
+        "data": 18433,
+        "x": 19,
+        "y": 69,
+        "weights": {
+            "hall_b_f1_5": 2.2
+        }
+    },
+    "elevator_b_f1": {
+        "name": "Fahrstuhl Haus B, 1. Etage",
+        "data": 18436,
+        "x": 38,
+        "y": 70,
+        "weights": {
+            "hall_b_f1_7": 3.6
+        }
+    },
+    "stair_b_f1_1": {
+        "name": "Haupttreppe",
+        "data": 18435,
+        "x": 44,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_8": 1.0
+        }
+    },
+    "room_120": {
+        "name": "Raum 120",
+        "data": 18433,
+        "x": 51,
+        "y": 69,
+        "weights": {
+            "hall_b_f1_9": 1.4
+        }
+    },
+    "room_b15": {
+        "name": "Seminarraum B15",
+        "data": 18433,
+        "x": 53,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_9": 1.4
+        }
+    },
+    "room_b16": {
+        "name": "Seminarraum B16",
+        "data": 18433,
+        "x": 64,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_10": 1.0
+        }
+    },
+    "room_b17": {
+        "name": "Seminarraum B17",
+        "data": 18433,
+        "x": 72,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_11": 1.0
+        }
+    },
+    "room_b18": {
+        "name": "Seminarraum B18",
+        "data": 18433,
+        "x": 79,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_12": 1.4
+        }
+    },
+    "room_b19": {
+        "name": "Seminarraum B19",
+        "data": 18433,
+        "x": 87,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_13": 1.4
+        }
+    },
+    "room_b20": {
+        "name": "Seminarraum B20",
+        "data": 18433,
+        "x": 96,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_14": 1.0
+        }
+    },
+    "room_117": {
+        "name": "Raum 117",
+        "data": 18433,
+        "x": 72,
+        "y": 69,
+        "weights": {
+            "hall_b_f1_11": 1.4
+        }
+    },
+    "wc_b17": {
+        "name": "Toiletten B17",
+        "data": 18470,
+        "x": 76,
+        "y": 70,
+        "weights": {
+            "hall_b_f1_12": 3.6
+        }
+    },
+    "room_114": {
+        "name": "Raum 114",
+        "data": 18433,
+        "x": 87,
+        "y": 69,
+        "weights": {
+            "hall_b_f1_13": 1.4
+        }
+    },
+    "hall_b_f1_1": {
+        "name": "Flur B1.1",
+        "data": 18434,
+        "x": 4,
+        "y": 70,
+        "weights": {
+            "hall_b_f1_2": 2.0,
+            "exit_b11": 1.4
+        }
+    },
+    "hall_b_f1_2": {
+        "name": "Flur B1.2",
+        "data": 18434,
+        "x": 4,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_1": 2.0,
+            "hall_b_f1_3": 2.0
+        }
+    },
+    "hall_b_f1_3": {
+        "name": "Flur B1.3",
+        "data": 18434,
+        "x": 10,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_2": 2.0,
+            "hall_b_f1_4": 2.0,
+            "pc_b11": 2.2
+        }
+    },
+    "hall_b_f1_4": {
+        "name": "Flur B1.4",
+        "data": 18434,
+        "x": 14,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_3": 2.0,
+            "hall_b_f1_5": 4.0,
+            "pc_b12": 2.2,
+            "room_123": 3.2
+        }
+    },
+    "hall_b_f1_5": {
+        "name": "Flur B1.5",
+        "data": 18434,
+        "x": 19,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_4": 4.0,
+            "hall_b_f1_6": 5.0,
+            "room_122": 2.2
+        }
+    },
+    "hall_b_f1_6": {
+        "name": "Flur B1.6",
+        "data": 18434,
+        "x": 24,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_5": 5.0,
+            "hall_b_f1_7": 11.0,
+            "room_b13": 1.0
+        }
+    },
+    "hall_b_f1_7": {
+        "name": "Flur B1.7",
+        "data": 18434,
+        "x": 35,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_6": 11.0,
+            "hall_b_f1_8": 9.0,
+            "room_b14": 1.4,
+            "elevator_b_f1": 3.6
+        }
+    },
+    "hall_b_f1_8": {
+        "name": "Flur B1.8",
+        "data": 18434,
+        "x": 44,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_7": 9.0,
+            "hall_b_f1_40": 4.5,
+            "stair_b_f1_1": 1.0
+        }
+    },
+    "hall_b_f1_9": {
+        "name": "Flur B1.9",
+        "data": 18434,
+        "x": 51,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_10": 13.0,
+            "hall_b_f1_40": 4.5,
+            "room_120": 1.4,
+            "room_b15": 1.4
+        }
+    },
+    "hall_b_f1_10": {
+        "name": "Flur B1.10",
+        "data": 18434,
+        "x": 64,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_9": 13.0,
+            "hall_b_f1_11": 8.0,
+            "room_b16": 1.0
+        }
+    },
+    "hall_b_f1_11": {
+        "name": "Flur B1.11",
+        "data": 18434,
+        "x": 72,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_10": 8.0,
+            "hall_b_f1_12": 7.0,
+            "room_b17": 1.0,
+            "room_117": 1.4
+        }
+    },
+    "hall_b_f1_12": {
+        "name": "Flur B1.12",
+        "data": 18434,
+        "x": 79,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_11": 7.0,
+            "hall_b_f1_13": 8.0,
+            "room_b18": 1.4,
+            "wc_b17": 3.6
+        }
+    },
+    "hall_b_f1_13": {
+        "name": "Flur B1.13",
+        "data": 18434,
+        "x": 87,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_12": 8.0,
+            "hall_b_f1_14": 9.0,
+            "room_b19": 1.4,
+            "room_114": 1.4
+        }
+    },
+    "hall_b_f1_14": {
+        "name": "Flur B1.14",
+        "data": 18434,
+        "x": 96,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_13": 9.0,
+            "door_hall_1": 10.0,
+            "room_b20": 1.0
+        }
+    },
+    "hall_b_f1_15": {
+        "name": "Flur B1.15",
+        "data": 18434,
+        "x": 108,
+        "y": 71,
+        "weights": {
+            "hall_b_f1_14": 12.0,
+            "hall_b_f1_16": 1.0,
+            "hall_b_f1_43": 1.2
+        }
+    },
+    "hall_b_f1_16": {
+        "name": "Flur B1.16",
+        "data": 18434,
+        "x": 109,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_15": 1.0,
+            "hall_b_f1_17": 3.0,
+            "room_105": 1.0,
+            "stair_b_f1_4": 1.0
+        }
+    },
+    "hall_b_f1_17": {
+        "name": "Flur B1.17",
+        "data": 18434,
+        "x": 112,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_16": 3.0,
+            "hall_b_f1_18": 8.0,
+            "room_108": 1.0,
+            "room_104": 1.0
+        }
+    },
+    "hall_b_f1_18": {
+        "name": "Flur B1.18",
+        "data": 18434,
+        "x": 120,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_17": 8.0,
+            "hall_b_f1_19": 4.0,
+            "room_107": 1.0,
+            "room_103": 1.0,
+            "stair_b_f1_5": 2.0
+        }
+    },
+    "hall_b_f1_19": {
+        "name": "Flur B1.19",
+        "data": 18434,
+        "x": 124,
+        "y": 65,
+        "weights": {
+            "hall_b_f1_18": 4.0,
+            "hall_b_f1_20": 6.0,
+            "room_101": 1.0
+        }
+    },
+    "hall_b_f1_20": {
+        "name": "Flur B1.20",
+        "data": 18434,
+        "x": 130,
+        "y": 65,
+        "weights": {
+            "hall_b_f1_19": 6.0,
+            "room_106": 1.0,
+            "room_100": 1.0
+        }
+    },
+    "hall_b_f1_21": {
+        "name": "Flur B1.21",
+        "data": 18434,
+        "x": 48,
+        "y": 64,
+        "weights": {
+            "hall_b_f1_40": 3.0,
+            "door_hall_2": 8.0
+        }
+    },
+    "hall_b_f1_22": {
+        "name": "Flur B1.22",
+        "data": 18434,
+        "x": 48,
+        "y": 40,
+        "weights": {
+            "hall_b_f1_23": 8.0,
+            "hall_b_f1_30": 11.0,
+            "hall_b_f1_41": 3.0,
+            "pc_b10": 2.0
+        }
+    },
+    "hall_b_f1_23": {
+        "name": "Flur B1.23",
+        "data": 18434,
+        "x": 40,
+        "y": 40,
+        "weights": {
+            "hall_b_f1_22": 8.0,
+            "hall_b_f1_24": 8.0,
+            "wc_b9": 2.0
+        }
+    },
+    "hall_b_f1_24": {
+        "name": "Flur B1.24",
+        "data": 18434,
+        "x": 32,
+        "y": 40,
+        "weights": {
+            "hall_b_f1_23": 8.0,
+            "hall_b_f1_25": 8.0,
+            "room_b9": 2.2
+        }
+    },
+    "hall_b_f1_25": {
+        "name": "Flur B1.25",
+        "data": 18434,
+        "x": 24,
+        "y": 40,
+        "weights": {
+            "hall_b_f1_24": 8.0,
+            "hall_b_f1_26": 4.0,
+            "room_b8": 2.0
+        }
+    },
+    "hall_b_f1_26": {
+        "name": "Flur B1.26",
+        "data": 18434,
+        "x": 20,
+        "y": 40,
+        "weights": {
+            "hall_b_f1_25": 4.0,
+            "hall_b_f1_27": 4.0,
+            "room_128": 1.0
+        }
+    },
+    "hall_b_f1_27": {
+        "name": "Flur B1.27",
+        "data": 18434,
+        "x": 16,
+        "y": 40,
+        "weights": {
+            "hall_b_f1_26": 4.0,
+            "hall_b_f1_28": 12.0,
+            "room_129": 1.0,
+            "room_b7": 2.0
+        }
+    },
+    "hall_b_f1_28": {
+        "name": "Flur B1.28",
+        "data": 18434,
+        "x": 4,
+        "y": 40,
+        "weights": {
+            "hall_b_f1_27": 12.0,
+            "hall_b_f1_29": 3.0,
+            "room_b6": 2.0
+        }
+    },
+    "hall_b_f1_29": {
+        "name": "Flur B1.29",
+        "data": 18434,
+        "x": 4,
+        "y": 43,
+        "weights": {
+            "hall_b_f1_28": 3.0,
+            "exit_b6": 1.4
+        }
+    },
+    "hall_b_f1_30": {
+        "name": "Flur B1.30",
+        "data": 18434,
+        "x": 48,
+        "y": 29,
+        "weights": {
+            "hall_b_f1_22": 11.0,
+            "stair_b_f1_2": 3.0,
+            "door_hall_5": 1.0
+        }
+    },
+    "hall_b_f1_31": {
+        "name": "Flur B1.31",
+        "data": 18434,
+        "x": 48,
+        "y": 12,
+        "weights": {
+            "hall_b_f1_32": 8.0,
+            "hall_b_f1_39": 10.0,
+            "hall_b_f1_42": 3.0,
+            "room_b5": 2.0
+        }
+    },
+    "hall_b_f1_32": {
+        "name": "Flur B1.32",
+        "data": 18434,
+        "x": 40,
+        "y": 12,
+        "weights": {
+            "hall_b_f1_31": 8.0,
+            "hall_b_f1_33": 8.0,
+            "wc_b4": 2.0
+        }
+    },
+    "hall_b_f1_33": {
+        "name": "Flur B1.33",
+        "data": 18434,
+        "x": 32,
+        "y": 12,
+        "weights": {
+            "hall_b_f1_32": 8.0,
+            "hall_b_f1_34": 8.0,
+            "room_b4": 2.2
+        }
+    },
+    "hall_b_f1_34": {
+        "name": "Flur B1.34",
+        "data": 18434,
+        "x": 24,
+        "y": 12,
+        "weights": {
+            "hall_b_f1_33": 8.0,
+            "hall_b_f1_35": 4.0,
+            "room_b3": 2.0
+        }
+    },
+    "hall_b_f1_35": {
+        "name": "Flur B1.35",
+        "data": 18434,
+        "x": 20,
+        "y": 12,
+        "weights": {
+            "hall_b_f1_34": 4.0,
+            "hall_b_f1_36": 4.0,
+            "room_134": 1.0
+        }
+    },
+    "hall_b_f1_36": {
+        "name": "Flur B1.36",
+        "data": 18434,
+        "x": 16,
+        "y": 12,
+        "weights": {
+            "hall_b_f1_35": 4.0,
+            "hall_b_f1_37": 12.0,
+            "room_135": 1.0,
+            "room_b2": 2.0
+        }
+    },
+    "hall_b_f1_37": {
+        "name": "Flur B1.37",
+        "data": 18434,
+        "x": 4,
+        "y": 12,
+        "weights": {
+            "hall_b_f1_36": 12.0,
+            "hall_b_f1_38": 3.0,
+            "room_b1": 2.0
+        }
+    },
+    "hall_b_f1_38": {
+        "name": "Flur B1.38",
+        "data": 18434,
+        "x": 4,
+        "y": 15,
+        "weights": {
+            "hall_b_f1_37": 3.0,
+            "exit_b1": 1.4
+        }
+    },
+    "hall_b_f1_39": {
+        "name": "Flur B1.39",
+        "data": 18434,
+        "x": 48,
+        "y": 2,
+        "weights": {
+            "hall_b_f1_31": 10.0,
+            "stair_b_f1_3": 3.0
+        }
+    },
+    "hall_b_f1_40": {
+        "name": "Flur B1.40",
+        "data": 18434,
+        "x": 48,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_9": 4.5,
+            "hall_b_f1_8": 4.0,
+            "hall_b_f1_21": 3.0
+        }
+    },
+    "hall_b_f1_41": {
+        "name": "Flur B1.41",
+        "data": 18434,
+        "x": 48,
+        "y": 43,
+        "weights": {
+            "hall_b_f1_22": 3.0,
+            "door_hall_3": 1.0
+        }
+    },
+    "hall_b_f1_42": {
+        "name": "Flur B1.42",
+        "data": 18434,
+        "x": 48,
+        "y": 15,
+        "weights": {
+            "hall_b_f1_31": 3.0,
+            "door_hall_4": 2.0
+        }
+    },
+    "hall_b_f1_43": {
+        "name": "Flur B1.43",
+        "data": 18434,
+        "x": 107,
+        "y": 70,
+        "weights": {
+            "hall_b_f1_15": 1.2,
+            "hall_b_f1_14": 11.0
+        }
+    },
+    "door_hall_1": {
+        "name": "Flurtür 1",
+        "data": 18437,
+        "x": 106,
+        "y": 70,
+        "weights": {
+            "hall_b_f1_43": 1.0,
+            "hall_b_f1_14": 10.0
+        }
+    },
+    "door_hall_2": {
+        "name": "Flurtür 2",
+        "data": 18437,
+        "x": 48,
+        "y": 56,
+        "weights": {
+            "hall_b_f1_21": 8.0,
+            "door_hall_3": 12.0
+        }
+    },
+    "door_hall_3": {
+        "name": "Flurtür 3",
+        "data": 18437,
+        "x": 48,
+        "y": 44,
+        "weights": {
+            "hall_b_f1_41": 1.0,
+            "door_hall_2": 12.0
+        }
+    },
+    "door_hall_4": {
+        "name": "Flurtür 4",
+        "data": 18437,
+        "x": 48,
+        "y": 17,
+        "weights": {
+            "hall_b_f1_42": 2.0,
+            "door_hall_5": 12.0
+        }
+    },
+    "door_hall_5": {
+        "name": "Flurtür 5",
+        "data": 18437,
+        "x": 48,
+        "y": 30,
+        "weights": {
+            "hall_b_f1_30": 1.0,
+            "door_hall_4": 12.0
+        }
+    },
+    "room_129": {
+        "name": "Raum 129",
+        "data": 18433,
+        "x": 16,
+        "y": 42,
+        "weights": {
+            "hall_b_f1_27": 1.0
+        }
+    },
+    "room_128": {
+        "name": "Raum 128",
+        "data": 18433,
+        "x": 20,
+        "y": 42,
+        "weights": {
+            "hall_b_f1_26": 1.0
+        }
+    },
+    "wc_b9": {
+        "name": "Toiletten B9",
+        "data": 18470,
+        "x": 40,
+        "y": 42,
+        "weights": {
+            "hall_b_f1_23": 2.0
+        }
+    },
+    "pc_b10": {
+        "name": "Linux-Raum B10",
+        "data": 18433,
+        "x": 50,
+        "y": 40,
+        "weights": {
+            "hall_b_f1_22": 2.0
+        }
+    },
+    "room_b9": {
+        "name": "Multimedia-Raum B9",
+        "data": 18433,
+        "x": 32,
+        "y": 38,
+        "weights": {
+            "hall_b_f1_24": 2.2
+        }
+    },
+    "room_b8": {
+        "name": "Seminarraum B8",
+        "data": 18433,
+        "x": 24,
+        "y": 38,
+        "weights": {
+            "hall_b_f1_25": 2.0
+        }
+    },
+    "room_b7": {
+        "name": "Seminarraum B7",
+        "data": 18433,
+        "x": 16,
+        "y": 38,
+        "weights": {
+            "hall_b_f1_27": 2.0
+        }
+    },
+    "room_b6": {
+        "name": "Seminarraum B6",
+        "data": 18433,
+        "x": 4,
+        "y": 38,
+        "weights": {
+            "hall_b_f1_28": 2.0
+        }
+    },
+    "stair_b_f1_2": {
+        "name": "Mittlere Treppe",
+        "data": 18435,
+        "x": 45,
+        "y": 29,
+        "weights": {
+            "hall_b_f1_30": 3.0
+        }
+    },
+    "room_135": {
+        "name": "Raum 135",
+        "data": 18433,
+        "x": 16,
+        "y": 14,
+        "weights": {
+            "hall_b_f1_36": 1.0
+        }
+    },
+    "room_134": {
+        "name": "Raum 134",
+        "data": 18433,
+        "x": 20,
+        "y": 14,
+        "weights": {
+            "hall_b_f1_35": 1.0
+        }
+    },
+    "wc_b4": {
+        "name": "Toiletten B4",
+        "data": 18470,
+        "x": 40,
+        "y": 14,
+        "weights": {
+            "hall_b_f1_32": 2.0
+        }
+    },
+    "room_b5": {
+        "name": "Seminarraum B5",
+        "data": 18433,
+        "x": 50,
+        "y": 12,
+        "weights": {
+            "hall_b_f1_31": 2.0
+        }
+    },
+    "stair_b_f1_3": {
+        "name": "Treppe Nordseite",
+        "data": 18435,
+        "x": 45,
+        "y": 2,
+        "weights": {
+            "hall_b_f1_39": 3.0
+        }
+    },
+    "room_b4": {
+        "name": "Seminarraum B4",
+        "data": 18433,
+        "x": 32,
+        "y": 10,
+        "weights": {
+            "hall_b_f1_33": 2.2
+        }
+    },
+    "room_b3": {
+        "name": "Seminarraum B3",
+        "data": 18433,
+        "x": 24,
+        "y": 10,
+        "weights": {
+            "hall_b_f1_34": 2.0
+        }
+    },
+    "room_b2": {
+        "name": "Seminarraum B2",
+        "data": 18433,
+        "x": 16,
+        "y": 10,
+        "weights": {
+            "hall_b_f1_36": 2.0
+        }
+    },
+    "room_b1": {
+        "name": "Seminarraum B1",
+        "data": 18433,
+        "x": 4,
+        "y": 10,
+        "weights": {
+            "hall_b_f1_37": 2.0
+        }
+    },
+    "stair_b_f1_4": {
+        "name": "Hintere Treppe 1",
+        "data": 18435,
+        "x": 106,
+        "y": 66,
+        "weights": {
+            "hall_b_f1_16": 1.0
+        }
+    },
+    "stair_b_f1_5": {
+        "name": "Hintere Treppe 2",
+        "data": 18435,
+        "x": 118,
+        "y": 68,
+        "weights": {
+            "hall_b_f1_18": 2.0
+        }
+    },
+    "exit_b11": {
+        "name": "Notausgang B11",
+        "data": 19013,
+        "x": 2,
+        "y": 71,
+        "weights": {
+            "hall_b_f1_1": 1.4
+        }
+    },
+    "exit_b6": {
+        "name": "Notausgang B6",
+        "data": 19013,
+        "x": 2,
+        "y": 43,
+        "weights": {
+            "hall_b_f1_29": 1.4
+        }
+    },
+    "exit_b1": {
+        "name": "Notausgang B1",
+        "data": 19013,
+        "x": 2,
+        "y": 15,
+        "weights": {
+            "hall_b_f1_38": 1.4
+        }
+    }
+}

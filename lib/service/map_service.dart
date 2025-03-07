@@ -6,4 +6,8 @@ class MapService {
         .load(path)
         .then((byteData) => byteData.buffer.asUint8List());
   }
+
+  static Future<String> loadAsset(String path) async {
+    return await rootBundle.loadString(path);
+  }
 }
