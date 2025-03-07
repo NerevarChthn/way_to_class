@@ -294,3 +294,46 @@ Aufgrund mangelhafter Ergebnisse bei großen Bildern Erleichterung der Arbeit f�
     - Umbau zu Tabelle
     - Drop-Down, weil Tabelle zu breit -> nur Anzeige Name und Raum, dann weitere Infos
     - Automatische Anpassung an Breite der Seite
+
+### 8. März 2025
+---
+#### Neugestaltung der Professorentabelle
+
+- **Moderne Tabellenansicht**:
+  - Ersetzung der klassischen Table-Widgets durch ein flexibles ListView-basiertes Layout für verbesserte Performance
+  - Implementierung eines professionellen Headers mit unterschiedlichen Spaltenbreiten (65% für Namen, 35% für Raumnummer)
+  - Abgerundete Ecken für bessere visuelle Integration in das App-Design
+
+- **Erweiterte Suchfunktionalität**:
+  - Implementierung einer Echtzeit-Suchfunktion mit Filterung nach Namen und Raumnummern
+  - Optimierte Suchergebnisanzeige mit Ergebniszähler und visueller Leerstatusmeldung
+  - Verbessertes Texteingabefeld mit klarem visuellen Feedback (Lösch-Icon erscheint nur bei Texteingabe)
+
+  ```dart
+  final filteredPersons = _searchQuery.isEmpty
+      ? widget.persons
+      : widget.persons.where((person) {
+          final fullName = '${person['name']} ${person['vorname']}'.toLowerCase();
+          final room = _formatRoom(person['raum']).toLowerCase();
+          final query = _searchQuery.toLowerCase();
+          return fullName.contains(query) || room.contains(query);
+        }).toList();
+
+
+- **Interaktive Elemente**
+  - Ausklappbare Detailansicht (ExpansionTile)
+  - Icons für wichtige Informationen (Telefon, E-Mail)
+  
+- **Visuelle Hierarchie**
+  - Alternierende Zeilenfarben für bessere Lesbarkeit
+  - Tabellenkopf farblich hervorgehoben (Primärfarbe)
+  - Abgerundete Ecken bei letzter Zeile
+  
+- **Navigation und Bedienbarkeit**
+  - Direkter Theme-Toggle in AppBar mit Kontext-Icons (Sonne/Mond)
+  - Navigationsbutton mit visueller Hervorhebung (Sekundärfarbe)
+  - Formatierung der Namen („Nachname, Vorname“) und Raumnummern
+  
+- **Responsive & konsistent**
+  - Automatische Anpassung an App-Design und Dark-/Light-Modus
+  - Verbessertes Touch-Target-Design
