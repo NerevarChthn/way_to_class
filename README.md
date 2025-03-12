@@ -228,6 +228,12 @@ Aufgrund mangelhafter Ergebnisse bei großen Bildern Erleichterung der Arbeit f�
 - **Graph Visualisierung:**  
   Eine separate Seite (`GraphViewScreen`) ermöglicht die Visualisierung des Graphen zur besseren Übersicht (optional).
 
+### 1. März 2025
+---
+- langes Debugging wegen Routen-Errors:
+![Routenvalidierung](docs/error_routes.png)
+- entwicklertools etc
+
 ### 5. März 2025
 ---
 - Einstellungsseite UI 
@@ -236,11 +242,6 @@ Aufgrund mangelhafter Ergebnisse bei großen Bildern Erleichterung der Arbeit f�
 ![Haus A, Erdgeschoss](docs/a_f0.png)
 - farbliche Gruppierung der Räume angepasst
 - Legende für Farbzuordnung erstellen
-- Verschlüsselung der Cache-Daten und des API-Keys mit den packages `flutter_secure_storage` und `encrypt`
-- Testroutine zur Verschlüsselung implementiert
-- Test aller möglichen Routen implementiert
-- langes Debugging wegen Routen-Errors:
-![Routenvalidierung](docs/error_routes.png)
 
 
 ### 7. März 2025
@@ -294,6 +295,8 @@ Aufgrund mangelhafter Ergebnisse bei großen Bildern Erleichterung der Arbeit f�
     - Umbau zu Tabelle
     - Drop-Down, weil Tabelle zu breit -> nur Anzeige Name und Raum, dann weitere Infos
     - Automatische Anpassung an Breite der Seite
+  
+- Dependency Injection GraphService mit GetIt
 
 ### 8. März 2025
 ---
@@ -337,3 +340,212 @@ Aufgrund mangelhafter Ergebnisse bei großen Bildern Erleichterung der Arbeit f�
 - **Responsive & konsistent**
   - Automatische Anpassung an App-Design und Dark-/Light-Modus
   - Verbessertes Touch-Target-Design
+
+### 9. März 2025
+---
+#### Neuimplementierung der Wegbeschreibungsgenerierung
+- **Struktur:**
+  - Generatorenklassen für alle 3 Schritte -> PathGenerator, SegmentsGenerator, InstructionGenerator
+
+### 10.03.25
+- Ablaufen der Räume, die noch unklar waren
+- Farben der neuen Räume zuordnen
+- Legende erstellen mit Farben & Räume
+
+### 11.03.25
+- Kleinigkeiten an den Räumen abwandeln
+- Große Karte anfangen -> Problem: Beschriftung muss gedreht werden
+- Anfangen, alles umzudrehen + Anpassungen an Größe + alle Linien nachziehen für Einheitlichkeit
+
+-**Performance-Verbesserung A-Star:**
+  - Vollständige Überarbeitung des A*-Algorithmus zur effizienteren Pfadfindung zwischen Campus-Knoten
+  - Optimierung der Heuristik durch präzisere Euklidische Distanz-Berechnung
+  - Implementierung spezifischer Gewichtungsmultiplikatoren für verschiedene Knotentypen:
+  ```dart
+  double weightMultiplier = 1.0;
+  if (neighbor.isStaircase) {
+    weightMultiplier = 2.0; 
+  } else if (neighbor.isElevator) {
+    weightMultiplier = 3.0; 
+  }
+
+  if (neighbor.isStaircase && !neighbor.isAccessible) {
+    weightMultiplier = 10.0; 
+  }
+  ```
+-**Verbesserte Logik bei Etagen-/Gebäudewechsel:**
+  - Integration einer etagenübergreifenden Pfadberechnung mit intelligenter Übergangserkennung
+  - Implementierung der `_findCrossFloorPath`-Methode für optimale Planung bei Etagenwechseln
+  - Überarbeitung der Verbindungserkennung zwischen Treppen und Aufzügen basierend auf räumlicher Nähe:
+  ```dart
+  bool _areConnectedTransitions(Node transition1, Node transition2) {
+    if (transition1.type != transition2.type) return false;
+
+    // Gleiches Gebäude
+    if (transition1.buildingCode != transition2.buildingCode) return false;
+
+    // Verschiedene Etagen
+    if (transition1.floorCode == transition2.floorCode) return false;
+
+    // Gleiche horizontale Position (x,y) mit Toleranz
+    final int dx = (transition1.x - transition2.x).abs();
+    final int dy = (transition1.y - transition2.y).abs();
+
+    // Wenn die Knoten ungefähr übereinander liegen
+    return dx < 5 && dy < 5;
+  }
+  ```
+
+### 12. März 2025
+---
+#### Implementierung eines Logging-Mechanismus für den A*-Algorithmus
+
+- **Ziel**:
+  - Verbesserung der Nachvollziehbarkeit und Debugging-Fähigkeit des A*-Algorithmus durch detailliertes Logging und Visualisierung der Algorithmus-Schritte.
+
+- **Logging-Mechanismus**:
+  - Einführung eines `enableLogging`-Flags in der `PathGenerator`-Klasse zur Aktivierung des detaillierten Loggings.
+  - Nutzung des `dart:developer`-Pakets für konsistente und strukturierte Log-Ausgaben.
+  - Implementierung einer Methode `findPathWithVisualization`, die den A*-Algorithmus mit aktiviertem Logging ausführt und die Ergebnisse visualisiert.
+
+  ```dart
+  bool enableLogging = false;
+
+  List<NodeId> findPathWithVisualization(
+    Path path,
+    CampusGraph graph, {
+    bool visualize = true,
+  }) {
+    enableLogging = true;
+    final result = calculatePath(path, graph);
+    enableLogging = false;
+    return result;
+  }
+  ```
+
+- **Algorithmus-Visualisierung**:
+  - Erstellung einer Methode `getAlgorithmVisualization`, die den A*-Algorithmus-Schritt für Schritt ausführt und die Ergebnisse in einem `StringBuffer` sammelt.
+  - Detaillierte Ausgabe der aktuellen Knoten, Nachbarn, Heuristik-Werte und Pfadkosten in jeder Iteration des Algorithmus.
+  - Visualisierung des finalen Pfades mit Knotendetails und Gesamtkosten.
+
+  ```dart
+  String getAlgorithmVisualization(Path path, CampusGraph graph) {
+    final NodeId startId = path.$1;
+    final NodeId endId = path.$2;
+
+    final Node? start = graph.getNodeById(startId);
+    final Node? end = graph.getNodeById(endId);
+
+    if (start == null || end == null) {
+      return "Fehler: Start- oder Zielknoten nicht gefunden.";
+    }
+
+    final buffer = StringBuffer();
+    buffer.writeln("=== A* ALGORITHMUS VISUALISIERUNG ===");
+    buffer.writeln("Start: $startId (${start.x}, ${start.y})");
+    buffer.writeln("Ziel:  $endId (${end.x}, ${end.y})");
+    buffer.writeln("Euklidische Distanz: ${_euclideanDistance(start, end)}");
+    buffer.writeln("======================================\n");
+
+    _visualizeAStarSearch(startId, endId, graph, buffer);
+
+    return buffer.toString();
+  }
+  ```
+
+- **Ergebnisse**:
+  - Der Logging-Mechanismus ermöglicht eine detaillierte Nachverfolgung der A*-Algorithmus-Schritte und erleichtert das Debugging und die Optimierung des Pfadfindungsprozesses.
+  - Die Visualisierung der Algorithmus-Schritte bietet eine klare und verständliche Darstellung der Pfadberechnung und der Entscheidungsprozesse innerhalb des Algorithmus.
+
+### 13. März 2025
+
+#### 1. Überblick
+
+Der heute implementierte Segment Generator verarbeitet einen Pfad (eine Liste von Node-IDs) und einen CampusGraph, um semantisch sinnvolle Wegsegmente zu erstellen. Dabei werden nicht nur die Knoten des Pfads genutzt, sondern auch kritische Punkte (Breakpoints) wie Richtungsänderungen (Turns) und Typwechsel (z. B. von Flur zu Tür) erkannt und in die Segmentierung integriert. Zusätzlich werden angrenzende _hallway_- und _door_-Segmente zusammengeführt, wobei gemeinsame Metadaten erhalten und erweiterte Werte (z. B. `doorCount` und `distance`) aktualisiert werden.
+
+#### 2. Segmentierung mit `convertPath`
+
+##### 2.1 Funktionale Übersicht
+
+- **Ziel:**  
+  Aus einem gegebenen Pfad und CampusGraph werden Wegsegmente (Instanzen von `RouteSegment`) generiert.  
+- **Segmenttypen:**  
+  - **Origin:** Startet im Raum und leitet in den Flur über.
+  - **Turn:** Kennzeichnet eine Richtungsänderung im Flur.
+  - **TypeChange:** Wird erzeugt bei einem Wechsel des Knotentyps (z. B. Tür, Treppe, Aufzug).
+  - **Destination:** Markiert den Endpunkt (z. B. ein Raum) und berechnet zusätzlich die Flurseite (links/rechts).
+
+##### 2.2 Origin-Segment
+
+- Wird erstellt, wenn der Pfad in einem Raum beginnt.  
+- Die ersten drei Knoten werden als `origin`-Segment zusammengefasst, um den Übergang vom Raum in den Flur darzustellen.  
+- Der Ursprungsknoten wird danach aus dem Pfad entfernt, um Doppelzählungen zu vermeiden.
+
+##### 2.3 Erkennung der Breakpoints
+
+- **Breakpoints** werden über die Methode `_findPathBreakpoints` ermittelt.
+- **Turn-Breakpoints:**  
+  - Erkennung erfolgt, wenn in einem Flur ein signifikanter Winkel (über 15°) festgestellt wird.
+  - Die Methode berechnet den Winkel anhand von drei aufeinanderfolgenden Knoten und fügt in den Metadaten Informationen wie `angle` und `direction` hinzu.
+- **TypeChange-Breakpoints:**  
+  - Treten auf, wenn sich der Knotentyp ändert (z. B. von Flur zu Tür, Treppe oder Aufzug).
+  - Hier wird auch eine spezielle Behandlung vorgenommen, um bei Türen den Vorgänger- und Folgeknoten in einem eigenen Segment zu berücksichtigen.
+
+##### 2.4 Segment-Erzeugung und -Verarbeitung
+
+- **Turn-Segmente:**  
+  - Der Abbiegungsknoten wird als Endpunkt des vorangegangenen und als Startpunkt des folgenden Segments genutzt.
+  - Dadurch wird sichergestellt, dass Distanzen korrekt berechnet werden und der Turn-Winkel in das Segment integriert wird.
+- **TypeChange-Segmente:**  
+  - Erzeugen ein separates Segment, das den Breakpoint-Knoten und, falls vorhanden, den angrenzenden Knoten umfasst.
+- **Finales Segment:**  
+  - Das letzte Segment wird überprüft, ob es mindestens zwei Knoten enthält.  
+  - Erfüllt der Endknoten Kriterien (Raum, Toilette, Ausgang), wird das Segment als `destination` markiert und die Flurseite ermittelt.
+
+#### 3. Merging von Segmenten
+
+##### 3.1 Ziel des Mergings
+
+Die Merging-Logik fasst angrenzende _hallway_- und _door_-Segmente zusammen, um eine konsistentere Routenbeschreibung zu erzeugen.  
+- **Wichtig:**  
+  - Abbiegungen (erkennbar über einen nicht-null `angle` in den Metadaten) werden als Trennungen beibehalten und verhindern, dass solche Segmente zusammengeführt werden.
+  - Nur Segmente der Typen _hallway_ und _door_ werden zusammengeführt, während andere Typen (z. B. turn, origin, destination) unberührt bleiben.
+
+##### 3.2 Gemeinsame Metadaten und Zusammenführung
+
+- **Gemeinsame Metadaten:**  
+  - Für alle Segmente in einer Merge-Gruppe wird ein Schnitt der Metadaten ermittelt.  
+  - Nur Schlüssel, die in allen Segmenten vorhanden sind und denselben Wert haben, werden übernommen.
+- **Erweiterte Werte:**  
+  - Der Wert `distance` wird durch Summierung der Distanzen aus den einzelnen Segmenten aktualisiert.
+  - Der Zähler `doorCount` wird entsprechend der Anzahl der Türsegmente (sowie vorhandener `doorCount`-Werte) aktualisiert.
+- **Knotenzusammenführung:**  
+  - Die Knotensequenzen der zusammengeführten Segmente werden zu einer einzigen Liste fusioniert, wobei Übergänge (duplizierte Knoten) vermieden werden.
+
+#### 4. Code-Struktur und Hilfsfunktionen
+
+##### 4.1 Hilfsfunktionen
+
+- **_createSegment:**  
+  - Erzeugt ein `RouteSegment` anhand der gegebenen Knoten, des Segmenttyps und fügt spezifische Metadaten basierend auf dem Typ hinzu (z. B. _hallway_, _door_, _turn_).
+- **_calculateTurnDirectionWithAngle:**  
+  - Berechnet den Winkel und die Richtung (links/rechts) zwischen drei aufeinanderfolgenden Knoten.
+- **_calculatePathDistance & _calculateDistance:**  
+  - Ermitteln die Gesamtdistanz eines Segments basierend auf der euklidischen Distanz zwischen den Knoten.
+- **_determineSegmentType:**  
+  - Bestimmt den Segmenttyp basierend auf den Eigenschaften eines Knotens (z. B. Raum, Flur, Tür, Treppe).
+
+##### 4.2 Breakpoint-Erkennung
+
+- Die Methode `_findPathBreakpoints` analysiert den Pfad und erkennt:
+  - **Typwechsel:** Wenn sich der Knotentyp von einem Knoten zum nächsten ändert.
+  - **Richtungsänderungen:** Durch Vergleich der Vektoren zwischen den Knoten, wobei ein signifikanter Winkel (über 15°) als Abbiegung interpretiert wird.
+  - **Spezialbehandlung für Türen:** Falls ein Türknoten von Flurknoten umgeben ist und in einer geraden Linie liegt, wird er nicht als Breakpoint gewertet.
+
+##### 4.3 Merge-Logik
+
+- **_mergeSegments:**  
+  - Führt angrenzende _hallway_- und _door_-Segmente zusammen.
+  - Teilt die Merge-Gruppe in Untergruppen, wenn innerhalb der Gruppe Abbiegungen (Turn-Marker) vorhanden sind.
+  - Ermittelt gemeinsame Metadaten und aktualisiert `distance` und `doorCount`, ohne andere Metadaten zu überschreiben.
+  - Behandelt die Knotenzusammenführung so, dass Duplikate an den Übergängen vermieden werden.

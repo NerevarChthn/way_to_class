@@ -1,5 +1,6 @@
 // Panel für die Routenbeschreibung
 import 'package:flutter/material.dart';
+import 'package:way_to_class/constants/other.dart';
 
 class RouteDescriptionPanel extends StatelessWidget {
   final String resultText;
@@ -28,7 +29,7 @@ class RouteDescriptionPanel extends StatelessWidget {
             const Divider(),
             Expanded(
               child:
-                  resultText == 'Wegbeschreibung erscheint hier'
+                  resultText == noPathSelected
                       ? Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,

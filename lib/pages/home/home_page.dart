@@ -1,17 +1,17 @@
 import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart' show Provider;
+import 'package:way_to_class/constants/other.dart';
+import 'package:way_to_class/core/utils/injection.dart';
 import 'package:way_to_class/pages/graph_view_page.dart' show GraphViewScreen;
-import 'package:way_to_class/pages/home/components/developer_panel.dart';
 import 'package:way_to_class/pages/home/components/nav_bar.dart';
 import 'package:way_to_class/pages/home/components/quick_access_panel.dart';
 import 'package:way_to_class/pages/home/components/route_desc_panel.dart';
 import 'package:way_to_class/pages/home/components/search_panel.dart';
 import 'package:way_to_class/core/components/graph.dart' show Graph;
 import 'package:way_to_class/pages/prof_page.dart';
+import 'package:way_to_class/screens/settings_dropdown.dart';
 import 'package:way_to_class/service/graph_service.dart';
-import 'package:way_to_class/theme/manager.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,9 +21,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final GraphService _graphService = GraphService();
+  final GraphService _graphService = getIt<GraphService>();
   late final Future<Graph> _graphFuture;
-  String resultText = 'Wegbeschreibung erscheint hier';
+  String resultText = noPathSelected;
   final PageController _pageController = PageController();
   int _currentIndex = 0;
 
@@ -159,22 +159,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campus Navigator'),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(
-              themeManager.isDarkMode ? Icons.wb_sunny : Icons.dark_mode,
-            ),
-            onPressed: () {
-              themeManager.toggleTheme();
-            },
-          ),
-        ],
+        actions: [const SettingsDropdown()],
       ),
       body: PageView(
         physics: const NeverScrollableScrollPhysics(),
@@ -272,11 +261,6 @@ class _HomePageState extends State<HomePage> {
                   onExitPressed: _findNearestEmergencyExit,
                   onCanteenPressed: () => log('Mensa'),
                 ),
-
-                const SizedBox(height: 16),
-
-                // Entwickleroptionen in einem expandierbaren Panel
-                DeveloperPanel(graph: graph),
               ],
             ),
           ),

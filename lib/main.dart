@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
+import 'package:way_to_class/core/utils/injection.dart';
 import 'package:way_to_class/pages/home/home_page.dart';
 import 'package:way_to_class/service/security/security_manager.dart';
 import 'package:way_to_class/theme/manager.dart';
@@ -8,10 +10,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SecurityManager.initialize();
 
+  // Dependency Injection
+  await setupDependencies();
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeManager(),
-      child: const CampusNavigator(),
+      child: ToastificationWrapper(child: const CampusNavigator()),
     ),
   );
 }

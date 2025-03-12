@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:way_to_class/core/components/node.dart';
+import 'package:way_to_class/core/models/node.dart';
 
 enum Direction { links, rechts, geradeaus }
 

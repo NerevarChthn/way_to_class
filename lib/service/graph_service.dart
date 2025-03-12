@@ -3,11 +3,6 @@ import 'dart:developer' show log;
 import 'package:way_to_class/core/components/graph.dart' show Graph;
 
 class GraphService {
-  // Singleton-Pattern
-  static final GraphService _instance = GraphService._internal();
-  factory GraphService() => _instance;
-  GraphService._internal();
-
   Graph? _currentGraph;
   bool _isLoading = false;
 
@@ -36,9 +31,20 @@ class GraphService {
     }
   }
 
+  Future<void> clearCache() async {
+    _currentGraph?.clearCache();
+  }
+
   /// Gibt den aktuell geladenen Graphen zurück oder null wenn noch nicht geladen
   Graph? get currentGraph => _currentGraph;
 
   /// Prüft ob der Graph bereits geladen wurde
   bool get isGraphLoaded => _currentGraph != null;
+
+  bool get cacheEnabled => _currentGraph?.cacheEnabled ?? true;
+  void setCacheEnabled(bool enabled) {
+    if (_currentGraph != null) {
+      _currentGraph!.enableCache(enabled);
+    }
+  }
 }

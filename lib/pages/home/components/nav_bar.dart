@@ -43,7 +43,7 @@ class CustomBottomNavBar extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.navigation_rounded),
+            icon: Icon(Icons.navigation_outlined),
             activeIcon: Icon(Icons.navigation_rounded),
             label: 'Navigation',
           ),
@@ -53,9 +53,9 @@ class CustomBottomNavBar extends StatelessWidget {
             label: 'Karte',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: 'Einstellungen',
+            icon: Icon(Icons.people_alt_outlined),
+            activeIcon: Icon(Icons.people_alt_rounded),
+            label: 'Professoren',
           ),
         ],
       ),

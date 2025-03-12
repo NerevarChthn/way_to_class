@@ -26,4 +26,16 @@ class Toast {
       alignment: Alignment.bottomRight,
     );
   }
+
+  static void infoToast(String desc) {
+    toastification.show(
+      title: Text('Info!'),
+      description: Text(desc),
+      autoCloseDuration: const Duration(seconds: 5),
+      type: ToastificationType.info,
+      style: ToastificationStyle.minimal,
+      showProgressBar: false,
+      alignment: Alignment.bottomRight,
+    );
+  }
 }

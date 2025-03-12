@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:way_to_class/screens/table_screen.dart';
-import 'package:way_to_class/service/html_find.dart'; // fetchHtml()
-import 'package:way_to_class/service/html_parse.dart'; // parseHtml()
+import 'package:way_to_class/service/html/html_find.dart'; // fetchHtml()
+import 'package:way_to_class/service/html/html_parse.dart'; // parseHtml()
 
 class ProfTablePage extends StatefulWidget {
   const ProfTablePage({super.key});

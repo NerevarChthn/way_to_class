@@ -3,11 +3,17 @@ import 'dart:developer' show log;
 import 'dart:math' show min, pow, sqrt;
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:way_to_class/constants/node_constants.dart';
 import 'package:way_to_class/core/components/navigation.dart';
-import 'package:way_to_class/core/components/node.dart';
-import 'package:way_to_class/core/components/route_segment.dart';
+import 'package:way_to_class/core/generator/path_generator.dart';
+import 'package:way_to_class/core/generator/segment_generator.dart';
+import 'package:way_to_class/core/models/campus_graph.dart';
+import 'package:way_to_class/core/models/node.dart';
+import 'package:way_to_class/core/models/route_segment.dart';
+import 'package:way_to_class/core/utils/injection.dart';
 import 'package:way_to_class/service/security/security_manager.dart';
-import 'package:way_to_class/utils/load.dart';
+import 'package:way_to_class/core/utils/load.dart';
+import 'package:way_to_class/service/toast.dart';
 
 class Graph {
   final Map<String, Node> nodeMap;
@@ -18,7 +24,7 @@ class Graph {
   // Ersetze den Text-Cache durch einen strukturierten Cache
   Map<String, List<RouteSegment>> _routeStructureCache = {};
 
-  final Map<String, String> nameToIdCache = {};
+  final Map<String, String> _nameToIdCache = {};
 
   int _cacheHits = 0;
   int _cacheMisses = 0;
@@ -35,8 +41,8 @@ class Graph {
   }
 
   String? getNodeIdByName(String name) {
-    if (nameToIdCache.containsKey(name)) {
-      return nameToIdCache[name];
+    if (_nameToIdCache.containsKey(name)) {
+      return _nameToIdCache[name];
     }
 
     if (nodeMap.containsKey(name)) {
@@ -45,7 +51,7 @@ class Graph {
 
     for (var entry in nodeMap.entries) {
       if (entry.value.name == name) {
-        nameToIdCache[name] = entry.key;
+        _nameToIdCache[name] = entry.key;
         return entry.key;
       }
     }
@@ -58,12 +64,45 @@ class Graph {
     String startId,
     String endId,
   ) async {
-    final navHelper = NavigationHelper();
+    final navHelper = getIt<NavigationHelper>();
     if (!_enableCache) {
       // Wenn Cache deaktiviert ist, berechne alles frisch
+
+      // Pfad mit Nodes
       final List<String> path = _calculatePath(startId, endId);
       if (path.length <= 1) return [];
-      return navHelper.generateNavigationInstructions(this, path);
+
+      // Temp neues System
+      final pathGen = getIt<PathGenerator>();
+      final stopwatch = Stopwatch()..start();
+      final path2 = pathGen.calculatePath((
+        startId,
+        endId,
+      ), getIt<CampusGraph>());
+      log('Pfadberechnungsdauer: ${stopwatch.elapsedMicroseconds / 1000} ms');
+      log('Node-Anzahl: ${path.length}');
+      log('Pfad: $path2');
+      stopwatch.stop();
+      final stopwatch2 = Stopwatch()..start();
+      final segmentss = getIt<SegmentsGenerator>().convertPath(
+        path2,
+        getIt<CampusGraph>(),
+      );
+      log('Segmentierungsdauer: ${stopwatch2.elapsedMicroseconds / 1000} ms');
+      stopwatch2.stop();
+      log('Segmentanzahl: ${segmentss.length}');
+      log('Segmente: $segmentss\n\n');
+
+      // Generiere strukturierte Anweisungen
+      final List<RouteSegment> segments = navHelper.generateRouteStructure(
+        this,
+        path,
+      );
+
+      // Generiere Text aus den Segmenten
+      return segments
+          .map((segment) => segment.generateTextWithErrorHandling())
+          .toList();
     }
 
     // Nur cachen, wenn Start und Ziel keine Flure sind
@@ -1100,5 +1139,110 @@ class Graph {
     }
 
     return false;
+  }
+
+  void enableCache(bool enable) {
+    _enableCache = enable;
+  }
+
+  bool get cacheEnabled => _enableCache;
+
+  // In der Graph-Klasse:
+  Node? findNearestLandmarkEfficient(Node node, int landmarkTypes) {
+    // Du könntest hier einen KD-Tree verwenden oder ein Spatial-Hash-Grid
+    // für eine effizientere räumliche Suche als lineare Suche
+    // Mit Bitmasken können wir nach bestimmten Typen von Landmarks filtern:
+    return nodeMap.values
+        .where(
+          (n) => (n.data & typeMask) & landmarkTypes != 0,
+        ) // Nur bestimmte Typen
+        .reduce(
+          (a, b) => computeDistance(node, a) < computeDistance(node, b) ? a : b,
+        );
+  }
+
+  // Füge diese Methode zur Graph-Klasse hinzu, wenn weder validateRoutes noch validateAllRoutes existieren:
+
+  Future<List<String>> validateRoutes() async {
+    // Eine einfache Implementierung, falls die Methode nicht existiert
+    log('Validiere Routen...');
+
+    final List<String> errors = [];
+    final Set<String> roomIds =
+        nodeMap.values
+            .where((node) => (node.type & typeMask) == typeRoom)
+            .map((node) => node.id)
+            .toSet();
+
+    // Die ersten 10 Räume testen, um Performance-Probleme zu vermeiden
+    final testableRooms = roomIds.take(10).toList();
+
+    if (testableRooms.length < 2) {
+      return ['Nicht genügend Räume zum Testen vorhanden'];
+    }
+
+    for (int i = 0; i < testableRooms.length; i++) {
+      for (int j = i + 1; j < testableRooms.length; j++) {
+        final String startId = testableRooms[i];
+        final String endId = testableRooms[j];
+
+        try {
+          final path = _calculatePath(startId, endId);
+          if (path.isEmpty) {
+            errors.add('Kein Pfad gefunden: $startId -> $endId');
+          }
+        } catch (e) {
+          errors.add('Fehler bei Route $startId -> $endId: $e');
+        }
+      }
+    }
+
+    return errors;
+  }
+
+  bool _arePathsEqual(List<String> path1, List<String> path2) {
+    // Schneller Längencheck
+    if (path1.length != path2.length) return false;
+
+    // Elementweise vergleichen (Reihenfolge beachten)
+    for (int i = 0; i < path1.length; i++) {
+      if (path1[i] != path2[i]) return false;
+    }
+
+    return true;
+  }
+
+  void _logPathDifferences(List<String> path1, List<String> path2) {
+    log('Path-Vergleich:');
+    log('Pfad 1 Länge: ${path1.length}, Pfad 2 Länge: ${path2.length}');
+
+    if (path1.length != path2.length) {
+      log('UNTERSCHIED: Unterschiedliche Länge!');
+    }
+
+    // Finde fehlende Elemente in beiden Richtungen
+    final Set<String> uniqueToPath1 = Set<String>.from(
+      path1,
+    ).difference(Set.from(path2));
+    final Set<String> uniqueToPath2 = Set<String>.from(
+      path2,
+    ).difference(Set.from(path1));
+
+    if (uniqueToPath1.isNotEmpty) {
+      log('Nur in Pfad 1: $uniqueToPath1');
+    }
+
+    if (uniqueToPath2.isNotEmpty) {
+      log('Nur in Pfad 2: $uniqueToPath2');
+    }
+
+    // Finde Positionsunterschiede
+    final int minLength =
+        path1.length < path2.length ? path1.length : path2.length;
+    for (int i = 0; i < minLength; i++) {
+      if (path1[i] != path2[i]) {
+        log('Position $i: Pfad1="${path1[i]}" vs Pfad2="${path2[i]}"');
+      }
+    }
   }
 }

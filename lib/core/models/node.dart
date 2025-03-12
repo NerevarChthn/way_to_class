@@ -1,7 +1,20 @@
 import 'package:way_to_class/constants/node_constants.dart';
+import 'package:way_to_class/constants/types.dart';
+
+enum NodeType {
+  room,
+  corridor,
+  staircase,
+  elevator,
+  door,
+  entranceExit,
+  emergencyExit,
+  toilet,
+  machine,
+}
 
 class Node {
-  final String id;
+  final NodeId id;
   final String name;
   final int data;
   final int x;

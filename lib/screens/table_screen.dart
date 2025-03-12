@@ -269,7 +269,10 @@ class _PersonsPageState extends State<PersonsPage> {
                                               _formatRoom(person['raum']),
                                             );
                                           },
-                                          icon: const Icon(Icons.directions),
+                                          icon: Icon(
+                                            Icons.directions,
+                                            color: theme.colorScheme.onPrimary,
+                                          ),
                                           label: const Text(
                                             'Zum Raum navigieren',
                                           ),
