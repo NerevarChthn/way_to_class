@@ -13,7 +13,6 @@ import 'package:way_to_class/core/models/route_segment.dart';
 import 'package:way_to_class/core/utils/injection.dart';
 import 'package:way_to_class/service/security/security_manager.dart';
 import 'package:way_to_class/core/utils/load.dart';
-import 'package:way_to_class/service/toast.dart';
 
 class Graph {
   final Map<String, Node> nodeMap;
