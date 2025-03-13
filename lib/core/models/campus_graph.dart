@@ -50,9 +50,63 @@ class CampusGraph {
   }
 
   /// Gibt alle direkt verbundenen Knoten-IDs zurück
-  List<NodeId> getNeighbors(NodeId nodeId) {
+  List<NodeId> _getNeighbors(NodeId nodeId) {
     final node = getNodeById(nodeId);
     if (node == null) return [];
     return node.weights.keys.toList();
+  }
+
+  /// Findet den nächstgelegenen nicht-Flurknoten von einem gegebenen Knoten aus
+  /// Gibt null zurück, falls kein solcher Knoten gefunden werden kann
+  Node? findNearestNonHallwayNode(NodeId startId, {double maxDistance = 12.0}) {
+    // Prüfe, ob der Startknoten existiert
+    final startNode = getNodeById(startId);
+    if (startNode == null) return null;
+
+    // Verwende Breadth-First-Search, um den nächstgelegenen Knoten zu finden
+    final Set<NodeId> visited = {startId};
+    // Queue mit Tupeln aus (nodeId, bisheriger Distanz)
+    final List<(NodeId, double)> queue = [];
+
+    // Füge die Nachbarn des Startknotens zur Queue hinzu
+    for (var neighborId in _getNeighbors(startId)) {
+      final weight = startNode.weights[neighborId] ?? 1.0;
+      queue.add((neighborId, weight));
+    }
+
+    Node? nearest;
+    double nearestDistance = double.infinity;
+
+    while (queue.isNotEmpty) {
+      final (NodeId nodeId, double distanceSoFar) = queue.removeAt(0); // FIFO
+
+      // Überspringe, wenn bereits besucht oder die Distanz den Maximalwert überschreitet
+      if (visited.contains(nodeId) || distanceSoFar > maxDistance) continue;
+      visited.add(nodeId);
+
+      // Prüfe, ob dieser Knoten ein gültiger Nicht-Flurknoten ist
+      final node = getNodeById(nodeId);
+      if (node == null) continue;
+
+      // Wenn wir einen Raum, eine Treppe, einen Aufzug oder eine Toilette gefunden haben
+      if (!node.isCorridor) {
+        // Gefundener gültiger Knoten als potenziellen nächsten betrachten
+        if (nearest == null || distanceSoFar < nearestDistance) {
+          nearest = node;
+          nearestDistance = distanceSoFar;
+          // Wir suchen weiter, um den nächstgelegenen zu finden
+        }
+      }
+
+      // Nachbarn zur Queue hinzufügen
+      for (var neighborId in _getNeighbors(nodeId)) {
+        if (!visited.contains(neighborId)) {
+          final weight = node.weights[neighborId] ?? 1.0;
+          queue.add((neighborId, distanceSoFar + weight));
+        }
+      }
+    }
+
+    return nearest;
   }
 }

@@ -3,7 +3,6 @@ import 'package:way_to_class/constants/types.dart';
 /// Segment types for route description
 enum SegmentType {
   hallway, // Corridor/hallway
-  turn, // Direction change in hallway
   stairs, // Staircase
   elevator, // Elevator
   room, // Room/classroom
