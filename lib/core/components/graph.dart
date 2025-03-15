@@ -5,6 +5,7 @@ import 'dart:math' show min, pow, sqrt;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:way_to_class/constants/node_constants.dart';
 import 'package:way_to_class/core/components/navigation.dart';
+import 'package:way_to_class/core/generator/instruction_generator.dart';
 import 'package:way_to_class/core/generator/path_generator.dart';
 import 'package:way_to_class/core/generator/segment_generator.dart';
 import 'package:way_to_class/core/models/campus_graph.dart';
@@ -91,6 +92,12 @@ class Graph {
       stopwatch2.stop();
       log('Segmentanzahl: ${segmentss.length}');
       log('Segmente: $segmentss\n\n');
+
+      log(
+        getIt<InstructionGenerator>()
+            .generateInstructions(segmentss)
+            .join('\n'),
+      );
 
       // Generiere strukturierte Anweisungen
       final List<RouteSegment> segments = navHelper.generateRouteStructure(

@@ -4,8 +4,13 @@ import 'package:way_to_class/constants/other.dart';
 
 class RouteDescriptionPanel extends StatelessWidget {
   final String resultText;
+  final Iterable<String> instructions;
 
-  const RouteDescriptionPanel({super.key, required this.resultText});
+  const RouteDescriptionPanel({
+    super.key,
+    required this.resultText,
+    required this.instructions,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,9 +62,32 @@ class RouteDescriptionPanel extends StatelessWidget {
                       : SingleChildScrollView(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Text(
-                            resultText,
-                            style: const TextStyle(fontSize: 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children:
+                                instructions
+                                    .map(
+                                      (instruction) => RichText(
+                                        text: TextSpan(
+                                          children: [
+                                            WidgetSpan(
+                                              child: Icon(
+                                                Icons.arrow_right,
+                                                size: 16,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: instruction,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
                           ),
                         ),
                       ),

@@ -2,17 +2,16 @@ import 'package:way_to_class/constants/types.dart';
 
 /// Segment types for route description
 enum SegmentType {
-  hallway, // Corridor/hallway
-  stairs, // Staircase
-  elevator, // Elevator
-  room, // Room/classroom
-  entrance, // entrance
-  exit, // Building exit
-  toilet, // Restroom/toilet
-  origin, // Origin
-  destination, // Destination
-  door,
-  unknown, // Unclassified
+  hallway, // Flur
+  stairs, // Treppe
+  elevator, // Aufzug
+  room, // Raum
+  exit, // Ausgang
+  toilet, // Toilette
+  origin, // Startpunkt
+  destination, // Zielpunkt
+  door, // Tür
+  unknown, // Unklassifiziert
 }
 
 /// Represents a semantic segment of a route
@@ -32,6 +31,15 @@ class RouteSegment {
     required this.nodes,
     required this.metadata,
   });
+
+  /// Creates a new segment from a JSON representation
+  factory RouteSegment.fromJson(Map<String, dynamic> json) {
+    return RouteSegment(
+      type: SegmentType.values[json['type']],
+      nodes: [],
+      metadata: json['metadata'],
+    );
+  }
 
   /// Creates a compact JSON representation for persistence
   /// Only stores metadata and type, since node IDs are not needed for text generation

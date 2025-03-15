@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'dart:developer' as dev;
+import 'package:way_to_class/constants/segment.dart';
 import 'package:way_to_class/constants/types.dart';
 import 'package:way_to_class/core/models/campus_graph.dart';
 import 'package:way_to_class/core/models/node.dart';
@@ -63,26 +64,25 @@ class SegmentsGenerator {
           );
           if (segmentNodes.length >= 2 &&
               segmentNodes.last != lastProcessedNode) {
-            // Berechne Turn-Winkel anhand der drei relevanten Knoten: [vorher, Abbiegung, nachher]
-            final Map<String, dynamic> turnInfo =
-                _calculateTurnDirectionWithAngle([
-                  path[endIndex - 1],
-                  path[endIndex],
-                  path[endIndex + 1],
-                ], graph);
+            // Berechne Turn-Richtung anhand der drei relevanten Knoten: [vorher, Abbiegung, nachher]
+            final String direction = _calculateTurnDirection([
+              path[endIndex - 1],
+              path[endIndex],
+              path[endIndex + 1],
+            ], graph);
             final RouteSegment seg = _createSegment(
               segmentNodes,
               _determineSegmentType(segmentNodes[0], graph),
               graph,
             );
-            seg.metadata.addAll(turnInfo);
+            seg.metadata['direction'] = direction;
 
-            final Node? landmark = graph.findNearestNonHallwayNode(
+            final String? landmarkName = graph.findNearestNonHallwayNode(
               path[endIndex],
             );
 
-            if (landmark != null) {
-              seg.metadata['landmark'] = landmark.name;
+            if (landmarkName != null) {
+              seg.metadata['landmark'] = landmarkName;
             }
 
             segments.add(seg);
@@ -209,73 +209,68 @@ class SegmentsGenerator {
 
   List<RouteSegment> _mergeSegments(List<RouteSegment> segments) {
     final List<RouteSegment> merged = [];
-
     // Wir wollen nur hallway- und door-Segmente zusammenführen.
     final mergeGroupTypes = {SegmentType.hallway, SegmentType.door};
 
     for (int i = 0; i < segments.length; i++) {
       final RouteSegment current = segments[i];
 
-      // Segmente, die nicht in die Merge-Gruppe gehören (z.B. turn, entrance, destination, etc.) werden direkt übernommen.
+      // Segmente, die nicht in die Merge-Gruppe gehören, werden direkt übernommen.
       if (!mergeGroupTypes.contains(current.type)) {
         merged.add(current);
         continue;
       }
 
-      // Sammle alle aufeinanderfolgenden Segmente, die in die Merge-Gruppe fallen.
+      // Zunächst sammeln wir alle aufeinanderfolgenden Segmente, die in die Merge-Gruppe fallen
+      // und dieselbe Umgebung (building, floor) haben.
       final List<RouteSegment> group = [current];
       while (i + 1 < segments.length &&
           mergeGroupTypes.contains(segments[i + 1].type)) {
-        group.add(segments[i + 1]);
-        i++;
-      }
-
-      // Innerhalb der Gruppe wollen wir trotzdem Abbiegungen (erkennbar z. B. an einem nicht-null Winkel in den Metadaten) als Trennungen behandeln.
-      // Wir teilen daher die Gruppe in mehrere Untergruppen auf, bei denen kein Segment einen "Turn" anzeigt.
-      final List<List<RouteSegment>> splitGroups = [];
-      final List<RouteSegment> currentSplit = [];
-      for (var seg in group) {
-        bool isTurnMarker = false;
-        if (seg.metadata.containsKey("angle")) {
-          final double angle = seg.metadata["angle"] as double;
-          // Wenn der Winkel ungleich 0 (bzw. über einem minimalen Schwellenwert) ist, betrachten wir das Segment als Abbiegung.
-          if (angle.abs() > 10.0) {
-            isTurnMarker = true;
-          }
-        }
-        if (isTurnMarker) {
-          // Falls bereits Segmente im aktuellen Split gesammelt wurden, speichern wir diese Gruppe.
-          if (currentSplit.isNotEmpty) {
-            splitGroups.add(List<RouteSegment>.from(currentSplit));
-            currentSplit.clear();
-          }
-          // Das Segment mit Turn-Marker wird als eigene Gruppe geführt.
-          splitGroups.add([seg]);
+        final RouteSegment nextSeg = segments[i + 1];
+        if (nextSeg.metadata["building"] == current.metadata["building"] &&
+            nextSeg.metadata["floor"] == current.metadata["floor"]) {
+          group.add(nextSeg);
+          i++;
         } else {
-          currentSplit.add(seg);
+          break;
         }
       }
-      if (currentSplit.isNotEmpty) {
-        splitGroups.add(currentSplit);
+
+      // Nun teilen wir die Gruppe in Untergruppen auf:
+      // Jedes Mal, wenn ein Segment mit einer Richtungsänderung (direction ≠ "geradeaus")
+      // gefunden wird, schließen wir den aktuellen Merge-Block ab (einschließlich dieses Segments)
+      // und starten einen neuen Block.
+      final List<List<RouteSegment>> mergeBlocks = [];
+      List<RouteSegment> currentBlock = [];
+      for (final seg in group) {
+        currentBlock.add(seg);
+        // Wenn in den Metadaten eine Richtungsänderung (nicht "geradeaus") vorhanden ist,
+        // schließen wir den aktuellen Block ab.
+        if (seg.metadata.containsKey("direction") &&
+            seg.metadata["direction"] != "geradeaus") {
+          mergeBlocks.add(List<RouteSegment>.from(currentBlock));
+          currentBlock = [];
+        }
+      }
+      if (currentBlock.isNotEmpty) {
+        mergeBlocks.add(currentBlock);
       }
 
-      // Für jede Untergruppe führen wir das eigentliche Merging durch.
-      for (var groupPart in splitGroups) {
-        // Wenn nur ein Segment in der Gruppe vorliegt, einfach übernehmen.
-        if (groupPart.length == 1) {
-          merged.add(groupPart.first);
+      // Für jeden Merge-Block führen wir das Zusammenführen durch:
+      for (final block in mergeBlocks) {
+        if (block.isEmpty) continue;
+        if (block.length == 1) {
+          merged.add(block.first);
         } else {
           final List<NodeId> mergedNodes = [];
-          double totalDistance = 0.0;
+          int totalDistance = 0;
           int doorCount = 0;
-          // Ermittle die gemeinsamen (common) Metadaten: Nur Schlüssel, die in allen Segmenten existieren und denselben Wert haben.
+          // Übernehme als Basis die Metadaten des letzten Segments im Block.
           final Map<String, dynamic> commonMetadata = Map<String, dynamic>.from(
-            groupPart.last.metadata,
+            block.last.metadata,
           );
-          for (int j = 0; j < groupPart.length; j++) {
-            final RouteSegment seg = groupPart[j];
-
-            // Knoten zusammenführen, Duplikate am Übergang vermeiden.
+          for (final seg in block) {
+            // Knoten zusammenführen – Duplikate an den Übergängen vermeiden.
             if (mergedNodes.isEmpty) {
               mergedNodes.addAll(seg.nodes);
             } else {
@@ -285,9 +280,8 @@ class SegmentsGenerator {
                 mergedNodes.addAll(seg.nodes);
               }
             }
-
             if (seg.metadata.containsKey('distance')) {
-              totalDistance += seg.metadata['distance'] as double;
+              totalDistance += seg.metadata['distance'] as int;
             }
             if (seg.type == SegmentType.door) {
               doorCount++;
@@ -296,19 +290,14 @@ class SegmentsGenerator {
               doorCount += seg.metadata['doorCount'] as int;
             }
           }
-
-          // Aktualisiere die zusammengeführten Werte.
           commonMetadata['distance'] = totalDistance;
           commonMetadata['doorCount'] = doorCount;
-
-          // Bestimme den Typ des zusammengeführten Segments:
-          // Wenn mindestens ein Segment als hallway markiert ist, wählen wir den Typ hallway, sonst door.
-          final bool hasHallway = groupPart.any(
+          // Bestimme den Segmenttyp: Falls mindestens ein Segment als hallway markiert ist, wählen wir hallway.
+          final bool hasHallway = block.any(
             (seg) => seg.type == SegmentType.hallway,
           );
           final SegmentType mergedType =
               hasHallway ? SegmentType.hallway : SegmentType.door;
-
           merged.add(
             RouteSegment(
               type: mergedType,
@@ -367,7 +356,7 @@ class SegmentsGenerator {
         final length1 = sqrt(dx1 * dx1 + dy1 * dy1);
         final length2 = sqrt(dx2 * dx2 + dy2 * dy2);
 
-        if (length1 > 0.001 && length2 > 0.001) {
+        if (length1 > minSegmentLength && length2 > minSegmentLength) {
           // Normalisierte Vektoren
           final nx1 = dx1 / length1;
           final ny1 = dy1 / length1;
@@ -379,7 +368,7 @@ class SegmentsGenerator {
 
           // Wenn die Vektoren nahezu parallel sind (dotProduct nahe 1), ist es eine gerade Linie
           // und wir betrachten die Tür als Teil des Flursegments
-          if (dotProduct > 0.95) {
+          if (dotProduct > parallelThreshold) {
             // Kein Breakpoint für diese Tür
             continue;
           }
@@ -409,7 +398,7 @@ class SegmentsGenerator {
         final length1 = sqrt(dx1 * dx1 + dy1 * dy1);
         final length2 = sqrt(dx2 * dx2 + dy2 * dy2);
 
-        if (length1 > 0.001 && length2 > 0.001) {
+        if (length1 > minSegmentLength && length2 > minSegmentLength) {
           // Normalisierte Vektoren
           final nx1 = dx1 / length1;
           final ny1 = dy1 / length1;
@@ -437,7 +426,7 @@ class SegmentsGenerator {
           );
 
           // Wenn der Winkel größer als 15° ist, handelt es sich um eine Abbiegung
-          if (angle > 15.0) {
+          if (angle > turnAngleThreshold) {
             dev.log("Abbiegung erkannt bei $currentId");
             breakpoints.add(_PathBreakpoint(i, BreakpointType.turn));
           }
@@ -493,6 +482,13 @@ class SegmentsGenerator {
         break;
       default:
         break;
+    }
+
+    // Building and floor
+    final Node? startNode = graph.getNodeById(nodes.first);
+    if (startNode != null) {
+      metadata['building'] = startNode.buildingName;
+      metadata['floor'] = startNode.floorNumber;
     }
 
     // Distanz berechnen
@@ -568,13 +564,6 @@ class SegmentsGenerator {
     if (hallwayNode != null && hallwayNode.name.isNotEmpty) {
       metadata['currentName'] = hallwayNode.name;
     }
-
-    // Building and floor
-    final Node? startNode = graph.getNodeById(nodes.first);
-    if (startNode != null) {
-      metadata['building'] = startNode.buildingName;
-      metadata['floor'] = startNode.floorNumber;
-    }
   }
 
   /// Adds metadata for an origin segment (room to hallway at start)
@@ -595,9 +584,8 @@ class SegmentsGenerator {
     }
 
     // Richtungsinformationen beim Verlassen des Raums
-    final directionInfo = _calculateTurnDirectionWithAngle(nodes, graph);
-    metadata['direction'] = directionInfo['direction'];
-    metadata['angle'] = directionInfo['angle'];
+    final direction = _calculateTurnDirection(nodes, graph);
+    metadata['direction'] = direction;
 
     // Flur-Informationen
     final hallwayNode = graph.getNodeById(nodes[2]);
@@ -705,7 +693,7 @@ class SegmentsGenerator {
   }
 
   /// Calculates the total distance of a path
-  double _calculatePathDistance(List<NodeId> nodes, CampusGraph graph) {
+  int _calculatePathDistance(List<NodeId> nodes, CampusGraph graph) {
     double distance = 0;
 
     for (int i = 0; i < nodes.length - 1; i++) {
@@ -717,7 +705,7 @@ class SegmentsGenerator {
       }
     }
 
-    return distance;
+    return distance.toInt();
   }
 
   /// Calculates the Euclidean distance between two nodes
@@ -743,14 +731,12 @@ class SegmentsGenerator {
     return SegmentType.unknown;
   }
 
-  /// Calculates the turn direction and angle for a list of nodes
-  Map<String, dynamic> _calculateTurnDirectionWithAngle(
-    List<NodeId> nodes,
-    CampusGraph graph,
-  ) {
+  /// Calculates the turn direction for a list of nodes
+  String _calculateTurnDirection(List<NodeId> nodes, CampusGraph graph) {
+    final String straight = 'geradeaus';
     // Für die Berechnung der Richtung brauchen wir mindestens 3 Knoten
     if (nodes.length < 3) {
-      return {'direction': 'geradeaus', 'angle': 0.0};
+      return straight;
     }
 
     // Holen der relevanten Knoten für die Richtungsberechnung
@@ -759,7 +745,7 @@ class SegmentsGenerator {
     final node3 = graph.getNodeById(nodes[2]);
 
     if (node1 == null || node2 == null || node3 == null) {
-      return {'direction': 'geradeaus', 'angle': 0.0};
+      return straight;
     }
 
     // Vektoren berechnen
@@ -772,8 +758,8 @@ class SegmentsGenerator {
     final length1 = sqrt(dx1 * dx1 + dy1 * dy1);
     final length2 = sqrt(dx2 * dx2 + dy2 * dy2);
 
-    if (length1 < 0.001 || length2 < 0.001) {
-      return {'direction': 'geradeaus', 'angle': 0.0};
+    if (length1 < minSegmentLength || length2 < minSegmentLength) {
+      return straight;
     }
 
     // Normalisierte Vektoren
@@ -795,7 +781,7 @@ class SegmentsGenerator {
     // Bestimme die Richtung basierend auf dem Winkel
     final String direction;
     if (angleDegrees.abs() < 10) {
-      direction = "geradeaus";
+      direction = straight;
     } else if (angleDegrees > 0) {
       // Linksabbiegung
       if (angleDegrees < 30) {
@@ -816,7 +802,7 @@ class SegmentsGenerator {
       }
     }
 
-    return {'direction': direction, 'angle': angleDegrees};
+    return direction;
   }
 
   /// Calculates which side of a hallway a room is on

@@ -486,7 +486,7 @@ Der heute implementierte Segment Generator verarbeitet einen Pfad (eine Liste vo
 - **Breakpoints** werden über die Methode `_findPathBreakpoints` ermittelt.
 - **Turn-Breakpoints:**  
   - Erkennung erfolgt, wenn in einem Flur ein signifikanter Winkel (über 15°) festgestellt wird.
-  - Die Methode berechnet den Winkel anhand von drei aufeinanderfolgenden Knoten und fügt in den Metadaten Informationen wie `angle` und `direction` hinzu.
+  - Die Methode berechnet den Winkel anhand von drei aufeinanderfolgenden Knoten und fügt in den Metadaten Informationen wie `direction` hinzu.
 - **TypeChange-Breakpoints:**  
   - Treten auf, wenn sich der Knotentyp ändert (z. B. von Flur zu Tür, Treppe oder Aufzug).
   - Hier wird auch eine spezielle Behandlung vorgenommen, um bei Türen den Vorgänger- und Folgeknoten in einem eigenen Segment zu berücksichtigen.
@@ -508,7 +508,7 @@ Der heute implementierte Segment Generator verarbeitet einen Pfad (eine Liste vo
 
 Die Merging-Logik fasst angrenzende _hallway_- und _door_-Segmente zusammen, um eine konsistentere Routenbeschreibung zu erzeugen.  
 - **Wichtig:**  
-  - Abbiegungen (erkennbar über einen nicht-null `angle` in den Metadaten) werden als Trennungen beibehalten und verhindern, dass solche Segmente zusammengeführt werden.
+  - Abbiegungen (erkennbar über einen nicht-null `direction` in den Metadaten) werden als Trennungen beibehalten und verhindern, dass solche Segmente zusammengeführt werden.
   - Nur Segmente der Typen _hallway_ und _door_ werden zusammengeführt, während andere Typen (z. B. turn, origin, destination) unberührt bleiben.
 
 ##### 3.2 Gemeinsame Metadaten und Zusammenführung
@@ -529,7 +529,7 @@ Die Merging-Logik fasst angrenzende _hallway_- und _door_-Segmente zusammen, um 
 - **_createSegment:**  
   - Erzeugt ein `RouteSegment` anhand der gegebenen Knoten, des Segmenttyps und fügt spezifische Metadaten basierend auf dem Typ hinzu (z. B. _hallway_, _door_, _turn_).
 - **_calculateTurnDirectionWithAngle:**  
-  - Berechnet den Winkel und die Richtung (links/rechts) zwischen drei aufeinanderfolgenden Knoten.
+  - Berechnet die Richtung (links/rechts) zwischen drei aufeinanderfolgenden Knoten.
 - **_calculatePathDistance & _calculateDistance:**  
   - Ermitteln die Gesamtdistanz eines Segments basierend auf der euklidischen Distanz zwischen den Knoten.
 - **_determineSegmentType:**  

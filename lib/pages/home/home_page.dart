@@ -24,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   final GraphService _graphService = getIt<GraphService>();
   late final Future<Graph> _graphFuture;
   String resultText = noPathSelected;
+  final List<String> pathInstructions = [];
   final PageController _pageController = PageController();
   int _currentIndex = 0;
 
@@ -139,6 +140,8 @@ class _HomePageState extends State<HomePage> {
 
       setState(() {
         resultText = instructions.join('\n');
+        pathInstructions.clear();
+        pathInstructions.addAll(instructions);
       });
     } catch (e) {
       log('Fehler: $e');
@@ -253,7 +256,12 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 16),
 
                 // Wegbeschreibung
-                Expanded(child: RouteDescriptionPanel(resultText: resultText)),
+                Expanded(
+                  child: RouteDescriptionPanel(
+                    resultText: resultText,
+                    instructions: pathInstructions,
+                  ),
+                ),
 
                 // Schnellzugriff-Panel
                 QuickAccessPanel(

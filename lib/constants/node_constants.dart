@@ -1,3 +1,5 @@
+// VERALTET - WIRD NICHT MEHR BENÖTIGT
+
 // Basistypen (untere 4 Bits)
 const int typeMask = 0xF; // 0000 0000 0000 1111 (Bits 0-3)
 const int typeRoom = 0x1; // 0000 0000 0000 0001

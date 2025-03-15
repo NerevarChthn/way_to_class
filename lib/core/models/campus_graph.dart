@@ -6,6 +6,9 @@ class CampusGraph {
   /// Map von NodeId zu Node-Objekten - enthält alle Knoten des Campus
   final Map<NodeId, Node> _nodes;
 
+  /// Landmark Cache
+  final Map<NodeId, String> _landmarkCache = {};
+
   /// Konstruktor erfordert eine vorbereitete Node-Map
   CampusGraph(this._nodes);
 
@@ -58,7 +61,13 @@ class CampusGraph {
 
   /// Findet den nächstgelegenen nicht-Flurknoten von einem gegebenen Knoten aus
   /// Gibt null zurück, falls kein solcher Knoten gefunden werden kann
-  Node? findNearestNonHallwayNode(NodeId startId, {double maxDistance = 12.0}) {
+  String? findNearestNonHallwayNode(
+    NodeId startId, {
+    double maxDistance = 12.0,
+  }) {
+    // Cache Prüfung
+    if (_landmarkCache.containsKey(startId)) return _landmarkCache[startId];
+
     // Prüfe, ob der Startknoten existiert
     final startNode = getNodeById(startId);
     if (startNode == null) return null;
@@ -107,6 +116,11 @@ class CampusGraph {
       }
     }
 
-    return nearest;
+    // Cache aktualisieren
+    if (nearest != null) {
+      _landmarkCache[startId] = nearest.name;
+    }
+
+    return nearest?.name;
   }
 }
