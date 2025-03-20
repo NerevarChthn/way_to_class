@@ -549,3 +549,65 @@ Die Merging-Logik fasst angrenzende _hallway_- und _door_-Segmente zusammen, um 
   - Teilt die Merge-Gruppe in Untergruppen, wenn innerhalb der Gruppe Abbiegungen (Turn-Marker) vorhanden sind.
   - Ermittelt gemeinsame Metadaten und aktualisiert `distance` und `doorCount`, ohne andere Metadaten zu überschreiben.
   - Behandelt die Knotenzusammenführung so, dass Duplikate an den Übergängen vermieden werden.
+
+
+### 12. März 2025
+- JSON-Dateien angefangen zu schreiben → über Karte Gitter gelegt für Koordinaten
+- Ablaufen der restlichen Räume für vollständigen Plan → weitere Räume in Tabelle noch falsch
+
+### 13. März 2025
+- Zeichnung 3. Etage D-Gebäude
+- Zeichnung 4. Etage A-Gebäude  
+→ Alle einzelnen Gebäude fertig gezeichnet
+
+### 15. März 2025
+- Fertigstellen aller großen Karten
+- JSON-Datei für E-Gebäude 1. OG komplett
+
+### 16. März 2025
+- JSON-Datei für E-Gebäude 2. OG
+
+Heute wurde der `InstructionGenerator` implementiert, eine Dart-Klasse zur dynamischen Generierung natürlicher Sprach-Anweisungen für die Navigation innerhalb von Gebäuden. Die Klasse verwendet zufällig ausgewählte Satzbausteine aus vorbereiteten Templates, um abwechslungsreiche und natürlich klingende Wegbeschreibungen zu erzeugen.
+
+**Implementierungsdetails:**
+- Ein interner Zufallsgenerator (`Random`) sorgt für Vielfalt bei der Auswahl von Konnektoren und Templates.
+- Drei Arten von Konnektoren (Initial, Mitte, Final) strukturieren die Anweisungen.
+- Die Methode `generateInstructions` erzeugt für eine Liste von `RouteSegment` Objekten passende Instruktionen durch Aufruf spezifischer Methoden je nach Segmenttyp.
+- Unterstützte Segmenttypen sind:
+  - **origin**: Startpunkt-Instruktionen enthalten den Namen des Ursprungsraums, Gebäudes und der Etage.
+  - **hallway**: Flur-Anweisungen berücksichtigen Entfernung und ggf. Abbiegerichtungen.
+  - **door**: Tür-Durchquerungen erhalten einfache Instruktionen zur Fortsetzung des Wegs.
+  - **destination**: Zielraum-Anweisungen geben den genauen Standort relativ zum Flur an.
+- Alle Templates nutzen Platzhalter (z.B. `{currentName}`, `{distance}`, `{direction}`), welche mit Metadaten der jeweiligen `RouteSegment` Instanzen befüllt werden.
+
+
+### 17. März 2025
+- JSON-Datei für A-Gebäude EG und 1. OG
+
+### 20. März 2025
+- **Implementierung der Methode `_generateHallwayInstruction`:**
+  - **Zweck:**  
+    Generiert eine natürliche Wegbeschreibung für Flurabschnitte innerhalb des Gebäudes.
+  - **Funktionsweise:**  
+    - Wählt zufällig ein Synonym für „Flur“ aus der Liste `["Flur", "Gang", "Korridor"]`.  
+    - Nutzt zwei vordefinierte Templates, um die Wegbeschreibung zu erstellen.  
+      - Beispiel-Template 1:  
+        `"gehe ${getRandomDistanceWeight()} {distance} Meter den {synonym} entlang"`  
+      - Beispiel-Template 2:  
+        `"folge dem {synonym} für ${getRandomDistanceWeight()} {distance} Meter"`
+    - Ersetzt Platzhalter:
+      - `{currentName}` wird mit dem Wert aus `seg.metadata["currentName"]` (oder dem Standardwert `"dem Flur"`) ersetzt.
+      - `{distance}` wird mit der aus `seg.metadata[MetadataKeys.distance]` ermittelten Entfernung (als Fließkommazahl, z. B. `"12.3"`) ersetzt.
+    - Falls ein Richtungswert (`MetadataKeys.direction`) vorhanden ist, wird der Zusatz `"und biege dann {direction} ab"` an die Anweisung angehängt.  
+      - Der Platzhalter `{direction}` wird mit dem entsprechenden Richtungswert (oder `"unbekannter Richtung"`) ersetzt.
+    - Abschließend wird die generierte Anweisung formatiert, indem zuerst mit `addPeriod()` ein Punkt am Ende angefügt wird (sofern noch keiner vorhanden ist) und dann mit `capitalize()` der erste Buchstabe großgeschrieben wird.
+  - **Rückgabewert:**  
+    Ein formatierter String, der die komplette Wegbeschreibung für einen Flurabschnitt enthält.
+
+- **Erweiterungen der String-Klasse:**
+  - **`capitalize()`**  
+    - **Funktion:** Wandelt den ersten Buchstaben eines Strings in einen Großbuchstaben um.  
+    - **Besonderheit:** Gibt den ursprünglichen String zurück, wenn er leer ist.
+  - **`addPeriod()`**  
+    - **Funktion:** Fügt am Ende eines Strings einen Punkt hinzu, sofern dieser noch nicht mit einem der Satzzeichen (`.`, `!` oder `?`) abschließt.  
+    - **Besonderheit:** Bei einem bereits korrekt beendeten Satz wird der Originalstring unverändert zurückgegeben.
