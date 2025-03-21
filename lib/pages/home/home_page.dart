@@ -13,6 +13,8 @@ import 'package:way_to_class/pages/prof_page.dart';
 import 'package:way_to_class/screens/settings_dropdown.dart';
 import 'package:way_to_class/service/graph_service.dart';
 
+import '../floors.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -171,7 +173,7 @@ class _HomePageState extends State<HomePage> {
         onPageChanged: (index) {
           setState(() => _currentIndex = index);
         },
-        children: [_buildNavigationPage(), GraphViewScreen(), ProfTablePage()],
+        children: [_buildNavigationPage(), FloorViewer(), ProfTablePage()],
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
