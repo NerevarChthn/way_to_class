@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'dart:developer' as dev;
+import 'package:way_to_class/constants/metadata_keys.dart';
 import 'package:way_to_class/constants/segment.dart';
 import 'package:way_to_class/constants/types.dart';
 import 'package:way_to_class/core/models/campus_graph.dart';
@@ -75,14 +76,14 @@ class SegmentsGenerator {
               _determineSegmentType(segmentNodes[0], graph),
               graph,
             );
-            seg.metadata['direction'] = direction;
+            seg.metadata[MetadataKeys.direction] = direction;
 
             final String? landmarkName = graph.findNearestNonHallwayNode(
               path[endIndex],
             );
 
             if (landmarkName != null) {
-              seg.metadata['landmark'] = landmarkName;
+              seg.metadata[MetadataKeys.landmark] = landmarkName;
             }
 
             segments.add(seg);
@@ -227,8 +228,10 @@ class SegmentsGenerator {
       while (i + 1 < segments.length &&
           mergeGroupTypes.contains(segments[i + 1].type)) {
         final RouteSegment nextSeg = segments[i + 1];
-        if (nextSeg.metadata["building"] == current.metadata["building"] &&
-            nextSeg.metadata["floor"] == current.metadata["floor"]) {
+        if (nextSeg.metadata[MetadataKeys.building] ==
+                current.metadata[MetadataKeys.building] &&
+            nextSeg.metadata[MetadataKeys.floor] ==
+                current.metadata[MetadataKeys.floor]) {
           group.add(nextSeg);
           i++;
         } else {
@@ -246,8 +249,9 @@ class SegmentsGenerator {
         currentBlock.add(seg);
         // Wenn in den Metadaten eine Richtungsänderung (nicht "geradeaus") vorhanden ist,
         // schließen wir den aktuellen Block ab.
-        if (seg.metadata.containsKey("direction") &&
-            seg.metadata["direction"] != "geradeaus") {
+        if (seg.metadata.containsKey(MetadataKeys.direction) &&
+            seg.metadata[MetadataKeys.direction] !=
+                MetadataKeys.straightDirection) {
           mergeBlocks.add(List<RouteSegment>.from(currentBlock));
           currentBlock = [];
         }
@@ -280,18 +284,18 @@ class SegmentsGenerator {
                 mergedNodes.addAll(seg.nodes);
               }
             }
-            if (seg.metadata.containsKey('distance')) {
-              totalDistance += seg.metadata['distance'] as int;
+            if (seg.metadata.containsKey(MetadataKeys.distance)) {
+              totalDistance += seg.metadata[MetadataKeys.distance] as int;
             }
             if (seg.type == SegmentType.door) {
               doorCount++;
             }
-            if (seg.metadata.containsKey('doorCount')) {
-              doorCount += seg.metadata['doorCount'] as int;
+            if (seg.metadata.containsKey(MetadataKeys.doorCount)) {
+              doorCount += seg.metadata[MetadataKeys.doorCount] as int;
             }
           }
-          commonMetadata['distance'] = totalDistance;
-          commonMetadata['doorCount'] = doorCount;
+          commonMetadata[MetadataKeys.distance] = totalDistance;
+          commonMetadata[MetadataKeys.doorCount] = doorCount;
           // Bestimme den Segmenttyp: Falls mindestens ein Segment als hallway markiert ist, wählen wir hallway.
           final bool hasHallway = block.any(
             (seg) => seg.type == SegmentType.hallway,
@@ -493,7 +497,7 @@ class SegmentsGenerator {
 
     // Distanz berechnen
     if (type != SegmentType.destination && type != SegmentType.origin) {
-      metadata['distance'] = _calculatePathDistance(nodes, graph);
+      metadata[MetadataKeys.distance] = _calculatePathDistance(nodes, graph);
     }
 
     return RouteSegment(type: type, nodes: nodes, metadata: metadata);
@@ -585,7 +589,7 @@ class SegmentsGenerator {
 
     // Richtungsinformationen beim Verlassen des Raums
     final direction = _calculateTurnDirection(nodes, graph);
-    metadata['direction'] = direction;
+    metadata[MetadataKeys.direction] = direction;
 
     // Flur-Informationen
     final hallwayNode = graph.getNodeById(nodes[2]);
@@ -608,11 +612,11 @@ class SegmentsGenerator {
     if (startNode != null && endNode != null) {
       // Direction (up/down)
       if (startNode.floorCode < endNode.floorCode) {
-        metadata['direction'] = 'hoch';
+        metadata[MetadataKeys.direction] = 'hoch';
         metadata['floorChange'] = endNode.floorNumber - startNode.floorNumber;
         metadata['targetFloor'] = endNode.floorNumber;
       } else {
-        metadata['direction'] = 'runter';
+        metadata[MetadataKeys.direction] = 'runter';
         metadata['floorChange'] = startNode.floorNumber - endNode.floorNumber;
         metadata['targetFloor'] = endNode.floorNumber;
       }
@@ -641,7 +645,7 @@ class SegmentsGenerator {
           (endNode.floorNumber - startNode.floorNumber).abs();
 
       // Direction
-      metadata['direction'] =
+      metadata[MetadataKeys.direction] =
           startNode.floorNumber < endNode.floorNumber ? 'hoch' : 'runter';
     }
   }
@@ -705,7 +709,7 @@ class SegmentsGenerator {
       }
     }
 
-    return distance.toInt();
+    return distance.round();
   }
 
   /// Calculates the Euclidean distance between two nodes

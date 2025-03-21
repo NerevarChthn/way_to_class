@@ -584,30 +584,82 @@ Heute wurde der `InstructionGenerator` implementiert, eine Dart-Klasse zur dynam
 ### 17. März 2025
 - JSON-Datei für A-Gebäude EG und 1. OG
 
-### 20. März 2025
-- **Implementierung der Methode `_generateHallwayInstruction`:**
-  - **Zweck:**  
-    Generiert eine natürliche Wegbeschreibung für Flurabschnitte innerhalb des Gebäudes.
-  - **Funktionsweise:**  
-    - Wählt zufällig ein Synonym für „Flur“ aus der Liste `["Flur", "Gang", "Korridor"]`.  
-    - Nutzt zwei vordefinierte Templates, um die Wegbeschreibung zu erstellen.  
-      - Beispiel-Template 1:  
-        `"gehe ${getRandomDistanceWeight()} {distance} Meter den {synonym} entlang"`  
-      - Beispiel-Template 2:  
-        `"folge dem {synonym} für ${getRandomDistanceWeight()} {distance} Meter"`
-    - Ersetzt Platzhalter:
-      - `{currentName}` wird mit dem Wert aus `seg.metadata["currentName"]` (oder dem Standardwert `"dem Flur"`) ersetzt.
-      - `{distance}` wird mit der aus `seg.metadata[MetadataKeys.distance]` ermittelten Entfernung (als Fließkommazahl, z. B. `"12.3"`) ersetzt.
-    - Falls ein Richtungswert (`MetadataKeys.direction`) vorhanden ist, wird der Zusatz `"und biege dann {direction} ab"` an die Anweisung angehängt.  
-      - Der Platzhalter `{direction}` wird mit dem entsprechenden Richtungswert (oder `"unbekannter Richtung"`) ersetzt.
-    - Abschließend wird die generierte Anweisung formatiert, indem zuerst mit `addPeriod()` ein Punkt am Ende angefügt wird (sofern noch keiner vorhanden ist) und dann mit `capitalize()` der erste Buchstabe großgeschrieben wird.
-  - **Rückgabewert:**  
-    Ein formatierter String, der die komplette Wegbeschreibung für einen Flurabschnitt enthält.
+### 18. März 2025
+- Korrektur A-Gebäude 1. OG
+- JSON-Datei für A-Gebäude 2. OG
 
-- **Erweiterungen der String-Klasse:**
-  - **`capitalize()`**  
-    - **Funktion:** Wandelt den ersten Buchstaben eines Strings in einen Großbuchstaben um.  
-    - **Besonderheit:** Gibt den ursprünglichen String zurück, wenn er leer ist.
-  - **`addPeriod()`**  
-    - **Funktion:** Fügt am Ende eines Strings einen Punkt hinzu, sofern dieser noch nicht mit einem der Satzzeichen (`.`, `!` oder `?`) abschließt.  
-    - **Besonderheit:** Bei einem bereits korrekt beendeten Satz wird der Originalstring unverändert zurückgegeben.
+### 19. März 2025
+- JSON-Datei für A-Gebäude 3. OG
+- Experimentieren mit Darstellung der Karten in App
+
+### 20. März 2025
+
+#### String Extensions
+- **`capitalize()`**  
+  Wandelt den ersten Buchstaben eines Strings in einen Großbuchstaben um (bei leerem String wird der Originalstring zurückgegeben).
+- **`addPeriod()`**  
+  Fügt einen Punkt am Ende hinzu, sofern der String nicht bereits mit `.`, `!` oder `?` endet.
+- **`normalizeSpaces()`**  
+  Ersetzt Mehrfach-Leerzeichen durch ein einzelnes Leerzeichen und trimmt den String.
+
+#### InstructionGenerator – Finale Version
+
+**Überblick:**  
+Die Klasse generiert dynamisch natürliche Navigationsanweisungen für verschiedene Routenabschnitte (Origin, Hallway, Door, Destination). Neu eingeführt wurden:
+- Platzhalter-Ersetzung (_replacePlaceholders) zur dynamischen Integration zufälliger Werte.
+- Erweiterte Origin- und Hallway-Logik mit Landmarken-Handling und Artikelanpassung.
+
+**Kernfunktionen und Änderungen:**
+
+- **Random Generator Methoden:**  
+  - `_getRandomInitialConnector()`, `_getRandomMiddleConnector()`, `_getRandomFinalConnector()`,  
+    `_getRandomDistanceWeight()` und `_getRandomHallSynonym()` wählen zufällig Werte aus vordefinierten Listen.
+  - **Änderung:** Bei `_getRandomMiddleConnector()` wird der zuletzt genutzte Connector vermieden.
+
+- **reset():**  
+  Setzt den internen Zustand zurück (insb. den zuletzt verwendeten Middle Connector).
+
+- **_replacePlaceholders(String text):**  
+  Ersetzt Platzhalter wie `{middleConnector}`, `{distanceWeight}` und `{hallSynonym}` im Text durch dynamisch generierte Werte.
+
+- **_optimizeInstructionString(String input):**  
+  Optimiert die generierte Anweisung durch Anwenden der String Extensions (normalizeSpaces, addPeriod, capitalize).
+
+- **generateInstructions(List<RouteSegment> route):**  
+  - Setzt den Zustand zurück und generiert für jedes Segment eine optimierte Instruktion, indem:
+    1. _generateSegmentInstruction aufgerufen wird,
+    2. die Platzhalter ersetzt und
+    3. das Format final optimiert wird.
+
+- **_generateSegmentInstruction(RouteSegment seg):**  
+  Wählt je nach Segmenttyp (origin, hallway, door, destination) die entsprechende Generierungsmethode aus.
+
+- **_generateOriginInstruction(RouteSegment seg):**  
+  - **Zweck:** Erzeugt die Anweisung für einen Ursprungsabschnitt.  
+  - **Ablauf:**  
+    - Startet mit dem Verlassen des Ursprungsraums, unter Einbindung eines zufälligen Initial-Konnektors und des Raum-Namens.
+    - Falls eine Richtung definiert ist:
+      - Bei gerader Richtung (`straightDirection`) wird „geradeaus“ verwendet.
+      - Andernfalls wird der konkrete Richtungswert eingefügt.
+    - Der Platzhalter `{hallSynonym}` wird zum Schluss durch einen zufälligen Hallensynonym ersetzt.  
+  - **Änderung:** Flexiblere Handhabung der Richtungsangaben, abhängig von der Richtung im Metadaten.
+
+- **_generateHallwayInstruction(RouteSegment seg):**  
+  - **Zweck:** Erzeugt eine Wegbeschreibung für Flurabschnitte.  
+  - **Ablauf:**  
+    - Wählt zufällig eines von zwei Templates, die dynamische Platzhalter enthalten:
+      - `{middleConnector}`, `{distanceWeight}`, `{distance}` und `{hallSynonym}`.
+    - Ersetzt `{distance}` durch den formatierten Distanzwert.
+    - **Neu:**  
+      - Falls eine Richtung vorliegt, wird ein zusätzlicher Abschnitt mit einem zufälligen Landmarken-Konnektor (z. B. "auf Höhe von", "bei") angehängt.
+      - Der Landmarkenname wird anhand seines Inhalts angepasst:  
+        - Enthält er „treppe“, wird „der“ vorangestellt;  
+        - enthält er „aufzug“, wird „dem“ verwendet;  
+        - ansonsten bleibt er unverändert.
+  - **Änderung:** Erweiterte Logik für Landmarken und Richtungsanweisungen.
+
+- **_generateDoorInstruction() & _generateDestinationInstruction():**  
+  Platzhalter-Implementierungen, die aktuell noch „Unimplemented“ zurückgeben, inklusive verfügbarer Metadaten.
+
+- **[TODO]:**  
+  Erweiterung um GPT Deep Reasoning für Segmentcode mit Beispielen und weiteren Template-Ideen.
