@@ -5,15 +5,15 @@ class FloorViewer extends StatefulWidget {
   const FloorViewer({super.key});
 
   @override
-  _FloorViewerState createState() => _FloorViewerState();
+  State<FloorViewer> createState() => _FloorViewerState();
 }
 
 class _FloorViewerState extends State<FloorViewer> {
   final List<String> floorImages = [
-    'assets/floor1.png',
-    'assets/floor2.png',
-    'assets/floor3.png',
-    'assets/floor4.png',
+    'assets/floor_0.png',
+    'assets/floor_1.png',
+    'assets/floor_2.png',
+    'assets/floor_3.png',
   ];
 
   int currentFloorIndex = 0;
@@ -57,7 +57,8 @@ class _FloorViewerState extends State<FloorViewer> {
               const SizedBox(width: 20),
               IconButton(
                 icon: Icon(Icons.arrow_upward),
-                onPressed: currentFloorIndex < floorImages.length - 1 ? goUp : null,
+                onPressed:
+                    currentFloorIndex < floorImages.length - 1 ? goUp : null,
               ),
             ],
           ),
