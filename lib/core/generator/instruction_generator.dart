@@ -21,7 +21,11 @@ class InstructionGenerator {
     "schließlich",
     "", // nicht immer Konnektor
   ];
-  final List<String> _finalConnectors = ["zuletzt"];
+  final List<String> _finalConnectors = [
+    "zuletzt",
+    "als letztes",
+    "zum Schluss",
+  ];
   final List<String> _distanceWeights = ["etwa", "ungefähr", "ca."];
   final List<String> _hallSynonyms = ["Flur", "Gang", "Korridor"];
 
