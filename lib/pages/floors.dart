@@ -18,6 +18,8 @@ class _FloorViewerState extends State<FloorViewer> {
 
   int currentFloorIndex = 0;
 
+  final TransformationController transformationController = TransformationController();
+
   void goUp() {
     if (currentFloorIndex < floorImages.length - 1) {
       setState(() {
@@ -37,34 +39,48 @@ class _FloorViewerState extends State<FloorViewer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Etagenansicht')),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: PhotoView(
-              imageProvider: AssetImage(floorImages[currentFloorIndex]),
-              minScale: PhotoViewComputedScale.contained,
-              maxScale: PhotoViewComputedScale.covered * 2,
+          Positioned.fill(
+            child: InteractiveViewer(
+              transformationController: transformationController,
+              boundaryMargin: const EdgeInsets.all(0),
+              minScale: 0.1,
+              maxScale: 5.0,
+              constrained: false,
+              child: Center(
+                child: Image.asset(
+                  floorImages[currentFloorIndex],
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: Icon(Icons.arrow_downward),
-                onPressed: currentFloorIndex > 0 ? goDown : null,
-              ),
-              const SizedBox(width: 20),
-              IconButton(
-                icon: Icon(Icons.arrow_upward),
-                onPressed:
-                    currentFloorIndex < floorImages.length - 1 ? goUp : null,
-              ),
-            ],
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton(
+                  backgroundColor: Colors.blue, // Hintergrundfarbe des Buttons
+                  onPressed: currentFloorIndex < floorImages.length - 1 ? goUp : null,
+                  child: const Icon(Icons.arrow_drop_up, size: 40, color: Colors.white),
+                ),
+                const SizedBox(height: 10),
+                FloatingActionButton(
+                  backgroundColor: Colors.red, // Hintergrundfarbe des Buttons
+                  onPressed: currentFloorIndex > 0 ? goDown : null,
+                  child: const Icon(Icons.arrow_drop_down, size: 40, color: Colors.white),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );
   }
+
+
 }
+
