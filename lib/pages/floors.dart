@@ -5,7 +5,7 @@ class FloorViewer extends StatefulWidget {
   const FloorViewer({super.key});
 
   @override
-  _FloorViewerState createState() => _FloorViewerState();
+  State<FloorViewer> createState() => _FloorViewerState();
 }
 
 class _FloorViewerState extends State<FloorViewer> {
@@ -57,7 +57,8 @@ class _FloorViewerState extends State<FloorViewer> {
               const SizedBox(width: 20),
               IconButton(
                 icon: Icon(Icons.arrow_upward),
-                onPressed: currentFloorIndex < floorImages.length - 1 ? goUp : null,
+                onPressed:
+                    currentFloorIndex < floorImages.length - 1 ? goUp : null,
               ),
             ],
           ),
