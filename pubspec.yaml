@@ -70,10 +70,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/haus_b/haus_b_f1.json
-    - assets/haus_e/haus_e_f1.json
-    - assets/haus_a/haus_a_f0.json
-    - assets/haus_a/haus_a_f1.json
+    - assets/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

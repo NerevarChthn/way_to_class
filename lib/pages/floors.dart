@@ -42,6 +42,10 @@ class _FloorViewerState extends State<FloorViewer>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _animationController.forward();
+    });
   }
 
   @override
