@@ -1,2 +1,2 @@
 const String noPathSelected = 'Wegbeschreibung erscheint hier';
-const String assetPath = 'assets/haus_b/haus_b_f1.json';
+const String assetPath = 'assets/haus_a/haus_a_f0.json';

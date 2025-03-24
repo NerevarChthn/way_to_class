@@ -1,899 +1,1115 @@
 {
-    "pc_b11": {
-        "name": "Computerraum B11",
-        "data": 18433,
-        "x": 10,
-        "y": 66,
+    "n1": {
+        "name": "Notausgang",
+        "data": 6565,
+        "x": 1,
+        "y": 13,
         "weights": {
-            "hall_b_f1_3": 2.2
+            "h79": 2.8
         }
     },
-    "pc_b12": {
-        "name": "Computerraum B12",
-        "data": 18433,
+    "h79": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 3,
+        "y": 11,
+        "weights": {
+            "n1": 2.8,
+            "b1": 1.0,
+            "h80": 8.0
+        }
+    },
+    "b1": {
+        "name": "Seminarraum B1",
+        "data": 1441,
+        "x": 3,
+        "y": 10,
+        "weights": {
+            "h79": 1.0
+        }
+    },
+    "h80": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 11,
+        "y": 11,
+        "weights": {
+            "b2": 1.0,
+            "h79": 8.0,
+            "h81": 3.0
+        }
+    },
+    "b2": {
+        "name": "Seminarraum B2",
+        "data": 1441,
+        "x": 11,
+        "y": 10,
+        "weights": {
+            "h80": 1.0
+        }
+    },
+    "h81": {
+        "name": "Flur",
+        "data": 1442,
         "x": 14,
-        "y": 66,
+        "y": 11,
         "weights": {
-            "hall_b_f1_4": 2.2
+            "h80": 3.0,
+            "h82": 5.0,
+            "b135": 1.4,
+            "b134": 1.4
         }
     },
-    "room_b13": {
-        "name": "Seminarraum B13",
-        "data": 18433,
-        "x": 24,
-        "y": 66,
+    "b135": {
+        "name": "Lager B135",
+        "data": 9633,
+        "x": 13,
+        "y": 12,
         "weights": {
-            "hall_b_f1_6": 1.0
+            "h81": 1.4
         }
     },
-    "room_b14": {
-        "name": "Seminarraum B14",
-        "data": 18433,
-        "x": 35,
-        "y": 66,
-        "weights": {
-            "hall_b_f1_7": 1.4
-        }
-    },
-    "room_123": {
-        "name": "Raum 123",
-        "data": 18433,
+    "b134": {
+        "name": "Lager B134",
+        "data": 9633,
         "x": 15,
-        "y": 69,
+        "y": 12,
         "weights": {
-            "hall_b_f1_4": 3.2
+            "h81": 1.4
         }
     },
-    "room_122": {
-        "name": "Raum 122",
-        "data": 18433,
+    "b3": {
+        "name": "Seminarraum B3",
+        "data": 1441,
         "x": 19,
-        "y": 69,
+        "y": 10,
         "weights": {
-            "hall_b_f1_5": 2.2
+            "h81": 1.0
         }
     },
-    "elevator_b_f1": {
-        "name": "Fahrstuhl Haus B, 1. Etage",
-        "data": 18436,
-        "x": 38,
-        "y": 70,
+    "h82": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 19,
+        "y": 11,
         "weights": {
-            "hall_b_f1_7": 3.6
+            "h81": 5.0,
+            "h83": 8.0
         }
     },
-    "stair_b_f1_1": {
-        "name": "Haupttreppe",
-        "data": 18435,
-        "x": 44,
-        "y": 66,
+    "h83": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 27,
+        "y": 11,
         "weights": {
-            "hall_b_f1_8": 1.0
+            "h82": 8.0,
+            "h84": 2.0,
+            "b4": 1.0,
+            "b133": 2.0
         }
     },
-    "room_120": {
-        "name": "Raum 120",
-        "data": 18433,
-        "x": 51,
-        "y": 69,
+    "b133": {
+        "name": "Putzraum B133",
+        "data": 9633,
+        "x": 27,
+        "y": 13,
         "weights": {
-            "hall_b_f1_9": 1.4
+            "h83": 2.0
         }
     },
-    "room_b15": {
-        "name": "Seminarraum B15",
-        "data": 18433,
-        "x": 53,
-        "y": 66,
+    "b4": {
+        "name": "Seminarraum B4",
+        "data": 1441,
+        "x": 27,
+        "y": 10,
         "weights": {
-            "hall_b_f1_9": 1.4
+            "h83": 1.0
         }
     },
-    "room_b16": {
-        "name": "Seminarraum B16",
-        "data": 18433,
-        "x": 64,
-        "y": 66,
+    "wc_12": {
+        "name": "Toilette B132",
+        "data": 1446,
+        "x": 29,
+        "y": 12,
         "weights": {
-            "hall_b_f1_10": 1.0
+            "h84": 1.0
         }
     },
-    "room_b17": {
-        "name": "Seminarraum B17",
-        "data": 18433,
-        "x": 72,
-        "y": 66,
+    "h84": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 29,
+        "y": 11,
         "weights": {
-            "hall_b_f1_11": 1.0
+            "h83": 2.0,
+            "h85": 4.0,
+            "wc_12": 1.0
         }
     },
-    "room_b18": {
-        "name": "Seminarraum B18",
-        "data": 18433,
-        "x": 79,
-        "y": 66,
+    "h85": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 33,
+        "y": 11,
         "weights": {
-            "hall_b_f1_12": 1.4
+            "wc_13": 1.0,
+            "h84": 4.0,
+            "h86": 3.0
         }
     },
-    "room_b19": {
-        "name": "Seminarraum B19",
-        "data": 18433,
-        "x": 87,
-        "y": 66,
+    "wc_13": {
+        "name": "Toilette B131",
+        "data": 1446,
+        "x": 33,
+        "y": 12,
         "weights": {
-            "hall_b_f1_13": 1.4
+            "h85": 1.0
         }
     },
-    "room_b20": {
-        "name": "Seminarraum B20",
-        "data": 18433,
-        "x": 96,
-        "y": 66,
+    "h86": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 36,
+        "y": 11,
         "weights": {
-            "hall_b_f1_14": 1.0
+            "b130": 1.0,
+            "h85": 3.0,
+            "h87": 3.0
         }
     },
-    "room_117": {
-        "name": "Raum 117",
-        "data": 18433,
-        "x": 72,
-        "y": 69,
+    "b130": {
+        "name": "ELT B130",
+        "data": 9633,
+        "x": 36,
+        "y": 12,
         "weights": {
-            "hall_b_f1_11": 1.4
+            "h86": 1.0
         }
     },
-    "wc_b17": {
-        "name": "Toiletten B17",
-        "data": 18470,
-        "x": 76,
-        "y": 70,
+    "h87": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 39,
+        "y": 11,
         "weights": {
-            "hall_b_f1_12": 3.6
+            "h86": 3.0,
+            "b5": 1.0,
+            "h88": 8.0,
+            "d3": 4.0
         }
     },
-    "room_114": {
-        "name": "Raum 114",
-        "data": 18433,
-        "x": 87,
-        "y": 69,
+    "b5": {
+        "name": "Seminarraum B5",
+        "data": 1441,
+        "x": 40,
+        "y": 11,
         "weights": {
-            "hall_b_f1_13": 1.4
+            "h87": 1.0
         }
     },
-    "hall_b_f1_1": {
-        "name": "Flur B1.1",
-        "data": 18434,
-        "x": 4,
-        "y": 70,
+    "h88": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 39,
+        "y": 3,
         "weights": {
-            "hall_b_f1_2": 2.0,
-            "exit_b11": 1.4
+            "t13": 2.0,
+            "h87": 8.0
         }
     },
-    "hall_b_f1_2": {
-        "name": "Flur B1.2",
-        "data": 18434,
-        "x": 4,
-        "y": 68,
+    "d3": {
+        "name": "Tür",
+        "data": 1445,
+        "x": 39,
+        "y": 15,
         "weights": {
-            "hall_b_f1_1": 2.0,
-            "hall_b_f1_3": 2.0
+            "h87": 4.0,
+            "d4": 9.0
         }
     },
-    "hall_b_f1_3": {
-        "name": "Flur B1.3",
-        "data": 18434,
-        "x": 10,
-        "y": 68,
+    "t13": {
+        "name": "Treppe",
+        "data": 419,
+        "x": 37,
+        "y": 3,
         "weights": {
-            "hall_b_f1_2": 2.0,
-            "hall_b_f1_4": 2.0,
-            "pc_b11": 2.2
+            "t14": 5.0,
+            "h88": 2.0
         }
     },
-    "hall_b_f1_4": {
-        "name": "Flur B1.4",
-        "data": 18434,
+    "d4": {
+        "name": "Tür",
+        "data": 1445,
+        "x": 39,
+        "y": 24,
+        "weights": {
+            "d3": 9.0,
+            "h89": 1.0
+        }
+    },
+    "h89": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 39,
+        "y": 25,
+        "weights": {
+            "d4": 1.0,
+            "t12": 2.0,
+            "h90": 8.0
+        }
+    },
+    "t12": {
+        "name": "Treppe",
+        "data": 419,
+        "x": 37,
+        "y": 25,
+        "weights": {
+            "t15": 5.0,
+            "h89": 2.0
+        }
+    },
+    "h90": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 39,
+        "y": 33,
+        "weights": {
+            "h89": 8.0,
+            "h91": 3.0,
+            "d5": 4.0,
+            "b10": 1.0
+        }
+    },
+    "b10": {
+        "name": "Computerraum B10",
+        "data": 1441,
+        "x": 40,
+        "y": 33,
+        "weights": {
+            "h90": 1.0
+        }
+    },
+    "d5": {
+        "name": "Tür",
+        "data": 1445,
+        "x": 39,
+        "y": 37,
+        "weights": {
+            "h90": 4.0,
+            "d6": 10.0
+        }
+    },
+    "d6": {
+        "name": "Tür",
+        "data": 1445,
+        "x": 39,
+        "y": 47,
+        "weights": {
+            "d5": 10.0,
+            "h103": 9.0
+        }
+    },
+    "h91": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 36,
+        "y": 33,
+        "weights": {
+            "h90": 3.0,
+            "h92": 4.0,
+            "b124": 1.0
+        }
+    },
+    "b124": {
+        "name": "ELT B124",
+        "data": 9633,
+        "x": 36,
+        "y": 34,
+        "weights": {
+            "j91": 1.0
+        }
+    },
+    "h92": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 32,
+        "y": 33,
+        "weights": {
+            "h91": 4.0,
+            "h92a": 3.0,
+            "wc_15": 1.0
+        }
+    },
+    "wc_15": {
+        "name": "Toilette B125",
+        "data": 1446,
+        "x": 32,
+        "y": 34,
+        "weights": {
+            "h92": 1.0
+        }
+    },
+    "wc_14": {
+        "name": "Toilette B126",
+        "data": 1446,
+        "x": 29,
+        "y": 34,
+        "weights": {
+            "h92a": 1.0
+        }
+    },
+    "h92a": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 29,
+        "y": 33,
+        "weights": {
+            "wc_14": 1.0,
+            "h92": 3.0,
+            "h93": 2.0
+        }
+    },
+    "h93": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 27,
+        "y": 33,
+        "weights": {
+            "h92a": 2.0,
+            "b9": 1.0,
+            "b127": 2.0,
+            "h94": 8.0
+        }
+    },
+    "b127": {
+        "name": "Putzraum B127",
+        "data": 9633,
+        "x": 27,
+        "y": 35,
+        "weights": {
+            "h93": 2.0
+        }
+    },
+    "b9": {
+        "name": "Computerraum B9",
+        "data": 1441,
+        "x": 27,
+        "y": 32,
+        "weights": {
+            "h93": 1.0
+        }
+    },
+    "h94": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 19,
+        "y": 33,
+        "weights": {
+            "b8": 1.0,
+            "h93": 8.0,
+            "h95": 5.0
+        }
+    },
+    "b8": {
+        "name": "Seminarraum B8",
+        "data": 1441,
+        "x": 19,
+        "y": 32,
+        "weights": {
+            "h94": 1.0
+        }
+    },
+    "h95": {
+        "name": "Flur",
+        "data": 1442,
         "x": 14,
-        "y": 68,
+        "y": 33,
         "weights": {
-            "hall_b_f1_3": 2.0,
-            "hall_b_f1_5": 4.0,
-            "pc_b12": 2.2,
-            "room_123": 3.2
+            "b128": 1.4,
+            "b129": 1.4,
+            "h96": 11.0
         }
     },
-    "hall_b_f1_5": {
-        "name": "Flur B1.5",
-        "data": 18434,
-        "x": 19,
-        "y": 68,
+    "b128": {
+        "name": "Lager B128",
+        "data": 9633,
+        "x": 15,
+        "y": 34,
         "weights": {
-            "hall_b_f1_4": 4.0,
-            "hall_b_f1_6": 5.0,
-            "room_122": 2.2
+            "h95": 1.4
         }
     },
-    "hall_b_f1_6": {
-        "name": "Flur B1.6",
-        "data": 18434,
-        "x": 24,
-        "y": 68,
+    "b129": {
+        "name": "Lager B129",
+        "data": 9633,
+        "x": 13,
+        "y": 34,
         "weights": {
-            "hall_b_f1_5": 5.0,
-            "hall_b_f1_7": 11.0,
-            "room_b13": 1.0
+            "h95": 1.4
         }
     },
-    "hall_b_f1_7": {
-        "name": "Flur B1.7",
-        "data": 18434,
-        "x": 35,
-        "y": 68,
+    "h96": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 3,
+        "y": 33,
         "weights": {
-            "hall_b_f1_6": 11.0,
-            "hall_b_f1_8": 9.0,
-            "room_b14": 1.4,
-            "elevator_b_f1": 3.6
+            "h95": 11.0,
+            "b6": 1.0,
+            "n2": 3.6
         }
     },
-    "hall_b_f1_8": {
-        "name": "Flur B1.8",
-        "data": 18434,
-        "x": 44,
-        "y": 68,
+    "b6": {
+        "name": "Seminarraum B6",
+        "data": 1441,
+        "x": 3,
+        "y": 32,
         "weights": {
-            "hall_b_f1_7": 9.0,
-            "hall_b_f1_40": 4.5,
-            "stair_b_f1_1": 1.0
+            "h96": 1.0
         }
     },
-    "hall_b_f1_9": {
-        "name": "Flur B1.9",
-        "data": 18434,
-        "x": 51,
-        "y": 68,
+    "n2": {
+        "name": "Notausgang",
+        "data": 6565,
+        "x": 1,
+        "y": 36,
         "weights": {
-            "hall_b_f1_10": 13.0,
-            "hall_b_f1_40": 4.5,
-            "room_120": 1.4,
-            "room_b15": 1.4
+            "h96": 3.6
         }
     },
-    "hall_b_f1_10": {
-        "name": "Flur B1.10",
-        "data": 18434,
+    "n3": {
+        "name": "Notausgang",
+        "data": 6565,
+        "x": 1,
+        "y": 58,
+        "weights": {
+            "h97": 7.2
+        }
+    },
+    "b11": {
+        "name": "Computerraum B11",
+        "data": 1441,
+        "x": 8,
+        "y": 55,
+        "weights": {
+            "h97": 1.0
+        }
+    },
+    "b12": {
+        "name": "Computerraum B12",
+        "data": 1441,
+        "x": 11,
+        "y": 55,
+        "weights": {
+            "h98": 1.4
+        }
+    },
+    "b123": {
+        "name": "Lager B123",
+        "data": 9633,
+        "x": 13,
+        "y": 57,
+        "weights": {
+            "h98": 1.4
+        }
+    },
+    "b122": {
+        "name": "Lager B122",
+        "data": 9633,
+        "x": 15,
+        "y": 57,
+        "weights": {
+            "h99": 1.0
+        }
+    },
+    "b13": {
+        "name": "Seminarraum B13",
+        "data": 1441,
+        "x": 20,
+        "y": 55,
+        "weights": {
+            "h100": 1.0
+        }
+    },
+    "b121": {
+        "name": "ELT B121",
+        "data": 9633,
+        "x": 27,
+        "y": 58,
+        "weights": {
+            "h101": 2.2
+        }
+    },
+    "b14": {
+        "name": "Seminarraum B14",
+        "data": 1441,
+        "x": 28,
+        "y": 55,
+        "weights": {
+            "h101": 1.0
+        }
+    },
+    "b120": {
+        "name": "Lager B120",
+        "data": 9633,
+        "x": 42,
+        "y": 57,
+        "weights": {
+            "h104": 1.0
+        }
+    },
+    "b15": {
+        "name": "Seminarraum B15",
+        "data": 1441,
+        "x": 43,
+        "y": 55,
+        "weights": {
+            "h104": 1.4
+        }
+    },
+    "b119": {
+        "name": "Kopierraum B119",
+        "data": 1441,
+        "x": 45,
+        "y": 57,
+        "weights": {
+            "h105": 1.0
+        }
+    },
+    "b16": {
+        "name": "Seminarraum B16",
+        "data": 1441,
+        "x": 52,
+        "y": 55,
+        "weights": {
+            "h106": 1.0
+        }
+    },
+    "wc_16": {
+        "name": "Behindertentoilette B118",
+        "data": 1446,
+        "x": 56,
+        "y": 58,
+        "weights": {
+            "h107": 2.0
+        }
+    },
+    "b17": {
+        "name": "Seminarraum B17",
+        "data": 1441,
+        "x": 58,
+        "y": 55,
+        "weights": {
+            "h108": 1.0
+        }
+    },
+    "wc_17": {
+        "name": "Toilette B117",
+        "data": 1446,
+        "x": 60,
+        "y": 57,
+        "weights": {
+            "h109": 1.0
+        }
+    },
+    "b18": {
+        "name": "Seminarraum B18",
+        "data": 1441,
         "x": 64,
-        "y": 68,
+        "y": 55,
         "weights": {
-            "hall_b_f1_9": 13.0,
-            "hall_b_f1_11": 8.0,
-            "room_b16": 1.0
+            "h110": 1.0
         }
     },
-    "hall_b_f1_11": {
-        "name": "Flur B1.11",
-        "data": 18434,
-        "x": 72,
-        "y": 68,
+    "wc_18": {
+        "name": "Toilette B116",
+        "data": 1446,
+        "x": 64,
+        "y": 57,
         "weights": {
-            "hall_b_f1_10": 8.0,
-            "hall_b_f1_12": 7.0,
-            "room_b17": 1.0,
-            "room_117": 1.4
+            "h110": 1.0
         }
     },
-    "hall_b_f1_12": {
-        "name": "Flur B1.12",
-        "data": 18434,
-        "x": 79,
-        "y": 68,
-        "weights": {
-            "hall_b_f1_11": 7.0,
-            "hall_b_f1_13": 8.0,
-            "room_b18": 1.4,
-            "wc_b17": 3.6
-        }
-    },
-    "hall_b_f1_13": {
-        "name": "Flur B1.13",
-        "data": 18434,
-        "x": 87,
-        "y": 68,
-        "weights": {
-            "hall_b_f1_12": 8.0,
-            "hall_b_f1_14": 9.0,
-            "room_b19": 1.4,
-            "room_114": 1.4
-        }
-    },
-    "hall_b_f1_14": {
-        "name": "Flur B1.14",
-        "data": 18434,
-        "x": 96,
-        "y": 68,
-        "weights": {
-            "hall_b_f1_13": 9.0,
-            "door_hall_1": 10.0,
-            "room_b20": 1.0
-        }
-    },
-    "hall_b_f1_15": {
-        "name": "Flur B1.15",
-        "data": 18434,
-        "x": 108,
-        "y": 71,
-        "weights": {
-            "hall_b_f1_14": 12.0,
-            "hall_b_f1_16": 1.0,
-            "hall_b_f1_43": 1.2
-        }
-    },
-    "hall_b_f1_16": {
-        "name": "Flur B1.16",
-        "data": 18434,
-        "x": 109,
-        "y": 66,
-        "weights": {
-            "hall_b_f1_15": 1.0,
-            "hall_b_f1_17": 3.0,
-            "room_105": 1.0,
-            "stair_b_f1_4": 1.0
-        }
-    },
-    "hall_b_f1_17": {
-        "name": "Flur B1.17",
-        "data": 18434,
-        "x": 112,
-        "y": 66,
-        "weights": {
-            "hall_b_f1_16": 3.0,
-            "hall_b_f1_18": 8.0,
-            "room_108": 1.0,
-            "room_104": 1.0
-        }
-    },
-    "hall_b_f1_18": {
-        "name": "Flur B1.18",
-        "data": 18434,
-        "x": 120,
-        "y": 66,
-        "weights": {
-            "hall_b_f1_17": 8.0,
-            "hall_b_f1_19": 4.0,
-            "room_107": 1.0,
-            "room_103": 1.0,
-            "stair_b_f1_5": 2.0
-        }
-    },
-    "hall_b_f1_19": {
-        "name": "Flur B1.19",
-        "data": 18434,
-        "x": 124,
-        "y": 65,
-        "weights": {
-            "hall_b_f1_18": 4.0,
-            "hall_b_f1_20": 6.0,
-            "room_101": 1.0
-        }
-    },
-    "hall_b_f1_20": {
-        "name": "Flur B1.20",
-        "data": 18434,
-        "x": 130,
-        "y": 65,
-        "weights": {
-            "hall_b_f1_19": 6.0,
-            "room_106": 1.0,
-            "room_100": 1.0
-        }
-    },
-    "hall_b_f1_21": {
-        "name": "Flur B1.21",
-        "data": 18434,
-        "x": 48,
-        "y": 64,
-        "weights": {
-            "hall_b_f1_40": 3.0,
-            "door_hall_2": 8.0
-        }
-    },
-    "hall_b_f1_22": {
-        "name": "Flur B1.22",
-        "data": 18434,
-        "x": 48,
-        "y": 40,
-        "weights": {
-            "hall_b_f1_23": 8.0,
-            "hall_b_f1_30": 11.0,
-            "hall_b_f1_41": 3.0,
-            "pc_b10": 2.0
-        }
-    },
-    "hall_b_f1_23": {
-        "name": "Flur B1.23",
-        "data": 18434,
-        "x": 40,
-        "y": 40,
-        "weights": {
-            "hall_b_f1_22": 8.0,
-            "hall_b_f1_24": 8.0,
-            "wc_b9": 2.0
-        }
-    },
-    "hall_b_f1_24": {
-        "name": "Flur B1.24",
-        "data": 18434,
-        "x": 32,
-        "y": 40,
-        "weights": {
-            "hall_b_f1_23": 8.0,
-            "hall_b_f1_25": 8.0,
-            "room_b9": 2.2
-        }
-    },
-    "hall_b_f1_25": {
-        "name": "Flur B1.25",
-        "data": 18434,
-        "x": 24,
-        "y": 40,
-        "weights": {
-            "hall_b_f1_24": 8.0,
-            "hall_b_f1_26": 4.0,
-            "room_b8": 2.0
-        }
-    },
-    "hall_b_f1_26": {
-        "name": "Flur B1.26",
-        "data": 18434,
-        "x": 20,
-        "y": 40,
-        "weights": {
-            "hall_b_f1_25": 4.0,
-            "hall_b_f1_27": 4.0,
-            "room_128": 1.0
-        }
-    },
-    "hall_b_f1_27": {
-        "name": "Flur B1.27",
-        "data": 18434,
-        "x": 16,
-        "y": 40,
-        "weights": {
-            "hall_b_f1_26": 4.0,
-            "hall_b_f1_28": 12.0,
-            "room_129": 1.0,
-            "room_b7": 2.0
-        }
-    },
-    "hall_b_f1_28": {
-        "name": "Flur B1.28",
-        "data": 18434,
-        "x": 4,
-        "y": 40,
-        "weights": {
-            "hall_b_f1_27": 12.0,
-            "hall_b_f1_29": 3.0,
-            "room_b6": 2.0
-        }
-    },
-    "hall_b_f1_29": {
-        "name": "Flur B1.29",
-        "data": 18434,
-        "x": 4,
-        "y": 43,
-        "weights": {
-            "hall_b_f1_28": 3.0,
-            "exit_b6": 1.4
-        }
-    },
-    "hall_b_f1_30": {
-        "name": "Flur B1.30",
-        "data": 18434,
-        "x": 48,
-        "y": 29,
-        "weights": {
-            "hall_b_f1_22": 11.0,
-            "stair_b_f1_2": 3.0,
-            "door_hall_5": 1.0
-        }
-    },
-    "hall_b_f1_31": {
-        "name": "Flur B1.31",
-        "data": 18434,
-        "x": 48,
-        "y": 12,
-        "weights": {
-            "hall_b_f1_32": 8.0,
-            "hall_b_f1_39": 10.0,
-            "hall_b_f1_42": 3.0,
-            "room_b5": 2.0
-        }
-    },
-    "hall_b_f1_32": {
-        "name": "Flur B1.32",
-        "data": 18434,
-        "x": 40,
-        "y": 12,
-        "weights": {
-            "hall_b_f1_31": 8.0,
-            "hall_b_f1_33": 8.0,
-            "wc_b4": 2.0
-        }
-    },
-    "hall_b_f1_33": {
-        "name": "Flur B1.33",
-        "data": 18434,
-        "x": 32,
-        "y": 12,
-        "weights": {
-            "hall_b_f1_32": 8.0,
-            "hall_b_f1_34": 8.0,
-            "room_b4": 2.2
-        }
-    },
-    "hall_b_f1_34": {
-        "name": "Flur B1.34",
-        "data": 18434,
-        "x": 24,
-        "y": 12,
-        "weights": {
-            "hall_b_f1_33": 8.0,
-            "hall_b_f1_35": 4.0,
-            "room_b3": 2.0
-        }
-    },
-    "hall_b_f1_35": {
-        "name": "Flur B1.35",
-        "data": 18434,
-        "x": 20,
-        "y": 12,
-        "weights": {
-            "hall_b_f1_34": 4.0,
-            "hall_b_f1_36": 4.0,
-            "room_134": 1.0
-        }
-    },
-    "hall_b_f1_36": {
-        "name": "Flur B1.36",
-        "data": 18434,
-        "x": 16,
-        "y": 12,
-        "weights": {
-            "hall_b_f1_35": 4.0,
-            "hall_b_f1_37": 12.0,
-            "room_135": 1.0,
-            "room_b2": 2.0
-        }
-    },
-    "hall_b_f1_37": {
-        "name": "Flur B1.37",
-        "data": 18434,
-        "x": 4,
-        "y": 12,
-        "weights": {
-            "hall_b_f1_36": 12.0,
-            "hall_b_f1_38": 3.0,
-            "room_b1": 2.0
-        }
-    },
-    "hall_b_f1_38": {
-        "name": "Flur B1.38",
-        "data": 18434,
-        "x": 4,
-        "y": 15,
-        "weights": {
-            "hall_b_f1_37": 3.0,
-            "exit_b1": 1.4
-        }
-    },
-    "hall_b_f1_39": {
-        "name": "Flur B1.39",
-        "data": 18434,
-        "x": 48,
-        "y": 2,
-        "weights": {
-            "hall_b_f1_31": 10.0,
-            "stair_b_f1_3": 3.0
-        }
-    },
-    "hall_b_f1_40": {
-        "name": "Flur B1.40",
-        "data": 18434,
-        "x": 48,
-        "y": 68,
-        "weights": {
-            "hall_b_f1_9": 4.5,
-            "hall_b_f1_8": 4.0,
-            "hall_b_f1_21": 3.0
-        }
-    },
-    "hall_b_f1_41": {
-        "name": "Flur B1.41",
-        "data": 18434,
-        "x": 48,
-        "y": 43,
-        "weights": {
-            "hall_b_f1_22": 3.0,
-            "door_hall_3": 1.0
-        }
-    },
-    "hall_b_f1_42": {
-        "name": "Flur B1.42",
-        "data": 18434,
-        "x": 48,
-        "y": 15,
-        "weights": {
-            "hall_b_f1_31": 3.0,
-            "door_hall_4": 2.0
-        }
-    },
-    "hall_b_f1_43": {
-        "name": "Flur B1.43",
-        "data": 18434,
-        "x": 107,
-        "y": 70,
-        "weights": {
-            "hall_b_f1_15": 1.2,
-            "hall_b_f1_14": 11.0
-        }
-    },
-    "door_hall_1": {
-        "name": "Flurtür 1",
-        "data": 18437,
-        "x": 106,
-        "y": 70,
-        "weights": {
-            "hall_b_f1_43": 1.0,
-            "hall_b_f1_14": 10.0
-        }
-    },
-    "door_hall_2": {
-        "name": "Flurtür 2",
-        "data": 18437,
-        "x": 48,
+    "h97": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 8,
         "y": 56,
         "weights": {
-            "hall_b_f1_21": 8.0,
-            "door_hall_3": 12.0
+            "n3": 7.2,
+            "b11": 1.0,
+            "h98": 4.0
         }
     },
-    "door_hall_3": {
-        "name": "Flurtür 3",
-        "data": 18437,
-        "x": 48,
-        "y": 44,
+    "h98": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 12,
+        "y": 56,
         "weights": {
-            "hall_b_f1_41": 1.0,
-            "door_hall_2": 12.0
+            "h97": 4.0,
+            "h99": 3.0,
+            "b123": 1.4,
+            "b12": 1.4
         }
     },
-    "door_hall_4": {
-        "name": "Flurtür 4",
-        "data": 18437,
-        "x": 48,
-        "y": 17,
+    "h99": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 15,
+        "y": 56,
         "weights": {
-            "hall_b_f1_42": 2.0,
-            "door_hall_5": 12.0
+            "h98": 3.0,
+            "h100": 5.0,
+            "b122": 1.0
         }
     },
-    "door_hall_5": {
-        "name": "Flurtür 5",
-        "data": 18437,
-        "x": 48,
-        "y": 30,
-        "weights": {
-            "hall_b_f1_30": 1.0,
-            "door_hall_4": 12.0
-        }
-    },
-    "room_129": {
-        "name": "Raum 129",
-        "data": 18433,
-        "x": 16,
-        "y": 42,
-        "weights": {
-            "hall_b_f1_27": 1.0
-        }
-    },
-    "room_128": {
-        "name": "Raum 128",
-        "data": 18433,
+    "h100": {
+        "name": "Flur",
+        "data": 1442,
         "x": 20,
-        "y": 42,
+        "y": 56,
         "weights": {
-            "hall_b_f1_26": 1.0
+            "h99": 4.0,
+            "h101": 8.0,
+            "b13": 1.0
         }
     },
-    "wc_b9": {
-        "name": "Toiletten B9",
-        "data": 18470,
-        "x": 40,
-        "y": 42,
+    "h101": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 28,
+        "y": 56,
         "weights": {
-            "hall_b_f1_23": 2.0
+            "h100": 8.0,
+            "h102": 8.0,
+            "b14": 1.0,
+            "b121": 2.2
         }
     },
-    "pc_b10": {
-        "name": "Linux-Raum B10",
-        "data": 18433,
-        "x": 50,
-        "y": 40,
-        "weights": {
-            "hall_b_f1_22": 2.0
-        }
-    },
-    "room_b9": {
-        "name": "Multimedia-Raum B9",
-        "data": 18433,
+    "auf5": {
+        "name": "Aufzug",
+        "data": 1444,
         "x": 32,
-        "y": 38,
+        "y": 58,
         "weights": {
-            "hall_b_f1_24": 2.2
+            "auf6": 5.0,
+            "h102": 4.5
         }
     },
-    "room_b8": {
-        "name": "Seminarraum B8",
-        "data": 18433,
-        "x": 24,
-        "y": 38,
+    "h102": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 36,
+        "y": 56,
         "weights": {
-            "hall_b_f1_25": 2.0
+            "h101": 8.0,
+            "h103": 3.0,
+            "t11": 1.0,
+            "auf5": 4.5
         }
     },
-    "room_b7": {
-        "name": "Seminarraum B7",
-        "data": 18433,
-        "x": 16,
-        "y": 38,
+    "t11": {
+        "name": "Treppe",
+        "data": 419,
+        "x": 36,
+        "y": 55,
         "weights": {
-            "hall_b_f1_27": 2.0
+            "t16": 5.0,
+            "h102": 1.0
         }
     },
-    "room_b6": {
-        "name": "Seminarraum B6",
-        "data": 18433,
-        "x": 4,
-        "y": 38,
+    "h103": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 39,
+        "y": 56,
         "weights": {
-            "hall_b_f1_28": 2.0
+            "h102": 3.0,
+            "d6": 9.0,
+            "h104": 3.0
         }
     },
-    "stair_b_f1_2": {
-        "name": "Mittlere Treppe",
-        "data": 18435,
+    "h104": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 42,
+        "y": 56,
+        "weights": {
+            "h103": 3.0,
+            "h105": 3.0,
+            "b120": 1.0,
+            "b15": 1.4
+        }
+    },
+    "h105": {
+        "name": "Flur",
+        "data": 1442,
         "x": 45,
-        "y": 29,
+        "y": 56,
         "weights": {
-            "hall_b_f1_30": 3.0
+            "h104": 3.0,
+            "b119": 1.0,
+            "b106": 7.0
         }
     },
-    "room_135": {
-        "name": "Raum 135",
-        "data": 18433,
-        "x": 16,
-        "y": 14,
+    "h106": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 52,
+        "y": 56,
         "weights": {
-            "hall_b_f1_36": 1.0
+            "h105": 7.0,
+            "h107": 4.0,
+            "b16": 1.0
         }
     },
-    "room_134": {
-        "name": "Raum 134",
-        "data": 18433,
-        "x": 20,
-        "y": 14,
+    "h107": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 56,
+        "y": 56,
         "weights": {
-            "hall_b_f1_35": 1.0
+            "h106": 4.0,
+            "h108": 2.0,
+            "wc_16": 2.0
         }
     },
-    "wc_b4": {
-        "name": "Toiletten B4",
-        "data": 18470,
-        "x": 40,
-        "y": 14,
+    "h108": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 58,
+        "y": 56,
         "weights": {
-            "hall_b_f1_32": 2.0
+            "h107": 2.0,
+            "h109": 2.0,
+            "b17": 1.0
         }
     },
-    "room_b5": {
-        "name": "Seminarraum B5",
-        "data": 18433,
-        "x": 50,
-        "y": 12,
+    "h109": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 60,
+        "y": 56,
         "weights": {
-            "hall_b_f1_31": 2.0
+            "wc_17": 1.0,
+            "h108": 2.0,
+            "h110": 4.0
         }
     },
-    "stair_b_f1_3": {
-        "name": "Treppe Nordseite",
-        "data": 18435,
-        "x": 45,
-        "y": 2,
+    "h110": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 64,
+        "y": 56,
         "weights": {
-            "hall_b_f1_39": 3.0
+            "h109": 4.0,
+            "h111": 6.0,
+            "wc_18": 1.0,
+            "b18": 1.0
         }
     },
-    "room_b4": {
-        "name": "Seminarraum B4",
-        "data": 18433,
-        "x": 32,
-        "y": 10,
+    "b115": {
+        "name": "ELT B115",
+        "data": 9633,
+        "x": 69,
+        "y": 58,
         "weights": {
-            "hall_b_f1_33": 2.2
+            "h111": 2.2
         }
     },
-    "room_b3": {
-        "name": "Seminarraum B3",
-        "data": 18433,
-        "x": 24,
-        "y": 10,
+    "b19": {
+        "name": "Seminarraum B19",
+        "data": 1441,
+        "x": 71,
+        "y": 55,
         "weights": {
-            "hall_b_f1_34": 2.0
+            "h111": 1.4
         }
     },
-    "room_b2": {
-        "name": "Seminarraum B2",
-        "data": 18433,
-        "x": 16,
-        "y": 10,
+    "b114": {
+        "name": "Putzraum B114",
+        "data": 9633,
+        "x": 72,
+        "y": 57,
         "weights": {
-            "hall_b_f1_36": 2.0
+            "h112": 1.0
         }
     },
-    "room_b1": {
-        "name": "Seminarraum B1",
-        "data": 18433,
-        "x": 4,
-        "y": 10,
+    "B113": {
+        "name": "Sanitätsraum B113",
+        "data": 1441,
+        "x": 74,
+        "y": 57,
         "weights": {
-            "hall_b_f1_37": 2.0
+            "h113": 1.0
         }
     },
-    "stair_b_f1_4": {
-        "name": "Hintere Treppe 1",
-        "data": 18435,
+    "b20": {
+        "name": "Seminarraum B20",
+        "data": 1441,
+        "x": 79,
+        "y": 55,
+        "weights": {
+            "h114": 1.0
+        }
+    },
+    "h111": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 70,
+        "y": 56,
+        "weights": {
+            "h110": 6.0,
+            "h112": 2.0,
+            "b19": 1.4,
+            "b115": 2.2
+        }
+    },
+    "h112": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 72,
+        "y": 56,
+        "weights": {
+            "h111": 2.0,
+            "h113": 2.0,
+            "b114": 1.0
+        }
+    },
+    "h113": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 74,
+        "y": 56,
+        "weights": {
+            "h112": 2.0,
+            "b113": 1.0,
+            "h114": 5.0
+        }
+    },
+    "h114": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 79,
+        "y": 56,
+        "weights": {
+            "b20": 1.0,
+            "h113": 5.0,
+            "h115": 7.0
+        }
+    },
+    "h115": {
+        "name": "Flur",
+        "data": 1442,
+        "x": 86,
+        "y": 56,
+        "weights": {
+            "h114": 7.0,
+            "t19": 1.0,
+            "d7": 1.0
+        }
+    },
+    "t19": {
+        "name": "Treppe",
+        "data": 419,
+        "x": 86,
+        "y": 55,
+        "weights": {
+            "h115": 1.0,
+            "t20": 5.0,
+            "weg": 0.0
+        }
+    },
+    "d7": {
+        "name": "Tür",
+        "data": 1445,
+        "x": 87,
+        "y": 56,
+        "weights": {
+            "h115": 1.0,
+            "h116": 1.0
+        }
+    },
+    "h116": {
+        "name": "Flur",
+        "data": 1474,
+        "x": 88,
+        "y": 56,
+        "weights": {
+            "d7": 1.0,
+            "h117": 2.0
+        }
+    },
+    "d109": {
+        "name": "Teeküche D109",
+        "data": 449,
+        "x": 90,
+        "y": 55,
+        "weights": {
+            "h118": 1.0
+        }
+    },
+    "d108": {
+        "name": "Büro D108",
+        "data": 449,
+        "x": 92,
+        "y": 55,
+        "weights": {
+            "h119": 1.0
+        }
+    },
+    "d105": {
+        "name": "Büro D105",
+        "data": 449,
+        "x": 89,
+        "y": 53,
+        "weights": {
+            "h117": 1.4
+        }
+    },
+    "d104": {
+        "name": "Büro D104",
+        "data": 449,
+        "x": 92,
+        "y": 53,
+        "weights": {
+            "h119": 1.0
+        }
+    },
+    "d103": {
+        "name": "Verwaltung D103",
+        "data": 449,
+        "x": 97,
+        "y": 53,
+        "weights": {
+            "h120": 1.4
+        }
+    },
+    "d101": {
+        "name": "Verwaltung D101",
+        "data": 449,
+        "x": 100,
+        "y": 53,
+        "weights": {
+            "h121": 1.4
+        }
+    },
+    "d107": {
+        "name": "Kopierraum D107",
+        "data": 449,
+        "x": 102,
+        "y": 55,
+        "weights": {
+            "h122": 1.0
+        }
+    },
+    "d106": {
+        "name": "Büro D106",
+        "data": 449,
         "x": 106,
-        "y": 66,
+        "y": 55,
         "weights": {
-            "hall_b_f1_16": 1.0
+            "h123": 1.0
         }
     },
-    "stair_b_f1_5": {
-        "name": "Hintere Treppe 2",
-        "data": 18435,
-        "x": 118,
-        "y": 68,
+    "d100": {
+        "name": "Büro D100",
+        "data": 449,
+        "x": 106,
+        "y": 53,
         "weights": {
-            "hall_b_f1_18": 2.0
+            "h123": 1.0
         }
     },
-    "exit_b11": {
-        "name": "Notausgang B11",
-        "data": 19013,
-        "x": 2,
-        "y": 71,
+    "h117": {
+        "name": "Flur",
+        "data": 450,
+        "x": 88,
+        "y": 54,
         "weights": {
-            "hall_b_f1_1": 1.4
+            "h116": 2.0,
+            "h118": 2.0,
+            "d105": 1.4
         }
     },
-    "exit_b6": {
-        "name": "Notausgang B6",
-        "data": 19013,
-        "x": 2,
-        "y": 43,
+    "h118": {
+        "name": "Flur",
+        "data": 450,
+        "x": 90,
+        "y": 54,
         "weights": {
-            "hall_b_f1_29": 1.4
+            "h117": 2.0,
+            "h119": 2.0,
+            "d109": 1.0
         }
     },
-    "exit_b1": {
-        "name": "Notausgang B1",
-        "data": 19013,
-        "x": 2,
-        "y": 15,
+    "h119": {
+        "name": "Flur",
+        "data": 450,
+        "x": 92,
+        "y": 54,
         "weights": {
-            "hall_b_f1_38": 1.4
+            "h118": 2.0,
+            "h120": 4.0,
+            "d104": 1.0,
+            "d108": 1.0
+        }
+    },
+    "h120": {
+        "name": "Flur",
+        "data": 450,
+        "x": 96,
+        "y": 54,
+        "weights": {
+            "h119": 4.0,
+            "t17": 2.0,
+            "h121": 5.0,
+            "d103": 1.4
+        }
+    },
+    "t17": {
+        "name": "Treppe",
+        "data": 451,
+        "x": 96,
+        "y": 56,
+        "weights": {
+            "h120": 2.0,
+            "t18": 5.0
+        }
+    },
+    "h121": {
+        "name": "Flur",
+        "data": 450,
+        "x": 101,
+        "y": 54,
+        "weights": {
+            "d101": 1.4,
+            "h120": 5.0,
+            "122": 1.0
+        }
+    },
+    "h122": {
+        "name": "Flur",
+        "data": 450,
+        "x": 102,
+        "y": 54,
+        "weights": {
+            "h121": 1.0,
+            "h123": 4.0,
+            "d107": 1.0
+        }
+    },
+    "h123": {
+        "name": "Flur",
+        "data": 450,
+        "x": 106,
+        "y": 54,
+        "weights": {
+            "h122": 4.0,
+            "d100": 1.0,
+            "d106": 1.0
         }
     }
 }

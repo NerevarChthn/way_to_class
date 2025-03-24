@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as dev;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:way_to_class/constants/types.dart';
 import 'package:way_to_class/core/generator/instruction_generator.dart';
 import 'package:way_to_class/core/generator/path_generator.dart';
@@ -28,20 +29,103 @@ class CampusGraphService {
   /// Cache für Node-Namen zu IDs für schnellere Suche
   final Map<String, NodeId> _nameToIdCache = {};
 
-  /// Initialisiert oder aktualisiert den Graphen aus einer Asset-Datei
-  Future<CampusGraph> loadGraph(String assetPath) async {
-    if (currentGraph != null) return currentGraph!;
+  /// Verzeichnis der geladenen Gebäudedateien
+  final List<String> _loadedFiles = [];
+
+  /// Lädt alle verfügbaren JSON-Dateien aus dem Assets-Ordner und erstellt einen kombinierten Graphen
+  Future<CampusGraph> loadGraph(String assetBasePath) async {
+    if (currentGraph != null && _loadedFiles.isNotEmpty) {
+      dev.log('Graph bereits geladen mit ${_loadedFiles.length} Dateien');
+      return currentGraph!;
+    }
 
     try {
-      final String jsonStr = await loadAsset(assetPath);
-      final Map<NodeId, Node> nodes = _parseNodes(jsonStr);
-      currentGraph = CampusGraph(nodes);
-      _updateNameCache(nodes);
-      dev.log('Campus-Graph mit ${currentGraph!.nodeCount} Knoten geladen');
+      // Finde alle JSON-Dateien im Assets-Verzeichnis
+      final manifestContent = await rootBundle.loadString('AssetManifest.json');
+      final Map<String, dynamic> manifestMap = json.decode(manifestContent);
+
+      // Filtern der JSON-Dateien in den Assets
+      final jsonFiles =
+          manifestMap.keys
+              .where(
+                (String key) =>
+                    key.startsWith('assets/') && key.endsWith('.json'),
+              )
+              .toList();
+
+      dev.log('Gefundene JSON-Dateien: ${jsonFiles.length}');
+
+      if (jsonFiles.isEmpty) {
+        dev.log('Keine JSON-Dateien in den Assets gefunden!');
+        // Fallback zur einzelnen Datei
+        return _loadSingleGraph(assetBasePath);
+      }
+
+      // Kombinierter Graph mit allen Knoten
+      final Map<NodeId, Node> allNodes = {};
+
+      // Jede JSON-Datei laden und parsen
+      for (final jsonFile in jsonFiles) {
+        try {
+          dev.log('Lade Graph aus: $jsonFile');
+          final String jsonContent = await loadAsset(jsonFile);
+          final nodes = _parseNodes(jsonContent);
+
+          // Knoten zum Gesamtgraphen hinzufügen
+          allNodes.addAll(nodes);
+          _loadedFiles.add(jsonFile);
+
+          dev.log('${nodes.length} Knoten aus $jsonFile geladen');
+        } catch (e) {
+          dev.log('Fehler beim Laden von $jsonFile: $e');
+          // Fehler bei einer Datei überspringen und mit den anderen fortfahren
+          continue;
+        }
+      }
+
+      // Wenn keine gültigen Nodes geladen wurden, Fehler werfen
+      if (allNodes.isEmpty) {
+        throw Exception('Keine gültigen Knoten in den JSON-Dateien gefunden');
+      }
+
+      // Graphen mit allen kombinierten Knoten erstellen
+      currentGraph = CampusGraph(allNodes);
+      _updateNameCache(allNodes);
+
+      dev.log(
+        'Kombinierter Campus-Graph mit ${currentGraph!.nodeCount} Knoten aus ${_loadedFiles.length} Dateien geladen',
+      );
       return currentGraph!;
     } catch (e) {
-      dev.log('Fehler beim Laden des Graphen: $e');
-      // Leeren Graphen zurückgeben als Fallback
+      dev.log('Fehler beim Laden des kombinierten Graphen: $e');
+
+      // Versuche es mit einer einzelnen Datei als Fallback
+      return _loadSingleGraph(assetBasePath);
+    }
+  }
+
+  /// Fallback-Methode: Lädt einen einzelnen Graphen aus dem angegebenen Pfad
+  Future<CampusGraph> _loadSingleGraph(String assetPath) async {
+    try {
+      dev.log('Versuche Fallback-Laden aus: $assetPath');
+      final String jsonStr = await loadAsset(assetPath);
+      final Map<NodeId, Node> nodes = _parseNodes(jsonStr);
+
+      if (nodes.isEmpty) {
+        throw Exception('Keine gültigen Knoten in $assetPath gefunden');
+      }
+
+      currentGraph = CampusGraph(nodes);
+      _updateNameCache(nodes);
+      _loadedFiles.add(assetPath);
+
+      dev.log(
+        'Fallback-Graph mit ${currentGraph!.nodeCount} Knoten aus $assetPath geladen',
+      );
+      return currentGraph!;
+    } catch (e) {
+      dev.log('Auch Fallback-Laden fehlgeschlagen: $e');
+      // Leeren Graphen zurückgeben als letzten Ausweg
       currentGraph = CampusGraph({});
       return currentGraph!;
     }
@@ -54,7 +138,12 @@ class CampusGraphService {
 
     json.forEach((key, value) {
       if (value is Map<String, dynamic>) {
-        nodes[key] = Node.fromJson(key, value);
+        try {
+          nodes[key] = Node.fromJson(key, value);
+        } catch (e) {
+          dev.log('Fehler beim Parsen von Knoten $key: $e');
+          // Fehlerhaften Knoten überspringen
+        }
       }
     });
 
@@ -63,12 +152,14 @@ class CampusGraphService {
 
   /// Aktualisiert den Namen-zu-ID-Cache
   void _updateNameCache(Map<NodeId, Node> nodes) {
-    _nameToIdCache.clear();
     for (var node in nodes.values) {
       if (node.name.isNotEmpty) {
         _nameToIdCache[node.name] = node.id;
       }
     }
+    dev.log(
+      'Name-zu-ID-Cache mit ${_nameToIdCache.length} Einträgen aktualisiert',
+    );
   }
 
   /// Holt einen Knoten anhand seines Namens, mit Cache-Nutzung
@@ -190,6 +281,8 @@ class CampusGraphService {
   void clearCache() {
     _pathCache.clear();
     _segmentCache.clear();
+    _nameToIdCache.clear();
+    dev.log('Alle Caches gelöscht');
   }
 
   void setCacheEnabled(bool enabled) {
@@ -214,4 +307,17 @@ class CampusGraphService {
 
   /// Prüft, ob ein Graph geladen ist
   bool get hasGraph => currentGraph != null;
+
+  /// Gibt Informationen über die geladenen Dateien zurück
+  List<String> getLoadedFiles() {
+    return List.from(_loadedFiles);
+  }
+
+  /// Löscht die Caches und erzwingt das Neuladen des Graphen
+  Future<void> reloadGraph(String assetBasePath) async {
+    clearCache();
+    _loadedFiles.clear();
+    currentGraph = null;
+    await loadGraph(assetBasePath);
+  }
 }

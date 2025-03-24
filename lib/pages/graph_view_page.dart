@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:way_to_class/constants/node_data.dart';
 
 class GraphViewScreen extends StatefulWidget {
   const GraphViewScreen({super.key});
@@ -149,7 +150,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
                                 color: theme.primaryColor,
                               ),
                               items:
-                                  ['a', 'b', 'c', 'd'].map((String value) {
+                                  ['a', 'b', 'd', 'e'].map((String value) {
                                     return DropdownMenuItem<String>(
                                       value: value,
                                       child: Text('Building $value'),
@@ -334,13 +335,13 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
 
 class ModernGraphPainter extends CustomPainter {
   final Map<String, dynamic> graphData;
-  final double scaleFactor = 20.0;
+  final double scaleFactor = 40.0;
 
   ModernGraphPainter(this.graphData);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Offset offset = Offset(200, 200);
+    final Offset offset = Offset(300, 300);
 
     // Find min/max coordinates
     int? minX, minY, maxX, maxY;
@@ -463,7 +464,7 @@ class ModernGraphPainter extends CustomPainter {
           nodeData.containsKey('x') &&
           nodeData.containsKey('y')) {
         final int data = nodeData['data'] as int? ?? 0;
-        final int nodeType = data & 0x1F;
+        final int nodeType = data & nodeMask;
         final int x = nodeData['x'] as int;
         final int y = nodeData['y'] as int;
 
@@ -571,7 +572,7 @@ class ModernGraphPainter extends CustomPainter {
         } else {
           // Use rounded rectangles for other nodes
           final RRect roundedRect = RRect.fromRectAndRadius(
-            Rect.fromCenter(center: position, width: size * 3.0, height: size),
+            Rect.fromCenter(center: position, width: size * 2.2, height: size),
             Radius.circular(8.0),
           );
 
