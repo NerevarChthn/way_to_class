@@ -1,13 +1,12 @@
 // Panel für Entwickleroptionen
-import 'dart:developer' show log;
 import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
-import 'package:way_to_class/core/components/graph.dart' show Graph;
+import 'package:way_to_class/service/campus_graph_service.dart';
 import 'package:way_to_class/service/security/security_manager.dart';
 
 class DeveloperPanel extends StatelessWidget {
-  final Graph graph;
+  final CampusGraphService graph;
 
   const DeveloperPanel({super.key, required this.graph});
 
@@ -109,16 +108,13 @@ class DeveloperPanel extends StatelessWidget {
                 label: const Text('Cache loggen'),
                 onPressed: () {
                   graph.printCache();
-                  graph.analyzeAllCacheSegments('wc_b4-pc_b11');
-                  log('\n----- IM VERGLEICH -----');
-                  graph.analyzeAllCacheSegments('pc_b11-wc_b4');
                 },
               ),
               TextButton.icon(
                 icon: const Icon(Icons.delete_outline),
                 label: const Text('Cache löschen'),
                 onPressed: () async {
-                  await graph.clearCache();
+                  graph.clearCache();
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -240,7 +236,7 @@ class DeveloperPanel extends StatelessWidget {
     );
 
     // Cache inspizieren und detaillierte Ergebnisse erhalten
-    final inspectionResults = await graph.inspectEncryptedCache();
+    final inspectionResults = graph.inspectEncryptedCache();
 
     // Verschlüsselungstest durchführen
     final success = await SecurityManager.verifyEncryption();
@@ -508,7 +504,7 @@ class DeveloperPanel extends StatelessWidget {
     );
 
     // Test starten
-    final results = await graph.validateAllRoutes();
+    final results = graph.validateAllRoutes();
 
     // Dialog schließen
     Navigator.pop(context);

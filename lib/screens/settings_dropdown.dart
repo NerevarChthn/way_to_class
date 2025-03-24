@@ -1,14 +1,13 @@
-import 'dart:developer' show log;
 import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:way_to_class/service/graph_service.dart';
+import 'package:way_to_class/core/models/campus_graph.dart';
+import 'package:way_to_class/service/campus_graph_service.dart';
 import 'package:way_to_class/service/security/security_manager.dart';
 import 'package:way_to_class/service/toast.dart';
 import 'package:way_to_class/theme/manager.dart';
 import 'package:way_to_class/core/utils/injection.dart';
-import 'package:way_to_class/core/components/graph.dart' show Graph;
 
 class SettingsDropdown extends StatefulWidget {
   const SettingsDropdown({super.key});
@@ -21,16 +20,16 @@ class _SettingsDropdownState extends State<SettingsDropdown> {
   final GlobalKey _menuKey = GlobalKey();
   OverlayEntry? _overlayEntry;
   OverlayEntry? _backgroundEntry;
-  final GraphService _graphService = getIt<GraphService>();
+  final CampusGraphService _graphService = getIt<CampusGraphService>();
   bool _cacheEnabled = true;
   bool _showDeveloperOptions = false;
 
-  Graph? get _currentGraph => _graphService.currentGraph;
+  CampusGraph? get _currentGraph => _graphService.currentGraph;
 
   @override
   void initState() {
     super.initState();
-    _cacheEnabled = _graphService.cacheEnabled;
+    _cacheEnabled = false;
   }
 
   void _showSettingsMenu() {
@@ -158,7 +157,7 @@ class _SettingsDropdownState extends State<SettingsDropdown> {
                               minimumSize: const Size(60, 36),
                             ),
                             onPressed: () async {
-                              await _graphService.clearCache();
+                              _graphService.clearCache();
                               Toast.successToast('Cache wurde gelöscht');
                               _dismissMenu();
                             },
@@ -316,7 +315,7 @@ class _SettingsDropdownState extends State<SettingsDropdown> {
   void _showCacheInfoDialog(BuildContext context) async {
     if (_currentGraph == null) return;
 
-    final stats = _currentGraph!.getCacheStats();
+    final stats = _graphService.getCacheStats();
     showDialog(
       context: context,
       builder:
@@ -354,17 +353,14 @@ class _SettingsDropdownState extends State<SettingsDropdown> {
                 icon: const Icon(Icons.terminal),
                 label: const Text('Cache loggen'),
                 onPressed: () {
-                  _currentGraph!.printCache();
-                  _currentGraph!.analyzeAllCacheSegments('wc_b4-pc_b11');
-                  log('\n----- IM VERGLEICH -----');
-                  _currentGraph!.analyzeAllCacheSegments('pc_b11-wc_b4');
+                  _graphService.printCache();
                 },
               ),
               TextButton.icon(
                 icon: const Icon(Icons.delete_outline),
                 label: const Text('Cache löschen'),
                 onPressed: () async {
-                  await _currentGraph!.clearCache();
+                  _graphService.clearCache();
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -495,7 +491,7 @@ class _SettingsDropdownState extends State<SettingsDropdown> {
     );
 
     // Cache inspizieren und detaillierte Ergebnisse erhalten
-    final inspectionResults = await _currentGraph!.inspectEncryptedCache();
+    final inspectionResults = _graphService.inspectEncryptedCache();
 
     // Verschlüsselungstest durchführen
     final success = await SecurityManager.verifyEncryption();
@@ -760,7 +756,7 @@ class _SettingsDropdownState extends State<SettingsDropdown> {
 
     // Test starten
     try {
-      final results = await _currentGraph!.validateAllRoutes();
+      final results = _graphService.validateAllRoutes();
 
       // Dialog schließen
       Navigator.pop(context);

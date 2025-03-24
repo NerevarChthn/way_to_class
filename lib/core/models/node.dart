@@ -1,4 +1,4 @@
-import 'package:way_to_class/constants/node_constants.dart';
+import 'package:way_to_class/constants/node_data.dart';
 import 'package:way_to_class/constants/types.dart';
 
 enum NodeType {
@@ -71,25 +71,24 @@ class Node {
     }
   }
 
-  int get floorNumber => (floorCode >> floorShift) - 1;
+  int get floorNumber => (floorCode >> floorShift) - 2;
 
   // Hilfsmethoden für Typ-Prüfungen
-  bool isType(int baseType) => (data & typeMask) == baseType;
+  bool isType(int baseType) => (data & nodeMask) == baseType;
   bool hasProperty(int prop) => (data & prop) == prop;
 
   // In der Node-Klasse:
-  bool get isRoom => isType(typeRoom);
-  bool get isCorridor => isType(typeCorridor);
-  bool get isStaircase => isType(typeStaircase);
-  bool get isElevator => isType(typeElevator);
-  bool get isDoor => isType(typeDoor);
-  bool get isToilet => isType(typeToilet);
-  bool get isMachine => isType(typeMachine);
+  bool get isRoom => isType(nodeRoom);
+  bool get isCorridor => isType(nodeCorridor);
+  bool get isStaircase => isType(nodeStaircase);
+  bool get isElevator => isType(nodeElevator);
+  bool get isDoor => isType(nodeDoor);
+  bool get isToilet => isType(nodeToilet);
+  bool get isMachine => isType(nodeMachine);
 
-  int get type => data & typeMask;
+  int get type => data & nodeMask;
 
-  bool get isEmergencyExit =>
-      hasProperty(propEmergency) && hasProperty(propExit);
+  bool get isEmergencyExit => hasProperty(propEmergencyExit);
   bool get isAccessible => hasProperty(propAccessible);
   bool get isLocked => hasProperty(propLocked);
 }

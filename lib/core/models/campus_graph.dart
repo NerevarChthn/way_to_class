@@ -36,16 +36,6 @@ class CampusGraph {
     return null;
   }
 
-  /// Liefert eine Liste aller Knoten-IDs
-  List<NodeId> get allNodeIds => _nodes.keys.toList();
-
-  /// Liefert eine Liste aller Raum-IDs (nützlich für die Suche)
-  List<NodeId> get allRoomIds =>
-      _nodes.entries
-          .where((entry) => entry.value.isRoom)
-          .map((entry) => entry.key)
-          .toList();
-
   /// Prüft, ob eine Verbindung zwischen zwei Knoten existiert
   bool hasConnection(NodeId fromId, NodeId toId) {
     final fromNode = getNodeById(fromId);
@@ -123,4 +113,88 @@ class CampusGraph {
 
     return nearest?.name;
   }
+
+  /// Findet die nächste Toilette ausgehend von einem Startknoten
+  String findNearestBathroomId(NodeId startId) {
+    return _findNearestNodeWithAttribute(startId, 'bathroom', 'true');
+  }
+
+  /// Findet den nächsten Notausgang ausgehend von einem Startknoten
+  String findNearestEmergencyExitId(NodeId startId) {
+    return _findNearestNodeWithAttribute(startId, 'emergency_exit', 'true');
+  }
+
+  /// Findet die nächste Mensa ausgehend von einem Startknoten
+  String findNearestCanteenId(NodeId startId) {
+    return _findNearestNodeWithAttribute(startId, 'canteen', 'true');
+  }
+
+  /// Hilfsmethode zum Finden des nächsten Knotens mit einem bestimmten Attribut
+  String _findNearestNodeWithAttribute(
+    NodeId startId,
+    String attributeName,
+    String attributeValue,
+  ) {
+    // Überprüfe, ob der Startknoten existiert
+    final startNode = getNodeById(startId);
+    if (startNode == null) {
+      return '';
+    }
+
+    // BFS-Algorithmus für das Finden des nächsten Knotens
+    final queue = <NodeId>[startId];
+    final visited = <NodeId>{startId};
+
+    while (queue.isNotEmpty) {
+      final currentId = queue.removeAt(0);
+      final currentNode = getNodeById(currentId);
+
+      if (currentNode == null) continue;
+
+      // Basierend auf dem Attributnamen den passenden Knotentyp prüfen
+      bool isMatch = false;
+
+      if (attributeName == 'bathroom' && attributeValue == 'true') {
+        isMatch = currentNode.isToilet;
+      } else if (attributeName == 'emergency_exit' &&
+          attributeValue == 'true') {
+        isMatch = currentNode.isEmergencyExit;
+      } else if (attributeName == 'canteen' && attributeValue == 'true') {
+        // Für die Mensa müssen wir einen speziellen Fall einrichten
+        // Hier nehmen wir an, dass Mensen in den Knotennamen 'Mensa' oder 'Cafeteria' enthalten
+        isMatch =
+            currentNode.name.toLowerCase().contains('mensa') ||
+            currentNode.name.toLowerCase().contains('cafeteria') ||
+            currentNode.name.toLowerCase().contains('canteen');
+      }
+
+      if (isMatch) {
+        return currentId;
+      }
+
+      // Füge alle Nachbarn zur Queue hinzu
+      for (var neighborId in _getNeighbors(currentId)) {
+        if (!visited.contains(neighborId)) {
+          visited.add(neighborId);
+          queue.add(neighborId);
+        }
+      }
+    }
+
+    // Kein passender Knoten gefunden
+    return '';
+  }
+
+  /// Liefert eine Liste aller Knoten-IDs
+  List<NodeId> get allNodeIds => _nodes.keys.toList();
+
+  /// Liefert eine Liste aller Raum-IDs (nützlich für die Suche)
+  List<NodeId> get allRoomIds =>
+      _nodes.entries
+          .where((entry) => entry.value.isRoom)
+          .map((entry) => entry.key)
+          .toList();
+
+  List<String> get nodeNames => _nodes.values.map((node) => node.name).toList();
+  int get nodeCount => _nodes.length;
 }

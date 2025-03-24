@@ -1,94 +1,87 @@
-// Panel für die Routenbeschreibung
 import 'package:flutter/material.dart';
-import 'package:way_to_class/constants/other.dart';
 
 class RouteDescriptionPanel extends StatelessWidget {
   final String resultText;
-  final Iterable<String> instructions;
+  final List<String> instructions;
+  final Future<void> Function()? onRefresh;
 
   const RouteDescriptionPanel({
     super.key,
     required this.resultText,
     required this.instructions,
+    this.onRefresh,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasInstructions = instructions.isNotEmpty;
 
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.directions_walk),
-                const SizedBox(width: 8),
-                Text('Wegbeschreibung', style: theme.textTheme.titleMedium),
+                Text(
+                  'Wegbeschreibung',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (onRefresh != null)
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    tooltip: 'Wegbeschreibung neu generieren',
+                    onPressed: onRefresh,
+                  ),
               ],
             ),
-            const Divider(),
+            const SizedBox(height: 8),
             Expanded(
               child:
-                  resultText == noPathSelected
-                      ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.directions,
-                              size: 48,
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Wähle Start und Ziel, um einen Weg zu berechnen',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.7,
+                  hasInstructions
+                      ? ListView.separated(
+                        itemCount: instructions.length,
+                        separatorBuilder: (context, index) => const Divider(),
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: theme.colorScheme.primary,
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onPrimary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    instructions[index],
+                                    style: theme.textTheme.bodyMedium,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       )
-                      : SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children:
-                                instructions
-                                    .map(
-                                      (instruction) => RichText(
-                                        text: TextSpan(
-                                          children: [
-                                            WidgetSpan(
-                                              child: Icon(
-                                                Icons.arrow_right,
-                                                size: 16,
-                                              ),
-                                            ),
-                                            TextSpan(
-                                              text: instruction,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                          ),
+                      : Center(
+                        child: Text(
+                          resultText,
+                          style: theme.textTheme.bodyLarge,
                         ),
                       ),
             ),

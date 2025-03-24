@@ -2,16 +2,17 @@ import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
 import 'package:way_to_class/constants/other.dart';
+import 'package:way_to_class/core/models/campus_graph.dart';
+import 'package:way_to_class/core/models/route_segments.dart';
 import 'package:way_to_class/core/utils/injection.dart';
 import 'package:way_to_class/pages/graph_view_page.dart' show GraphViewScreen;
 import 'package:way_to_class/pages/home/components/nav_bar.dart';
 import 'package:way_to_class/pages/home/components/quick_access_panel.dart';
 import 'package:way_to_class/pages/home/components/route_desc_panel.dart';
 import 'package:way_to_class/pages/home/components/search_panel.dart';
-import 'package:way_to_class/core/components/graph.dart' show Graph;
 import 'package:way_to_class/pages/prof_page.dart';
 import 'package:way_to_class/screens/settings_dropdown.dart';
-import 'package:way_to_class/service/graph_service.dart';
+import 'package:way_to_class/service/campus_graph_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,16 +22,21 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final GraphService _graphService = getIt<GraphService>();
-  late final Future<Graph> _graphFuture;
+  final CampusGraphService _graphService = getIt<CampusGraphService>();
+  late final Future<CampusGraph> _graphFuture;
+
+  // State-Variablen
   String resultText = noPathSelected;
   final List<String> pathInstructions = [];
   final PageController _pageController = PageController();
   int _currentIndex = 0;
-
-  // State-Variablen für die Werte der Eingabefelder
   String _startValue = '';
   String _zielValue = '';
+
+  // Routing-State
+  List<RouteSegment>? _currentRouteSegments;
+  String? _lastStartId;
+  String? _lastTargetId;
 
   @override
   void initState() {
@@ -44,77 +50,78 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Future<Graph> _loadGraph() async {
-    return _graphService.loadGraph('assets/haus_b/haus_b_f1.json');
+  Future<CampusGraph> _loadGraph() async {
+    return _graphService.loadGraph(assetPath);
   }
 
-  // Wegfindungs-Methoden
-  Future<void> _findPath() async {
+  /// Findet einen Weg zwischen Start und Ziel und bereitet Anweisungen vor
+  Future<void> _findPathAndGenerateInstructions({
+    required String startId,
+    required String targetId,
+    bool forceRecompute = false,
+  }) async {
+    if (startId.isEmpty || targetId.isEmpty) {
+      setState(() {
+        resultText = 'Bitte wähle Start und Ziel aus.';
+      });
+      return;
+    }
+
     try {
       final stopwatch = Stopwatch()..start();
 
-      final String startId = _getStartNodeId();
-      final String targetId = _getTargetNodeId();
-      await _findeWeg(startId, targetId);
+      // Rufe bestehende Route ab oder berechne neu (mit Caching)
+      if (_lastStartId != startId ||
+          _lastTargetId != targetId ||
+          _currentRouteSegments == null ||
+          forceRecompute) {
+        // Neue Route berechnen und cachen
+        _currentRouteSegments = await _graphService.getRouteSegments(
+          startId,
+          targetId,
+        );
+        _lastStartId = startId;
+        _lastTargetId = targetId;
+
+        log(
+          'Route neu berechnet: ${_currentRouteSegments?.length ?? 0} Segmente',
+        );
+      } else {
+        log(
+          'Verwende gecachte Route: ${_currentRouteSegments?.length ?? 0} Segmente',
+        );
+      }
+
+      // Anweisungen aus den Segmenten generieren
+      final instructions = _graphService.getInstructionsFromSegments(
+        _currentRouteSegments!,
+      );
+
+      if (instructions.isEmpty) {
+        setState(() => resultText = 'Kein Weg gefunden.');
+        return;
+      }
+
+      // Ergebnisse aktualisieren
+      setState(() {
+        resultText = instructions.join('\n\n');
+        pathInstructions.clear();
+        pathInstructions.addAll(instructions);
+      });
 
       final double totalTime = stopwatch.elapsedMicroseconds / 1000;
-      log('Button-zu-Ergebnis Zeit: $totalTime ms');
+      log('Gesamtzeit für Wegfindung und Anweisungen: $totalTime ms');
     } catch (e) {
-      setState(() => resultText = e.toString());
+      log('Fehler bei der Wegfindung: $e');
+      setState(() => resultText = 'Fehler bei der Wegfindung: $e');
     }
   }
 
-  Future<void> _findNearestBathroom() async {
+  /// Hauptmethode für die Wegfindung von UI-Eingaben
+  Future<void> _findPath() async {
     try {
-      final Graph graph = _graphService.currentGraph!;
       final String startId = _getStartNodeId();
-
-      if (startId.isEmpty) {
-        setState(() => resultText = 'Bitte wähle einen Startpunkt aus.');
-        return;
-      }
-      final String nearestBathroomId = graph.findNearestBathroomId(startId);
-
-      await _findeWeg(startId, nearestBathroomId);
-    } catch (e) {
-      setState(() => resultText = e.toString());
-    }
-  }
-
-  Future<void> _findNearestEmergencyExit() async {
-    try {
-      final Graph graph = _graphService.currentGraph!;
-      final String startId = _getStartNodeId();
-
-      if (startId.isEmpty) {
-        setState(() => resultText = 'Bitte wähle einen Startpunkt aus.');
-        return;
-      }
-      final String nearestExit = graph.findNearestEmergencyExitId(startId);
-
-      await _findeWeg(startId, nearestExit);
-    } catch (e) {
-      setState(() => resultText = e.toString());
-    }
-  }
-
-  String _getStartNodeId() {
-    final Graph graph = _graphService.currentGraph!;
-    // Hier Logik zur ID-Ermittlung
-    // Beispiel (angepasst an deine vorherige Implementierung):
-    return graph.getNodeIdByName(_startValue) ?? '';
-  }
-
-  String _getTargetNodeId() {
-    final Graph graph = _graphService.currentGraph!;
-    // Hier Logik zur ID-Ermittlung
-    // Beispiel:
-    return graph.getNodeIdByName(_zielValue) ?? '';
-  }
-
-  Future<void> _findeWeg(String startId, String targetId) async {
-    try {
-      final Graph graph = _graphService.currentGraph!;
+      final String targetId = _getTargetNodeId();
 
       if (startId.isEmpty) {
         setState(() => resultText = 'Bitte wähle einen Startpunkt aus.');
@@ -126,27 +133,112 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      log('Starte Wegfindung von $startId nach $targetId');
-
-      final List<String> instructions = await graph.getNavigationInstructions(
-        startId,
-        targetId,
+      await _findPathAndGenerateInstructions(
+        startId: startId,
+        targetId: targetId,
       );
+    } catch (e) {
+      setState(() => resultText = e.toString());
+    }
+  }
 
-      if (instructions.isEmpty) {
-        setState(() => resultText = 'Kein Weg gefunden.');
+  /// Sucht die nächste Toilette und berechnet den Weg dorthin
+  Future<void> _findNearestBathroom() async {
+    try {
+      final String startId = _getStartNodeId();
+
+      if (startId.isEmpty) {
+        setState(() => resultText = 'Bitte wähle einen Startpunkt aus.');
         return;
       }
 
-      setState(() {
-        resultText = instructions.join('\n');
-        pathInstructions.clear();
-        pathInstructions.addAll(instructions);
-      });
+      final String nearestBathroomId = await _graphService
+          .findNearestPointOfInterest(startId, PointOfInterestType.toilet);
+
+      if (nearestBathroomId.isEmpty) {
+        setState(
+          () => resultText = 'Leider konnte keine Toilette gefunden werden.',
+        );
+        return;
+      }
+
+      await _findPathAndGenerateInstructions(
+        startId: startId,
+        targetId: nearestBathroomId,
+      );
     } catch (e) {
-      log('Fehler: $e');
-      setState(() => resultText = 'Fehler bei der Wegfindung: $e');
+      setState(() => resultText = e.toString());
     }
+  }
+
+  /// Sucht den nächsten Notausgang und berechnet den Weg dorthin
+  Future<void> _findNearestEmergencyExit() async {
+    try {
+      final String startId = _getStartNodeId();
+
+      if (startId.isEmpty) {
+        setState(() => resultText = 'Bitte wähle einen Startpunkt aus.');
+        return;
+      }
+
+      final String nearestExitId = await _graphService
+          .findNearestPointOfInterest(startId, PointOfInterestType.exit);
+
+      if (nearestExitId.isEmpty) {
+        setState(
+          () => resultText = 'Leider konnte kein Notausgang gefunden werden.',
+        );
+        return;
+      }
+
+      await _findPathAndGenerateInstructions(
+        startId: startId,
+        targetId: nearestExitId,
+      );
+    } catch (e) {
+      setState(() => resultText = e.toString());
+    }
+  }
+
+  /// Sucht die Mensa und berechnet den Weg dorthin
+  Future<void> _findCanteen() async {
+    try {
+      final String startId = _getStartNodeId();
+
+      if (startId.isEmpty) {
+        setState(() => resultText = 'Bitte wähle einen Startpunkt aus.');
+        return;
+      }
+
+      final String canteenId = await _graphService.findNearestPointOfInterest(
+        startId,
+        PointOfInterestType.canteen,
+      );
+
+      if (canteenId.isEmpty) {
+        setState(
+          () => resultText = 'Leider konnte keine Mensa gefunden werden.',
+        );
+        return;
+      }
+
+      await _findPathAndGenerateInstructions(
+        startId: startId,
+        targetId: canteenId,
+      );
+    } catch (e) {
+      setState(() => resultText = e.toString());
+    }
+  }
+
+  String _getStartNodeId() {
+    final CampusGraph graph = _graphService.currentGraph!;
+    return graph.getNodeIdByName(_startValue) ?? '';
+  }
+
+  String _getTargetNodeId() {
+    final CampusGraph graph = _graphService.currentGraph!;
+    return graph.getNodeIdByName(_zielValue) ?? '';
   }
 
   void _onTabTapped(int index) {
@@ -186,7 +278,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildNavigationPage() {
     final theme = Theme.of(context);
 
-    return FutureBuilder<Graph>(
+    return FutureBuilder<CampusGraph>(
       future: _graphFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -217,8 +309,7 @@ class _HomePageState extends State<HomePage> {
         }
 
         final graph = snapshot.data!;
-        final List<String> nodeNames =
-            graph.nodeMap.values.map((n) => n.name).toList();
+        final List<String> nodeNames = graph.nodeNames;
 
         return Container(
           decoration: BoxDecoration(
@@ -260,6 +351,19 @@ class _HomePageState extends State<HomePage> {
                   child: RouteDescriptionPanel(
                     resultText: resultText,
                     instructions: pathInstructions,
+                    onRefresh:
+                        _currentRouteSegments != null
+                            ? () async {
+                              if (_lastStartId != null &&
+                                  _lastTargetId != null) {
+                                await _findPathAndGenerateInstructions(
+                                  startId: _lastStartId!,
+                                  targetId: _lastTargetId!,
+                                  forceRecompute: true,
+                                );
+                              }
+                            }
+                            : null,
                   ),
                 ),
 
@@ -267,7 +371,7 @@ class _HomePageState extends State<HomePage> {
                 QuickAccessPanel(
                   onBathroomPressed: _findNearestBathroom,
                   onExitPressed: _findNearestEmergencyExit,
-                  onCanteenPressed: () => log('Mensa'),
+                  onCanteenPressed: _findCanteen,
                 ),
               ],
             ),
@@ -277,3 +381,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+/// Definition für POI-Typen
+enum PointOfInterestType { toilet, exit, canteen }

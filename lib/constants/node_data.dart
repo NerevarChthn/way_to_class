@@ -18,6 +18,7 @@ const int buildingE = 0x50; // 0000 0000 0101 0000 (Gebäude E = 5)
 
 /// Floors (Bits 7-9)
 const int floorMask = 0x380; // 0000 0011 1000 0000 (Bits 7-9)
+const int floorShift = 7;
 const int floorBasement = 0x80; // 0000 0000 1000 0000 (UG = 1)
 const int floor0 = 0x100; // 0000 0001 0000 0000 (EG = 2)
 const int floor1 = 0x180; // 0000 0001 1000 0000 (1. OG = 3)
