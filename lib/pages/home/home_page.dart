@@ -6,7 +6,6 @@ import 'package:way_to_class/core/models/campus_graph.dart';
 import 'package:way_to_class/core/models/route_segments.dart';
 import 'package:way_to_class/core/utils/injection.dart';
 import 'package:way_to_class/pages/floors.dart';
-import 'package:way_to_class/pages/graph_view_page.dart' show GraphViewScreen;
 import 'package:way_to_class/pages/home/components/nav_bar.dart';
 import 'package:way_to_class/pages/home/components/quick_access_panel.dart';
 import 'package:way_to_class/pages/home/components/route_desc_panel.dart';
@@ -311,6 +310,7 @@ class _HomePageState extends State<HomePage> {
 
         final graph = snapshot.data!;
         final List<String> nodeNames = graph.nodeNames;
+        log('Graph geladen: ${nodeNames.length} Knoten');
 
         return Container(
           decoration: BoxDecoration(

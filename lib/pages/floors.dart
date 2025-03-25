@@ -236,7 +236,7 @@ class _FloorViewerState extends State<FloorViewer>
                           ),
                           ColorLegendItem(color: Colors.blue, label: 'Hörsäle'),
                           ColorLegendItem(
-                            color: Colors.green,
+                            color: Color(0xFF00FF00),
                             label: 'Seminarräume',
                           ),
                           ColorLegendItem(
