@@ -23,6 +23,53 @@ class NodeAutocompleteField extends StatefulWidget {
 class _NodeAutocompleteFieldState extends State<NodeAutocompleteField> {
   late TextEditingController _controller;
 
+  /// Konvertiert Raumbezeichnungen, um numerische Teile ohne führende Nullen zu vergleichen
+  String _normalizeRoomNumber(String input) {
+    // Trennt die Eingabe in Buchstaben- und Zahlenblöcke
+    final RegExp regex = RegExp(r'([a-zA-Z]+|\d+)');
+    final matches = regex.allMatches(input);
+
+    // Erstellt eine normalisierte Version der Eingabe
+    final StringBuffer normalized = StringBuffer();
+
+    for (final match in matches) {
+      final part = match.group(0)!;
+
+      // Wenn es eine Zahl ist, entferne führende Nullen
+      if (RegExp(r'^\d+$').hasMatch(part)) {
+        try {
+          // Konvertiert zu int und zurück, um führende Nullen zu entfernen
+          final normalizedNumber = int.parse(part).toString();
+          normalized.write(normalizedNumber);
+        } catch (e) {
+          // Bei Fehler den Originaltext behalten
+          normalized.write(part);
+        }
+      } else {
+        // Buchstaben unverändert übernehmen
+        normalized.write(part);
+      }
+    }
+
+    return normalized.toString().toLowerCase();
+  }
+
+  /// Prüft, ob die Option mit der Abfrage übereinstimmt (mit spezieller Behandlung für Raumnummern)
+  bool _matchesQuery(String option, String query) {
+    final normalizedOption = _normalizeRoomNumber(option);
+    final normalizedQuery = _normalizeRoomNumber(query);
+
+    return normalizedOption.contains(normalizedQuery);
+  }
+
+  /// Prüft, ob die Option mit der Abfrage beginnt (mit spezieller Behandlung für Raumnummern)
+  bool _startsWithQuery(String option, String query) {
+    final normalizedOption = _normalizeRoomNumber(option);
+    final normalizedQuery = _normalizeRoomNumber(query);
+
+    return normalizedOption.startsWith(normalizedQuery);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -51,19 +98,22 @@ class _NodeAutocompleteFieldState extends State<NodeAutocompleteField> {
           return const Iterable<String>.empty();
         }
 
-        final query = textEditingValue.text.trim().toLowerCase();
+        final query = textEditingValue.text.trim();
         List<String> matches =
             widget.nodeNames
-                .where((option) => option.toLowerCase().contains(query))
+                .where((option) => _matchesQuery(option, query))
                 .toList();
 
-        // Sortierung
+        // Verbesserte Sortierung mit normalisierter Raumnummernlogik
         matches.sort((a, b) {
-          bool aStartsWith = a.toLowerCase().startsWith(query);
-          bool bStartsWith = b.toLowerCase().startsWith(query);
+          // Zuerst nach "beginnt mit" sortieren
+          bool aStartsWith = _startsWithQuery(a, query);
+          bool bStartsWith = _startsWithQuery(b, query);
 
           if (aStartsWith && !bStartsWith) return -1;
           if (!aStartsWith && bStartsWith) return 1;
+
+          // Dann nach Länge (kürzere zuerst)
           return a.length - b.length;
         });
 
@@ -87,12 +137,16 @@ class _NodeAutocompleteFieldState extends State<NodeAutocompleteField> {
           decoration: InputDecoration(
             hintText: widget.hintText,
             prefixIcon: Icon(widget.prefixIcon),
-            // Rest der Dekoration
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surface,
           ),
           onSubmitted: (_) => onFieldSubmitted(),
         );
       },
-      // Rest des Autocomplete bleibt gleich...
+      displayStringForOption: (option) => option,
     );
   }
 }

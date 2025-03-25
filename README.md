@@ -663,3 +663,7 @@ Die Klasse generiert dynamisch natürliche Navigationsanweisungen für verschied
 
 - **[TODO]:**  
   Erweiterung um GPT Deep Reasoning für Segmentcode mit Beispielen und weiteren Template-Ideen.
+
+
+### 25. März 2025
+- Raumsuche erkennt jetzt auch Räume, wenn man potenzielle Nullen weglässt (z.B. a4 findet auch A004)
