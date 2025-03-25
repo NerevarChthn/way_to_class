@@ -1,11 +1,13 @@
 import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
+import 'package:graphview/GraphView.dart';
 import 'package:way_to_class/constants/other.dart';
 import 'package:way_to_class/core/models/campus_graph.dart';
 import 'package:way_to_class/core/models/route_segments.dart';
 import 'package:way_to_class/core/utils/injection.dart';
 import 'package:way_to_class/pages/floors.dart';
+import 'package:way_to_class/pages/graph_view_page.dart';
 import 'package:way_to_class/pages/home/components/nav_bar.dart';
 import 'package:way_to_class/pages/home/components/quick_access_panel.dart';
 import 'package:way_to_class/pages/home/components/route_desc_panel.dart';
@@ -76,7 +78,7 @@ class _HomePageState extends State<HomePage> {
           _currentRouteSegments == null ||
           forceRecompute) {
         // Neue Route berechnen und cachen
-        _currentRouteSegments = await _graphService.getRouteSegments(
+        _currentRouteSegments = _graphService.getRouteSegments(
           startId,
           targetId,
         );
@@ -152,8 +154,10 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      final String nearestBathroomId = await _graphService
-          .findNearestPointOfInterest(startId, PointOfInterestType.toilet);
+      final String nearestBathroomId = _graphService.findNearestPointOfInterest(
+        startId,
+        PointOfInterestType.toilet,
+      );
 
       if (nearestBathroomId.isEmpty) {
         setState(
@@ -181,8 +185,10 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      final String nearestExitId = await _graphService
-          .findNearestPointOfInterest(startId, PointOfInterestType.exit);
+      final String nearestExitId = _graphService.findNearestPointOfInterest(
+        startId,
+        PointOfInterestType.exit,
+      );
 
       if (nearestExitId.isEmpty) {
         setState(
@@ -210,7 +216,7 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      final String canteenId = await _graphService.findNearestPointOfInterest(
+      final String canteenId = _graphService.findNearestPointOfInterest(
         startId,
         PointOfInterestType.canteen,
       );
@@ -266,7 +272,7 @@ class _HomePageState extends State<HomePage> {
         onPageChanged: (index) {
           setState(() => _currentIndex = index);
         },
-        children: [_buildNavigationPage(), FloorViewer(), ProfTablePage()],
+        children: [_buildNavigationPage(), GraphViewScreen(), ProfTablePage()],
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,

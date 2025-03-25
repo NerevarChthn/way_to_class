@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:developer' as dev;
 import 'package:way_to_class/constants/metadata_keys.dart';
+import 'package:way_to_class/constants/node_data.dart';
 import 'package:way_to_class/constants/segment.dart';
 import 'package:way_to_class/constants/types.dart';
 import 'package:way_to_class/core/models/campus_graph.dart';
@@ -35,11 +36,12 @@ class SegmentsGenerator {
     // Ermittlung der Breakpoints (kritische Punkte im Pfad)
     final List<_PathBreakpoint> breakpoints = _findPathBreakpoints(path, graph);
     dev.log("Gefundene Breakpoints: ${breakpoints.length}");
-    dev.log(breakpoints.toString());
 
     // Falls keine Breakpoints gefunden werden, den gesamten Pfad als ein Segment behandeln
     if (breakpoints.isEmpty) {
-      final SegmentType pathType = _determineSegmentType(path[0], graph);
+      SegmentType pathType = _determineSegmentType(path[0], graph);
+      // Türen immer als hallway behandeln
+      if (pathType == SegmentType.door) pathType = SegmentType.hallway;
       segments.add(_createSegment(path, pathType, graph));
       return segments;
     }
@@ -57,7 +59,8 @@ class SegmentsGenerator {
         if (endIndex > 0 && startIndex >= endIndex) {
           startIndex = endIndex - 1;
         }
-        // Nur verarbeiten, wenn auch mindestens ein Knoten nach dem Abbiegungsknoten existiert (für die Berechnung des Winkels)
+
+        // Nur verarbeiten, wenn auch mindestens ein Knoten nach dem Abbiegungsknoten existiert
         if (endIndex >= startIndex && endIndex + 1 < path.length) {
           final List<NodeId> segmentNodes = path.sublist(
             startIndex,
@@ -65,23 +68,41 @@ class SegmentsGenerator {
           );
           if (segmentNodes.length >= 2 &&
               segmentNodes.last != lastProcessedNode) {
-            // Berechne Turn-Richtung anhand der drei relevanten Knoten: [vorher, Abbiegung, nachher]
+            // Berechne Turn-Richtung anhand der drei relevanten Knoten
             final String direction = _calculateTurnDirection([
               path[endIndex - 1],
               path[endIndex],
               path[endIndex + 1],
             ], graph);
+
+            // Prüfe, ob wir Türen im Segment haben und zähle sie
+            int doorCount = 0;
+            for (final nodeId in segmentNodes) {
+              final node = graph.getNodeById(nodeId);
+              if (node != null && node.isDoor) {
+                doorCount++;
+              }
+            }
+
+            // Erstelle das Segment immer als hallway
             final RouteSegment seg = _createSegment(
               segmentNodes,
-              _determineSegmentType(segmentNodes[0], graph),
+              SegmentType.hallway,
               graph,
             );
+
+            // Füge Abbiegungsrichtung hinzu
             seg.metadata[MetadataKeys.direction] = direction;
 
+            // Füge Türzähler hinzu, wenn Türen enthalten sind
+            if (doorCount > 0) {
+              seg.metadata[MetadataKeys.doorCount] = doorCount;
+            }
+
+            // Landmark hinzufügen, wenn verfügbar
             final String? landmarkName = graph.findNearestNonHallwayNode(
               path[endIndex],
             );
-
             if (landmarkName != null) {
               seg.metadata[MetadataKeys.landmark] = landmarkName;
             }
@@ -90,30 +111,50 @@ class SegmentsGenerator {
             lastProcessedNode = segmentNodes.last;
           }
         }
+
         // Setze startIndex so, dass der Abbiegungsknoten auch im nächsten Segment enthalten ist
         startIndex = endIndex;
-      } else if (bp.type == BreakpointType.typeChange) {
+      } else if (bp.type == BreakpointType.typeChange ||
+          bp.type == BreakpointType.specialDoor) {
         // Erzeuge Segment von startIndex bis kurz vor den Breakpoint
         if (endIndex > startIndex) {
           final List<NodeId> segmentNodes = path.sublist(startIndex, endIndex);
           if (segmentNodes.length >= 2 &&
               segmentNodes.last != lastProcessedNode) {
-            segments.add(
-              _createSegment(
-                segmentNodes,
-                _determineSegmentType(segmentNodes[0], graph),
-                graph,
-              ),
-            );
+            SegmentType segType = _determineSegmentType(segmentNodes[0], graph);
+            // Türen immer als hallway behandeln
+            if (segType == SegmentType.door) segType = SegmentType.hallway;
+            segments.add(_createSegment(segmentNodes, segType, graph));
             lastProcessedNode = segmentNodes.last;
           }
         }
 
-        // Spezielle Behandlung für Typwechsel (z. B. Türen, Treppen, Aufzüge)
+        // Spezielle Behandlung für Typwechsel (z. B. Treppen, Aufzüge)
         final NodeId bpNode = path[endIndex];
-        final SegmentType bpType = _determineSegmentType(bpNode, graph);
-        if (bpType == SegmentType.door ||
-            bpType == SegmentType.stairs ||
+        SegmentType bpType = _determineSegmentType(bpNode, graph);
+
+        // Für Notausgänge und Haupteingänge spezielle Behandlung
+        if (bp.type == BreakpointType.specialDoor) {
+          final Node? exitNode = graph.getNodeById(bpNode);
+          if (exitNode != null) {
+            final List<NodeId> exitNodes = [];
+            if (endIndex > 0 && path[endIndex - 1] != lastProcessedNode) {
+              exitNodes.add(path[endIndex - 1]);
+            }
+            exitNodes.add(bpNode);
+            if (endIndex + 1 < path.length) {
+              exitNodes.add(path[endIndex + 1]);
+            }
+
+            final RouteSegment exitSegment = _createSegment(
+              exitNodes,
+              SegmentType.exit,
+              graph,
+            );
+            segments.add(exitSegment);
+            lastProcessedNode = bpNode;
+          }
+        } else if (bpType == SegmentType.stairs ||
             bpType == SegmentType.elevator) {
           final List<NodeId> specialSegmentNodes = [];
           if (endIndex > 0 && path[endIndex - 1] != lastProcessedNode) {
@@ -123,17 +164,17 @@ class SegmentsGenerator {
           if (endIndex + 1 < path.length) {
             specialSegmentNodes.add(path[endIndex + 1]);
           }
-          if (specialSegmentNodes.length >= 2 || bpType == SegmentType.door) {
+          if (specialSegmentNodes.length >= 2) {
             segments.add(_createSegment(specialSegmentNodes, bpType, graph));
             lastProcessedNode = bpNode;
           }
         }
-        // Wenn direkt nach diesem TypeChange ein Turn folgt, wollen wir den Abbiegungsknoten nicht verlieren.
+
+        // Wenn direkt nach diesem TypeChange ein Turn folgt, wollen wir den Abbiegungsknoten nicht verlieren
         final bool nextIsTurn =
             (i + 1 < breakpoints.length &&
                 breakpoints[i + 1].type == BreakpointType.turn);
-        // Falls das Segment zwischen startIndex und dem Breakpoint weniger als 2 Knoten hat,
-        // setzen wir startIndex so, dass der Knoten erhalten bleibt.
+
         if (!nextIsTurn && (endIndex - startIndex) < 2) {
           startIndex = endIndex;
         } else if (nextIsTurn) {
@@ -147,10 +188,6 @@ class SegmentsGenerator {
     // Verarbeitung des letzten Segments
     if (startIndex < path.length) {
       final List<NodeId> lastSegmentNodes = path.sublist(startIndex);
-      // Falls nur ein einzelner Knoten übrig ist, füge den vorherigen hinzu, um mindestens zwei Knoten zu erhalten
-      if (lastSegmentNodes.length == 1 && startIndex > 0) {
-        lastSegmentNodes.insert(0, path[startIndex - 1]);
-      }
       if (lastSegmentNodes.length >= 2) {
         final SegmentType lastNodeType = _determineSegmentType(
           lastSegmentNodes.last,
@@ -159,52 +196,40 @@ class SegmentsGenerator {
         if (lastNodeType == SegmentType.room ||
             lastNodeType == SegmentType.toilet ||
             lastNodeType == SegmentType.exit) {
-          // Destination-Segment: Nutzt die letzten Knoten, um die Seite zu berechnen
-          if (lastSegmentNodes.length >= 3) {
-            final List<NodeId> destinationNodes = lastSegmentNodes.sublist(
-              lastSegmentNodes.length - 3,
+          // Destination-Segment
+          final List<NodeId> destinationNodes = lastSegmentNodes.sublist(
+            lastSegmentNodes.length - 2,
+          );
+          segments.add(
+            _createSegment(destinationNodes, SegmentType.destination, graph),
+          );
+
+          // Füge den Rest als hallway hinzu, falls vorhanden
+          if (lastSegmentNodes.length > 2) {
+            final List<NodeId> hallwayNodes = lastSegmentNodes.sublist(
+              0,
+              lastSegmentNodes.length - 1,
             );
-            segments.add(
-              _createSegment(destinationNodes, SegmentType.destination, graph),
-            );
-            if (lastSegmentNodes.length > 3) {
-              final List<NodeId> hallwayNodes = lastSegmentNodes.sublist(
-                0,
-                lastSegmentNodes.length - 2,
+            if (hallwayNodes.length >= 2) {
+              segments.add(
+                _createSegment(hallwayNodes, SegmentType.hallway, graph),
               );
-              if (hallwayNodes.length >= 2) {
-                segments.add(
-                  _createSegment(hallwayNodes, SegmentType.hallway, graph),
-                );
-              }
             }
-          } else {
-            segments.add(
-              _createSegment(lastSegmentNodes, SegmentType.destination, graph),
-            );
           }
         } else {
-          segments.add(
-            _createSegment(
-              lastSegmentNodes,
-              _determineSegmentType(lastSegmentNodes[0], graph),
-              graph,
-            ),
+          // Normales Segment
+          SegmentType segType = _determineSegmentType(
+            lastSegmentNodes[0],
+            graph,
           );
-        }
-      } else if (lastSegmentNodes.length == 1 &&
-          lastSegmentNodes[0] != lastProcessedNode) {
-        final SegmentType nodeType = _determineSegmentType(
-          lastSegmentNodes[0],
-          graph,
-        );
-        if (nodeType != SegmentType.unknown) {
-          segments.add(_createSegment(lastSegmentNodes, nodeType, graph));
+          // Türen immer als hallway behandeln
+          if (segType == SegmentType.door) segType = SegmentType.hallway;
+          segments.add(_createSegment(lastSegmentNodes, segType, graph));
         }
       }
     }
 
-    // Zusammenführen von Hallway- und Door-Segmenten
+    // Zusammenführen von Hallway-Segmenten
     return _mergeSegments(segments);
   }
 
@@ -323,11 +348,22 @@ class SegmentsGenerator {
   ) {
     final List<_PathBreakpoint> breakpoints = [];
 
-    // Analysiere jeden Knoten (außer Start und Ende) auf Typwechsel oder Richtungsänderungen
+    // Ausführliche Debug-Information für den Pfad
+    dev.log("Suche Breakpoints in folgendem Pfad: ${path.join(' -> ')}");
+
+    // Zuerst nach Abbiegungen suchen, da diese höchste Priorität haben
     for (int i = 1; i < path.length - 1; i++) {
       final NodeId prevId = path[i - 1];
       final NodeId currentId = path[i];
       final NodeId nextId = path[i + 1];
+
+      if (nextId == path.last) {
+        dev.log(
+          "Überspringe Abbiegungsprüfung bei $i ($currentId): Nächster Knoten ist das Ziel",
+        );
+
+        continue;
+      }
 
       // Knoten abrufen
       final prevNode = graph.getNodeById(prevId);
@@ -338,104 +374,133 @@ class SegmentsGenerator {
         continue;
       }
 
-      // Typwechsel erkennen
-      final SegmentType prevType = _determineSegmentType(prevId, graph);
-      final SegmentType currentType = _determineSegmentType(currentId, graph);
-      final SegmentType nextType = _determineSegmentType(nextId, graph);
+      // Ignoriere Türen nicht mehr für die Abbiegungserkennung
+      // Fokus liegt auf der Geometrie, nicht auf dem Typ
 
-      // ÄNDERUNG: Spezialbehandlung für Türen
-      // Wenn der aktuelle Knoten eine Tür ist, aber der vorherige und nächste Flure sind,
-      // behandeln wir die Tür nicht als Breakpoint
-      if (currentType == SegmentType.door &&
-          prevType == SegmentType.hallway &&
-          nextType == SegmentType.hallway) {
-        // Prüfen, ob die Tür eine gerade Fortsetzung des Flurs ist
-        // Vektoren berechnen
-        final dx1 = currentNode.x - prevNode.x;
-        final dy1 = currentNode.y - prevNode.y;
-        final dx2 = nextNode.x - currentNode.x;
-        final dy2 = nextNode.y - currentNode.y;
+      // Vektoren berechnen
+      final dx1 = currentNode.x - prevNode.x;
+      final dy1 = currentNode.y - prevNode.y;
+      final dx2 = nextNode.x - currentNode.x;
+      final dy2 = nextNode.y - currentNode.y;
 
-        // Längen der Vektoren
-        final length1 = sqrt(dx1 * dx1 + dy1 * dy1);
-        final length2 = sqrt(dx2 * dx2 + dy2 * dy2);
+      // Längen der Vektoren
+      final length1 = sqrt(dx1 * dx1 + dy1 * dy1);
+      final length2 = sqrt(dx2 * dx2 + dy2 * dy2);
 
-        if (length1 > minSegmentLength && length2 > minSegmentLength) {
-          // Normalisierte Vektoren
-          final nx1 = dx1 / length1;
-          final ny1 = dy1 / length1;
-          final nx2 = dx2 / length2;
-          final ny2 = dy2 / length2;
+      // Debug-Log für Vektoren
+      dev.log(
+        "Vektoren bei $i ($currentId): V1=($dx1,$dy1) Länge=$length1, V2=($dx2,$dy2) Länge=$length2",
+      );
 
-          // Skalarprodukt für den Winkel
-          final dotProduct = nx1 * nx2 + ny1 * ny2;
+      // Reduzierter Schwellenwert für bessere Erkennung
+      if (length1 > 0.5 && length2 > 0.5) {
+        // Normalisierte Vektoren
+        final nx1 = dx1 / length1;
+        final ny1 = dy1 / length1;
+        final nx2 = dx2 / length2;
+        final ny2 = dy2 / length2;
 
-          // Wenn die Vektoren nahezu parallel sind (dotProduct nahe 1), ist es eine gerade Linie
-          // und wir betrachten die Tür als Teil des Flursegments
-          if (dotProduct > parallelThreshold) {
-            // Kein Breakpoint für diese Tür
-            continue;
-          }
-        }
-      }
+        // Skalarprodukt für den Winkel
+        final dotProduct = nx1 * nx2 + ny1 * ny2;
 
-      // Bei Typwechsel (z.B. Flur → Treppe) handelt es sich um einen Breakpoint
-      if (prevType != currentType || currentType != nextType) {
-        breakpoints.add(_PathBreakpoint(i, BreakpointType.typeChange));
-        continue;
-      }
+        // Kreuzprodukt für die Richtung
+        final crossProduct = nx1 * ny2 - ny1 * nx2;
 
-      // WICHTIG: Erkennung von Richtungsänderungen im Flur
-      // Dies wurde im vorherigen Code ausgelassen!
-      if (((currentType == SegmentType.door) ||
-              (currentType == SegmentType.hallway)) &&
-          prevType == SegmentType.hallway &&
-          ((nextType == SegmentType.door) ||
-              (nextType == SegmentType.hallway))) {
-        // Vektoren berechnen
-        final dx1 = currentNode.x - prevNode.x;
-        final dy1 = currentNode.y - prevNode.y;
-        final dx2 = nextNode.x - currentNode.x;
-        final dy2 = nextNode.y - currentNode.y;
-
-        // Längen der Vektoren
-        final length1 = sqrt(dx1 * dx1 + dy1 * dy1);
-        final length2 = sqrt(dx2 * dx2 + dy2 * dy2);
-
-        if (length1 > minSegmentLength && length2 > minSegmentLength) {
-          // Normalisierte Vektoren
-          final nx1 = dx1 / length1;
-          final ny1 = dy1 / length1;
-          final nx2 = dx2 / length2;
-          final ny2 = dy2 / length2;
-
-          // Skalarprodukt für den Winkel
-          final dotProduct = nx1 * nx2 + ny1 * ny2;
-
-          // Kreuzprodukt für die Richtung
-          final crossProduct = nx1 * ny2 - ny1 * nx2;
-
-          if (crossProduct == 0) {
-            // Keine Richtungsänderung, da die Vektoren parallel sind
-            continue;
-          }
-
+        // Überprüfe auf echte Abbiegung
+        if (crossProduct.abs() > 0.1) {
           // Winkel zwischen den Vektoren berechnen
           final angle = acos(dotProduct.clamp(-1.0, 1.0)) * 180 / pi;
 
           // Debug-Ausgabe
           final direction = crossProduct > 0 ? "links" : "rechts";
           dev.log(
-            "Knoten $i ($currentId): Winkel $angle° nach $direction (Dot: $dotProduct)",
+            "Knoten $i ($currentId): Winkel $angle° nach $direction (Dot: $dotProduct, Cross: $crossProduct)",
           );
 
-          // Wenn der Winkel größer als 15° ist, handelt es sich um eine Abbiegung
-          if (angle > turnAngleThreshold) {
-            dev.log("Abbiegung erkannt bei $currentId");
+          // Reduzierter Schwellenwert für bessere Erkennung
+          if (angle > 10) {
+            dev.log(
+              "ABBIEGUNG erkannt bei $i ($currentId) (${currentNode.name}): $angle°",
+            );
             breakpoints.add(_PathBreakpoint(i, BreakpointType.turn));
           }
         }
       }
+    }
+
+    // Dann nach Typwechseln suchen (niedrigere Priorität)
+    for (int i = 1; i < path.length - 1; i++) {
+      // Wenn dieser Knoten bereits als Abbiegung markiert ist, überspringen
+      if (breakpoints.any(
+        (bp) => bp.index == i && bp.type == BreakpointType.turn,
+      )) {
+        continue;
+      }
+
+      final NodeId prevId = path[i - 1];
+      final NodeId currentId = path[i];
+      final NodeId nextId = path[i + 1];
+
+      // Knoten abrufen
+      final currentNode = graph.getNodeById(currentId);
+      if (currentNode == null) continue;
+
+      // Typwechsel erkennen (Türen jetzt ausgenommen!)
+      final SegmentType prevType = _determineSegmentType(prevId, graph);
+      final SegmentType currentType = _determineSegmentType(currentId, graph);
+      final SegmentType nextType = _determineSegmentType(nextId, graph);
+
+      // WICHTIG: Alle Türen werden jetzt als hallway behandelt
+      final SegmentType effectivePrevType =
+          prevType == SegmentType.door ? SegmentType.hallway : prevType;
+      final SegmentType effectiveCurrentType =
+          currentType == SegmentType.door ? SegmentType.hallway : currentType;
+      final SegmentType effectiveNextType =
+          nextType == SegmentType.door ? SegmentType.hallway : nextType;
+
+      // Debug-Log für Knotentypen
+      dev.log(
+        "Knotentypen bei $i ($currentId): Prev=$effectivePrevType, Current=$effectiveCurrentType, Next=$effectiveNextType",
+      );
+
+      // Bei Typwechsel (z.B. Flur → Treppe) handelt es sich um einen Breakpoint
+      // Ignoriere Typwechsel zwischen hallway und door
+      if (effectivePrevType != effectiveCurrentType ||
+          effectiveCurrentType != effectiveNextType) {
+        // Spezialfall: Notausgang oder Haupteingang
+        if (currentNode.isEmergencyExit ||
+            currentNode.hasProperty(propEntranceExit)) {
+          dev.log(
+            "Spezialtür-Breakpoint bei $i ($currentId): ${currentNode.name}",
+          );
+          breakpoints.add(_PathBreakpoint(i, BreakpointType.specialDoor));
+          continue;
+        }
+
+        // Normaler Typwechsel (außer Tür -> Flur oder Flur -> Tür)
+        dev.log(
+          "Typwechsel-Breakpoint bei $i ($currentId): $effectivePrevType -> $effectiveCurrentType -> $effectiveNextType",
+        );
+        breakpoints.add(_PathBreakpoint(i, BreakpointType.typeChange));
+      }
+    }
+
+    // Sortiere die Breakpoints nach ihrem Index
+    breakpoints.sort((a, b) => a.index.compareTo(b.index));
+
+    // Logge alle gefundenen Breakpoints
+    if (breakpoints.isNotEmpty) {
+      dev.log("Gefundene Breakpoints: ${breakpoints.length}");
+      for (int i = 0; i < breakpoints.length; i++) {
+        final bp = breakpoints[i];
+        final nodeId = path[bp.index];
+        final node = graph.getNodeById(nodeId);
+        dev.log(
+          "  Breakpoint $i: Index=${bp.index}, Typ=${bp.type}, Knoten=$nodeId (${node?.name ?? 'unbekannt'})",
+        );
+      }
+    } else {
+      dev.log("Keine Breakpoints gefunden im Pfad");
     }
 
     return breakpoints;
@@ -567,6 +632,30 @@ class SegmentsGenerator {
     final Node? hallwayNode = graph.getNodeById(nodes.last);
     if (hallwayNode != null && hallwayNode.name.isNotEmpty) {
       metadata['currentName'] = hallwayNode.name;
+    }
+
+    // Durchgang durch Türen zählen
+    int doorCount = 0;
+    for (final nodeId in nodes) {
+      final node = graph.getNodeById(nodeId);
+      if (node != null && node.isDoor) {
+        doorCount++;
+
+        // Bei speziellen Türen zusätzliche Metadaten hinzufügen
+        if (node.isEmergencyExit) {
+          metadata['containsEmergencyExit'] = true;
+        }
+        if (node.hasProperty(propEntranceExit)) {
+          metadata['containsEntranceExit'] = true;
+        }
+        if (node.isLocked) {
+          metadata['containsLockedDoor'] = true;
+        }
+      }
+    }
+
+    if (doorCount > 0) {
+      metadata[MetadataKeys.doorCount] = doorCount;
     }
   }
 
@@ -729,7 +818,7 @@ class SegmentsGenerator {
     if (node.isStaircase) return SegmentType.stairs;
     if (node.isElevator) return SegmentType.elevator;
     if (node.isToilet) return SegmentType.toilet;
-    if (node.isDoor) return SegmentType.door;
+    if (node.isDoor) return SegmentType.hallway;
     if (node.isEmergencyExit) return SegmentType.exit;
 
     return SegmentType.unknown;
@@ -828,6 +917,7 @@ class SegmentsGenerator {
 enum BreakpointType {
   turn, // Abbiegung im Flur
   typeChange, // Änderung des Node-Typs (z.B. Flur → Treppe)
+  specialDoor, // Spezielle Tür (Notausgang, Haupteingang)
 }
 
 /// Repräsentiert einen kritischen Punkt im Pfad

@@ -22,13 +22,6 @@ class CampusGraphService {
   final InstructionGenerator _instructionGenerator =
       getIt<InstructionGenerator>();
 
-  // Cache-Struktur für Routen und Segmente
-  final Map<String, List<NodeId>> _pathCache = {};
-  final Map<String, List<RouteSegment>> _segmentCache = {};
-
-  /// Cache für Node-Namen zu IDs für schnellere Suche
-  final Map<String, NodeId> _nameToIdCache = {};
-
   /// Verzeichnis der geladenen Gebäudedateien
   final List<String> _loadedFiles = [];
 
@@ -90,7 +83,6 @@ class CampusGraphService {
 
       // Graphen mit allen kombinierten Knoten erstellen
       currentGraph = CampusGraph(allNodes);
-      _updateNameCache(allNodes);
 
       dev.log(
         'Kombinierter Campus-Graph mit ${currentGraph!.nodeCount} Knoten aus ${_loadedFiles.length} Dateien geladen',
@@ -116,7 +108,6 @@ class CampusGraphService {
       }
 
       currentGraph = CampusGraph(nodes);
-      _updateNameCache(nodes);
       _loadedFiles.add(assetPath);
 
       dev.log(
@@ -150,46 +141,14 @@ class CampusGraphService {
     return nodes;
   }
 
-  /// Aktualisiert den Namen-zu-ID-Cache
-  void _updateNameCache(Map<NodeId, Node> nodes) {
-    for (var node in nodes.values) {
-      if (node.name.isNotEmpty) {
-        _nameToIdCache[node.name] = node.id;
-      }
-    }
-    dev.log(
-      'Name-zu-ID-Cache mit ${_nameToIdCache.length} Einträgen aktualisiert',
-    );
-  }
-
-  /// Holt einen Knoten anhand seines Namens, mit Cache-Nutzung
+  /// Holt einen Knoten anhand seines Namens
   NodeId? getNodeIdByName(String name) {
-    // Zuerst im Cache nachsehen
-    if (_nameToIdCache.containsKey(name)) {
-      return _nameToIdCache[name];
-    }
-
-    // Falls nicht im Cache, im Graphen suchen
-    final nodeId = currentGraph?.getNodeIdByName(name);
-
-    // Wenn gefunden, zum Cache hinzufügen
-    if (nodeId != null) {
-      _nameToIdCache[name] = nodeId;
-    }
-
-    return nodeId;
+    return currentGraph?.getNodeIdByName(name);
   }
 
-  /// Generiert einen Pfad zwischen Start und Ziel mit Caching
-  Future<List<NodeId>> getPath(NodeId startId, NodeId endId) async {
-    // Erzeuge eindeutigen Cache-Schlüssel für diese Route
-    final String cacheKey = '$startId-$endId';
-
-    // Prüfe Cache
-    if (_pathCache.containsKey(cacheKey)) {
-      dev.log('Verwende gecachten Pfad für $cacheKey');
-      return List<NodeId>.from(_pathCache[cacheKey]!);
-    }
+  /// Generiert einen Pfad zwischen Start und Ziel ohne Caching
+  List<NodeId> getPath(NodeId startId, NodeId endId) {
+    dev.log('Berechne Pfad von $startId zu $endId');
 
     // Berechne neuen Pfad
     if (currentGraph == null) {
@@ -201,30 +160,19 @@ class CampusGraphService {
       endId,
     ), currentGraph!);
 
-    // Cache aktualisieren
-    _pathCache[cacheKey] = List<NodeId>.from(path);
-
+    dev.log('Pfad gefunden mit ${path.length} Knoten: ${path.join(" -> ")}');
     return path;
   }
 
-  /// Generiert Routensegmente aus einem Pfad mit Caching
-  Future<List<RouteSegment>> getRouteSegments(
-    NodeId startId,
-    NodeId endId,
-  ) async {
-    // Erzeuge eindeutigen Cache-Schlüssel für diese Route
-    final String cacheKey = '$startId-$endId';
-
-    // Prüfe Cache
-    if (_segmentCache.containsKey(cacheKey)) {
-      dev.log('Verwende gecachte Segmente für $cacheKey');
-      return List<RouteSegment>.from(_segmentCache[cacheKey]!);
-    }
+  /// Generiert Routensegmente aus einem Pfad ohne Caching
+  List<RouteSegment> getRouteSegments(NodeId startId, NodeId endId) {
+    dev.log('Generiere Routensegmente von $startId zu $endId');
 
     // Berechne neuen Pfad und konvertiere zu Segmenten
-    final List<NodeId> path = await getPath(startId, endId);
+    final List<NodeId> path = getPath(startId, endId);
 
     if (path.isEmpty) {
+      dev.log('Kein Pfad gefunden zwischen $startId und $endId');
       return [];
     }
 
@@ -233,8 +181,24 @@ class CampusGraphService {
       currentGraph!,
     );
 
-    // Cache aktualisieren
-    _segmentCache[cacheKey] = List<RouteSegment>.from(segments);
+    // Ausführliche Logs für Debugging
+    dev.log('${segments.length} Segmente generiert:');
+    for (int i = 0; i < segments.length; i++) {
+      final segment = segments[i];
+      dev.log(
+        'Segment ${i + 1}: Typ=${segment.type}, Metadaten=${segment.metadata}',
+      );
+
+      // Besonders für Flursegmente mit Abbiegungen prüfen
+      if (segment.type == SegmentType.hallway &&
+          segment.metadata.containsKey('direction') &&
+          segment.metadata['direction'] != 'geradeaus') {
+        dev.log(
+          'FLUR MIT ABBIEGUNG gefunden! Details: ${segment.metadata}',
+          level: 800,
+        );
+      }
+    }
 
     return segments;
   }
@@ -242,67 +206,53 @@ class CampusGraphService {
   /// Generiert Anweisungen aus Routensegmenten
   List<String> getInstructionsFromSegments(List<RouteSegment> segments) {
     if (segments.isEmpty) {
+      dev.log('Keine Segmente für Anweisungen vorhanden');
       return [];
     }
 
-    return _instructionGenerator.generateInstructions(segments);
+    dev.log('Generiere Anweisungen für ${segments.length} Segmente');
+    final instructions = _instructionGenerator.generateInstructions(segments);
+
+    // Log der generierten Anweisungen
+    for (int i = 0; i < instructions.length; i++) {
+      dev.log('Anweisung ${i + 1}: ${instructions[i]}');
+    }
+
+    return instructions;
   }
 
   /// Kombinierte Methode für den gesamten Prozess
-  Future<List<String>> getNavigationInstructions(
-    NodeId startId,
-    NodeId endId,
-  ) async {
-    final segments = await getRouteSegments(startId, endId);
+  List<String> getNavigationInstructions(NodeId startId, NodeId endId) {
+    dev.log(
+      'Generiere komplette Navigationsanweisungen von $startId zu $endId',
+    );
+    final segments = getRouteSegments(startId, endId);
     return getInstructionsFromSegments(segments);
   }
 
   /// Findet den nächsten Punkt vom angegebenen Typ
-  Future<String> findNearestPointOfInterest(
-    NodeId startId,
-    PointOfInterestType type,
-  ) async {
+  String findNearestPointOfInterest(NodeId startId, PointOfInterestType type) {
     if (currentGraph == null) {
       throw Exception('Graph nicht geladen');
     }
 
+    dev.log('Suche nächsten POI vom Typ $type ausgehend von $startId');
+
+    String result = "";
     switch (type) {
       case PointOfInterestType.toilet:
-        return currentGraph!.findNearestBathroomId(startId);
+        result = currentGraph!.findNearestBathroomId(startId);
+        break;
       case PointOfInterestType.exit:
-        return currentGraph!.findNearestEmergencyExitId(startId);
+        result = currentGraph!.findNearestEmergencyExitId(startId);
+        break;
       case PointOfInterestType.canteen:
-        // Implementiere diese Methode im CampusGraph
-        return currentGraph!.findNearestCanteenId(startId);
+        result = currentGraph!.findNearestCanteenId(startId);
+        break;
     }
-  }
 
-  /// Löscht alle Caches
-  void clearCache() {
-    _pathCache.clear();
-    _segmentCache.clear();
-    _nameToIdCache.clear();
-    dev.log('Alle Caches gelöscht');
-  }
-
-  void setCacheEnabled(bool enabled) {
-    // Nicht implementiert
-  }
-
-  Map<String, dynamic> getCacheStats() {
-    return {};
-  }
-
-  Map<String, dynamic> inspectEncryptedCache() {
-    return {};
-  }
-
-  void printCache() {
-    dev.log('Cache-Statistik:');
-  }
-
-  Map<String, dynamic> validateAllRoutes() {
-    return {};
+    dev.log('Gefundenes POI für $type: $result');
+    return result;
   }
 
   /// Prüft, ob ein Graph geladen ist
@@ -315,7 +265,6 @@ class CampusGraphService {
 
   /// Löscht die Caches und erzwingt das Neuladen des Graphen
   Future<void> reloadGraph(String assetBasePath) async {
-    clearCache();
     _loadedFiles.clear();
     currentGraph = null;
     await loadGraph(assetBasePath);

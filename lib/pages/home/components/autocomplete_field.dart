@@ -56,16 +56,38 @@ class _NodeAutocompleteFieldState extends State<NodeAutocompleteField> {
 
   /// Prüft, ob die Option mit der Abfrage übereinstimmt (mit spezieller Behandlung für Raumnummern)
   bool _matchesQuery(String option, String query) {
-    final normalizedOption = _normalizeRoomNumber(option);
-    final normalizedQuery = _normalizeRoomNumber(query);
+    // Überprüfen, ob die Abfrage mit einem Leerzeichen endet
+    bool hasTrailingSpace = query.endsWith(' ');
 
+    // Entferne Leerzeichen für die normalisierte Suche
+    String trimmedQuery = query.trim();
+
+    // Wenn die Abfrage leer ist, keine Übereinstimmung
+    if (trimmedQuery.isEmpty) return false;
+
+    final normalizedOption = _normalizeRoomNumber(option);
+    final normalizedQuery = _normalizeRoomNumber(trimmedQuery);
+
+    // Wenn die Abfrage mit einem Leerzeichen endet, prüfe auf vollständigen Teil
+    if (hasTrailingSpace) {
+      // Bei Leerzeichen: Suche nach "b11" als vollständiger Teil (nicht b114, b115, etc.)
+      RegExp pattern = RegExp(
+        normalizedQuery + r'(?!\d)',
+      ); // Prüft, dass keine Zahl folgt
+      return pattern.hasMatch(normalizedOption);
+    }
+
+    // Normale Suche: Option enthält die Abfrage
     return normalizedOption.contains(normalizedQuery);
   }
 
   /// Prüft, ob die Option mit der Abfrage beginnt (mit spezieller Behandlung für Raumnummern)
   bool _startsWithQuery(String option, String query) {
+    // Entferne Leerzeichen für die normalisierte Suche
+    String trimmedQuery = query.trim();
+
     final normalizedOption = _normalizeRoomNumber(option);
-    final normalizedQuery = _normalizeRoomNumber(query);
+    final normalizedQuery = _normalizeRoomNumber(trimmedQuery);
 
     return normalizedOption.startsWith(normalizedQuery);
   }
@@ -98,7 +120,7 @@ class _NodeAutocompleteFieldState extends State<NodeAutocompleteField> {
           return const Iterable<String>.empty();
         }
 
-        final query = textEditingValue.text.trim();
+        final query = textEditingValue.text;
         List<String> matches =
             widget.nodeNames
                 .where((option) => _matchesQuery(option, query))
@@ -106,6 +128,17 @@ class _NodeAutocompleteFieldState extends State<NodeAutocompleteField> {
 
         // Verbesserte Sortierung mit normalisierter Raumnummernlogik
         matches.sort((a, b) {
+          // Wenn die Abfrage mit einem Leerzeichen endet, prüfen wir auf exakte Übereinstimmung
+          if (query.endsWith(' ')) {
+            bool aExact =
+                _normalizeRoomNumber(a) == _normalizeRoomNumber(query.trim());
+            bool bExact =
+                _normalizeRoomNumber(b) == _normalizeRoomNumber(query.trim());
+
+            if (aExact && !bExact) return -1;
+            if (!aExact && bExact) return 1;
+          }
+
           // Zuerst nach "beginnt mit" sortieren
           bool aStartsWith = _startsWithQuery(a, query);
           bool bStartsWith = _startsWithQuery(b, query);
@@ -119,6 +152,8 @@ class _NodeAutocompleteFieldState extends State<NodeAutocompleteField> {
 
         return matches.take(10);
       },
+
+      // Rest des Codes bleibt unverändert
       onSelected: (value) {
         _controller.text = value;
         widget.onSelected(value);
