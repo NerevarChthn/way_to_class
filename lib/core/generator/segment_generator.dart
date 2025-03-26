@@ -21,7 +21,7 @@ class SegmentsGenerator {
 
     final List<RouteSegment> segments = [];
 
-    // Spezialbehandlung für den Startpunkt (Ausgang aus einem Raum)
+    // Spezialbehandlung für den Startpunkt und Endpunkt, dann entfernen
     if (path.length >= 3) {
       final startNode = graph.getNodeById(path[0]);
       if (startNode != null &&
@@ -30,6 +30,40 @@ class SegmentsGenerator {
         segments.add(_createSegment(originNodes, SegmentType.origin, graph));
         // Entferne den Raum, damit er nicht doppelt auftaucht
         path.removeAt(0);
+      }
+    }
+
+    // Spezialbehandlung für den Endpunkt (Ziel)
+    final NodeId lastNodeId = path.last;
+    final Node? lastNode = graph.getNodeById(lastNodeId);
+    final SegmentType lastNodeType =
+        lastNode != null
+            ? _determineSegmentType(lastNodeId, graph)
+            : SegmentType.unknown;
+
+    // Prüfen ob das letzte Element ein Destination-Segment sein sollte
+    final bool hasDestination =
+        lastNode != null &&
+        (lastNodeType == SegmentType.room ||
+            lastNodeType == SegmentType.toilet ||
+            lastNodeType == SegmentType.exit);
+
+    // Wenn der letzte Knoten ein Raum, eine Toilette oder ein Ausgang ist,
+    // entfernen wir diesen aus dem Pfad, um ihn später als Destination-Segment zu behandeln
+    List<NodeId> destinationNodes = [];
+    if (hasDestination && path.length >= 2) {
+      // Mindestens den letzten und vorletzten Knoten nehmen für die Seitenberechnung
+      if (path.length >= 3) {
+        destinationNodes = [
+          path[path.length - 3],
+          path[path.length - 2],
+          path.last,
+        ];
+        path.removeLast();
+        path.removeLast();
+      } else {
+        destinationNodes = [path.first, path.last];
+        path.removeLast();
       }
     }
 
@@ -196,14 +230,6 @@ class SegmentsGenerator {
         if (lastNodeType == SegmentType.room ||
             lastNodeType == SegmentType.toilet ||
             lastNodeType == SegmentType.exit) {
-          // Destination-Segment
-          final List<NodeId> destinationNodes = lastSegmentNodes.sublist(
-            lastSegmentNodes.length - 2,
-          );
-          segments.add(
-            _createSegment(destinationNodes, SegmentType.destination, graph),
-          );
-
           // Füge den Rest als hallway hinzu, falls vorhanden
           if (lastSegmentNodes.length > 2) {
             final List<NodeId> hallwayNodes = lastSegmentNodes.sublist(
@@ -227,6 +253,13 @@ class SegmentsGenerator {
           segments.add(_createSegment(lastSegmentNodes, segType, graph));
         }
       }
+    }
+
+    // Füge das Destination-Segment hinzu, wenn es existiert
+    if (destinationNodes.isNotEmpty) {
+      segments.add(
+        _createSegment(destinationNodes, SegmentType.destination, graph),
+      );
     }
 
     // Zusammenführen von Hallway-Segmenten

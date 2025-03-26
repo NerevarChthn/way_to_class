@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class RouteDescriptionPanel extends StatelessWidget {
   final String resultText;
   final List<String> instructions;
-  final Future<void> Function()? onRefresh;
+  final void Function()? onRefresh;
 
   const RouteDescriptionPanel({
     super.key,

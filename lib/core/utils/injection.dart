@@ -1,5 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:way_to_class/constants/other.dart';
 import 'package:way_to_class/core/generator/instruction_generator.dart';
 import 'package:way_to_class/core/generator/path_generator.dart';
 import 'package:way_to_class/core/generator/segment_generator.dart';
@@ -24,12 +23,5 @@ Future<void> setupDependencies() async {
   // CampusGraph Service sollte nach den Generatoren registriert werden
   if (!getIt.isRegistered<CampusGraphService>()) {
     getIt.registerSingleton<CampusGraphService>(CampusGraphService());
-    await loadCampusGraph(assetPath);
   }
-}
-
-/// Lädt den Campus-Graphen asynchron
-Future<void> loadCampusGraph(String assetPath) async {
-  final graphService = getIt<CampusGraphService>();
-  await graphService.loadGraph(assetPath);
 }

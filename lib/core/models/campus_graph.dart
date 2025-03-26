@@ -162,10 +162,7 @@ class CampusGraph {
       } else if (attributeName == 'canteen' && attributeValue == 'true') {
         // Für die Mensa müssen wir einen speziellen Fall einrichten
         // Hier nehmen wir an, dass Mensen in den Knotennamen 'Mensa' oder 'Cafeteria' enthalten
-        isMatch =
-            currentNode.name.toLowerCase().contains('mensa') ||
-            currentNode.name.toLowerCase().contains('cafeteria') ||
-            currentNode.name.toLowerCase().contains('canteen');
+        isMatch = currentNode.name.toLowerCase().contains('mensa');
       }
 
       if (isMatch) {

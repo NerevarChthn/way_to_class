@@ -1,12 +1,10 @@
 import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
-import 'package:graphview/GraphView.dart';
 import 'package:way_to_class/constants/other.dart';
 import 'package:way_to_class/core/models/campus_graph.dart';
 import 'package:way_to_class/core/models/route_segments.dart';
 import 'package:way_to_class/core/utils/injection.dart';
-import 'package:way_to_class/pages/floors.dart';
 import 'package:way_to_class/pages/graph_view_page.dart';
 import 'package:way_to_class/pages/home/components/nav_bar.dart';
 import 'package:way_to_class/pages/home/components/quick_access_panel.dart';
@@ -25,7 +23,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final CampusGraphService _graphService = getIt<CampusGraphService>();
-  late final Future<CampusGraph> _graphFuture;
 
   // State-Variablen
   String resultText = noPathSelected;
@@ -40,10 +37,15 @@ class _HomePageState extends State<HomePage> {
   String? _lastStartId;
   String? _lastTargetId;
 
+  // State für Graph-Ladestatus
+  bool _isLoading = true;
+  String? _loadError;
+  List<String> _nodeNames = [];
+
   @override
   void initState() {
     super.initState();
-    _graphFuture = _loadGraph();
+    _loadGraph();
   }
 
   @override
@@ -52,16 +54,36 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  Future<CampusGraph> _loadGraph() async {
-    return _graphService.loadGraph(assetPath);
+  /// Lädt den Graphen einmalig
+  Future<void> _loadGraph() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+
+      final graph = await _graphService.loadGraph('assets/');
+
+      setState(() {
+        _isLoading = false;
+        _nodeNames = graph.nodeNames;
+        log('Graph geladen: ${_nodeNames.length} Knoten');
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _loadError = e.toString();
+        log('Fehler beim Laden des Graphen: $e');
+      });
+    }
   }
 
   /// Findet einen Weg zwischen Start und Ziel und bereitet Anweisungen vor
-  Future<void> _findPathAndGenerateInstructions({
+  void _findPathAndGenerateInstructions({
     required String startId,
     required String targetId,
     bool forceRecompute = false,
-  }) async {
+  }) {
     if (startId.isEmpty || targetId.isEmpty) {
       setState(() {
         resultText = 'Bitte wähle Start und Ziel aus.';
@@ -120,7 +142,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Hauptmethode für die Wegfindung von UI-Eingaben
-  Future<void> _findPath() async {
+  void _findPath() {
     try {
       final String startId = _getStartNodeId();
       final String targetId = _getTargetNodeId();
@@ -135,17 +157,14 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      await _findPathAndGenerateInstructions(
-        startId: startId,
-        targetId: targetId,
-      );
+      _findPathAndGenerateInstructions(startId: startId, targetId: targetId);
     } catch (e) {
       setState(() => resultText = e.toString());
     }
   }
 
   /// Sucht die nächste Toilette und berechnet den Weg dorthin
-  Future<void> _findNearestBathroom() async {
+  void _findNearestBathroom() {
     try {
       final String startId = _getStartNodeId();
 
@@ -166,7 +185,7 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      await _findPathAndGenerateInstructions(
+      _findPathAndGenerateInstructions(
         startId: startId,
         targetId: nearestBathroomId,
       );
@@ -176,7 +195,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Sucht den nächsten Notausgang und berechnet den Weg dorthin
-  Future<void> _findNearestEmergencyExit() async {
+  void _findNearestEmergencyExit() {
     try {
       final String startId = _getStartNodeId();
 
@@ -197,7 +216,7 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      await _findPathAndGenerateInstructions(
+      _findPathAndGenerateInstructions(
         startId: startId,
         targetId: nearestExitId,
       );
@@ -207,7 +226,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Sucht die Mensa und berechnet den Weg dorthin
-  Future<void> _findCanteen() async {
+  void _findCanteen() {
     try {
       final String startId = _getStartNodeId();
 
@@ -228,10 +247,7 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      await _findPathAndGenerateInstructions(
-        startId: startId,
-        targetId: canteenId,
-      );
+      _findPathAndGenerateInstructions(startId: startId, targetId: canteenId);
     } catch (e) {
       setState(() => resultText = e.toString());
     }
@@ -284,107 +300,107 @@ class _HomePageState extends State<HomePage> {
   Widget _buildNavigationPage() {
     final theme = Theme.of(context);
 
-    return FutureBuilder<CampusGraph>(
-      future: _graphFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text('Graph wird geladen...', style: theme.textTheme.bodyLarge),
-              ],
-            ),
-          );
-        }
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('Graph wird geladen...', style: theme.textTheme.bodyLarge),
+          ],
+        ),
+      );
+    }
 
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Fehler beim Laden des Graphen: ${snapshot.error}',
+    if (_loadError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Fehler beim Laden des Graphen: $_loadError',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.error,
                 ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadGraph,
+                child: const Text('Erneut versuchen'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+            theme.colorScheme.surface,
+          ],
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Oberer Bereich: Start- und Zielauswahl
+            SearchPanel(
+              nodeNames: _nodeNames,
+              startValue: _startValue,
+              zielValue: _zielValue,
+              onStartChanged: (value) => setState(() => _startValue = value),
+              onZielChanged: (value) => setState(() => _zielValue = value),
+              onSwap:
+                  () => setState(() {
+                    final tempStart = _startValue;
+                    _startValue = _zielValue;
+                    _zielValue = tempStart;
+                  }),
+              onFindPath: _findPath,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Wegbeschreibung
+            Expanded(
+              child: RouteDescriptionPanel(
+                resultText: resultText,
+                instructions: pathInstructions,
+                onRefresh:
+                    _currentRouteSegments != null
+                        ? () {
+                          if (_lastStartId != null && _lastTargetId != null) {
+                            _findPathAndGenerateInstructions(
+                              startId: _lastStartId!,
+                              targetId: _lastTargetId!,
+                              forceRecompute: true,
+                            );
+                          }
+                        }
+                        : null,
               ),
             ),
-          );
-        }
 
-        final graph = snapshot.data!;
-        final List<String> nodeNames = graph.nodeNames;
-        log('Graph geladen: ${nodeNames.length} Knoten');
-
-        return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
-                theme.colorScheme.surface,
-              ],
+            // Schnellzugriff-Panel
+            QuickAccessPanel(
+              onBathroomPressed: _findNearestBathroom,
+              onExitPressed: _findNearestEmergencyExit,
+              onCanteenPressed: _findCanteen,
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Oberer Bereich: Start- und Zielauswahl
-                SearchPanel(
-                  nodeNames: nodeNames,
-                  startValue: _startValue,
-                  zielValue: _zielValue,
-                  onStartChanged:
-                      (value) => setState(() => _startValue = value),
-                  onZielChanged: (value) => setState(() => _zielValue = value),
-                  onSwap:
-                      () => setState(() {
-                        final tempStart = _startValue;
-                        _startValue = _zielValue;
-                        _zielValue = tempStart;
-                      }),
-                  onFindPath: _findPath,
-                ),
-
-                const SizedBox(height: 16),
-
-                // Wegbeschreibung
-                Expanded(
-                  child: RouteDescriptionPanel(
-                    resultText: resultText,
-                    instructions: pathInstructions,
-                    onRefresh:
-                        _currentRouteSegments != null
-                            ? () async {
-                              if (_lastStartId != null &&
-                                  _lastTargetId != null) {
-                                await _findPathAndGenerateInstructions(
-                                  startId: _lastStartId!,
-                                  targetId: _lastTargetId!,
-                                  forceRecompute: true,
-                                );
-                              }
-                            }
-                            : null,
-                  ),
-                ),
-
-                // Schnellzugriff-Panel
-                QuickAccessPanel(
-                  onBathroomPressed: _findNearestBathroom,
-                  onExitPressed: _findNearestEmergencyExit,
-                  onCanteenPressed: _findCanteen,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }
