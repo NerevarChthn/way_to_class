@@ -67,7 +67,7 @@ class InstructionTemplates {
     '{finalConnector} findest du {destinationName} auf der {side} Seite',
     '{finalConnector} befindet sich {destinationName} auf der {side} Seite',
     '{finalConnector} ist {destinationName} auf der {side} Seite zu finden',
-    '{destinationName} liegt {finalConnector} zu deiner {side}en',
+    '{destinationName} liegt {finalConnector} zu deiner {side}',
   };
 
   static const Set<String> destinationWithDistance = {

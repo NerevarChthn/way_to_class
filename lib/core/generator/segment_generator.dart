@@ -8,51 +8,68 @@ import 'package:way_to_class/core/models/campus_graph.dart';
 import 'package:way_to_class/core/models/node.dart';
 import 'package:way_to_class/core/models/route_segments.dart';
 
+// Typdefinition für Metadata-Builder Funktionen
+typedef MetadataBuilder =
+    void Function(
+      Map<String, dynamic> metadata,
+      List<NodeId> nodes,
+      CampusGraph graph,
+    );
+
 /// Generator für Wegsegmente aus Pfadknoten
 class SegmentsGenerator {
+  late final Map<SegmentType, MetadataBuilder> _metadataBuilders;
+
+  SegmentsGenerator() {
+    _metadataBuilders = {
+      SegmentType.hallway: _addHallwayMetadata,
+      SegmentType.stairs: _addStairsMetadata,
+      SegmentType.elevator: _addElevatorMetadata,
+      SegmentType.room: _addRoomMetadata,
+      SegmentType.exit: _addExitMetadata,
+      SegmentType.toilet: _addToiletMetadata,
+      SegmentType.door: _addDoorMetadata,
+      SegmentType.origin: _addOriginMetadata,
+      SegmentType.destination: _addDestinationMetadata,
+    };
+  }
+
   List<RouteSegment> convertPath(List<NodeId> path, CampusGraph graph) {
     if (path.isEmpty || path.length < 2) {
       return [];
     }
 
-    // Erzeuge eine tiefe Kopie des Pfads, um Originaldaten nicht zu verändern
+    // Erzeuge eine Kopie des Pfads, um Originaldaten nicht zu verändern
     path = List<NodeId>.from(path);
     dev.log("Verarbeite Pfad mit ${path.length} Knoten: ${path.join(', ')}");
 
     final List<RouteSegment> segments = [];
 
-    // Spezialbehandlung für den Startpunkt und Endpunkt, dann entfernen
+    // Spezialbehandlung für Startpunkt (Origin)
     if (path.length >= 3) {
       final startNode = graph.getNodeById(path[0]);
       if (startNode != null &&
           _determineSegmentType(path[0], graph) == SegmentType.room) {
         final List<NodeId> originNodes = [path[0], path[1], path[2]];
         segments.add(_createSegment(originNodes, SegmentType.origin, graph));
-        // Entferne den Raum, damit er nicht doppelt auftaucht
         path.removeAt(0);
       }
     }
 
-    // Spezialbehandlung für den Endpunkt (Ziel)
+    // Spezialbehandlung für Endpunkt (Destination)
     final NodeId lastNodeId = path.last;
     final Node? lastNode = graph.getNodeById(lastNodeId);
     final SegmentType lastNodeType =
         lastNode != null
             ? _determineSegmentType(lastNodeId, graph)
             : SegmentType.unknown;
-
-    // Prüfen ob das letzte Element ein Destination-Segment sein sollte
     final bool hasDestination =
         lastNode != null &&
         (lastNodeType == SegmentType.room ||
             lastNodeType == SegmentType.toilet ||
             lastNodeType == SegmentType.exit);
-
-    // Wenn der letzte Knoten ein Raum, eine Toilette oder ein Ausgang ist,
-    // entfernen wir diesen aus dem Pfad, um ihn später als Destination-Segment zu behandeln
     List<NodeId> destinationNodes = [];
     if (hasDestination && path.length >= 2) {
-      // Mindestens den letzten und vorletzten Knoten nehmen für die Seitenberechnung
       if (path.length >= 3) {
         destinationNodes = [
           path[path.length - 3],
@@ -67,14 +84,12 @@ class SegmentsGenerator {
       }
     }
 
-    // Ermittlung der Breakpoints (kritische Punkte im Pfad)
+    // Ermittlung der Breakpoints (kritische Punkte)
     final List<_PathBreakpoint> breakpoints = _findPathBreakpoints(path, graph);
     dev.log("Gefundene Breakpoints: ${breakpoints.length}");
 
-    // Falls keine Breakpoints gefunden werden, den gesamten Pfad als ein Segment behandeln
     if (breakpoints.isEmpty) {
       SegmentType pathType = _determineSegmentType(path[0], graph);
-      // Türen immer als hallway behandeln
       if (pathType == SegmentType.door) pathType = SegmentType.hallway;
       segments.add(_createSegment(path, pathType, graph));
       return segments;
@@ -89,12 +104,9 @@ class SegmentsGenerator {
       final int endIndex = bp.index;
 
       if (bp.type == BreakpointType.turn) {
-        // Falls startIndex bereits ≥ endIndex ist, setzen wir startIndex auf (endIndex - 1), sofern möglich
         if (endIndex > 0 && startIndex >= endIndex) {
           startIndex = endIndex - 1;
         }
-
-        // Nur verarbeiten, wenn auch mindestens ein Knoten nach dem Abbiegungsknoten existiert
         if (endIndex >= startIndex && endIndex + 1 < path.length) {
           final List<NodeId> segmentNodes = path.sublist(
             startIndex,
@@ -102,72 +114,50 @@ class SegmentsGenerator {
           );
           if (segmentNodes.length >= 2 &&
               segmentNodes.last != lastProcessedNode) {
-            // Berechne Turn-Richtung anhand der drei relevanten Knoten
             final String direction = _calculateTurnDirection([
               path[endIndex - 1],
               path[endIndex],
               path[endIndex + 1],
             ], graph);
-
-            // Prüfe, ob wir Türen im Segment haben und zähle sie
-            int doorCount = 0;
-            for (final nodeId in segmentNodes) {
-              final node = graph.getNodeById(nodeId);
-              if (node != null && node.isDoor) {
-                doorCount++;
-              }
-            }
-
-            // Erstelle das Segment immer als hallway
+            final int doorCount =
+                segmentNodes
+                    .map((nodeId) => graph.getNodeById(nodeId))
+                    .where((node) => node?.isDoor ?? false)
+                    .length;
             final RouteSegment seg = _createSegment(
               segmentNodes,
               SegmentType.hallway,
               graph,
             );
-
-            // Füge Abbiegungsrichtung hinzu
             seg.metadata[MetadataKeys.direction] = direction;
-
-            // Füge Türzähler hinzu, wenn Türen enthalten sind
             if (doorCount > 0) {
               seg.metadata[MetadataKeys.doorCount] = doorCount;
             }
-
-            // Landmark hinzufügen, wenn verfügbar
             final String? landmarkName = graph.findNearestNonHallwayNode(
               path[endIndex],
             );
             if (landmarkName != null) {
               seg.metadata[MetadataKeys.landmark] = landmarkName;
             }
-
             segments.add(seg);
             lastProcessedNode = segmentNodes.last;
           }
         }
-
-        // Setze startIndex so, dass der Abbiegungsknoten auch im nächsten Segment enthalten ist
         startIndex = endIndex;
       } else if (bp.type == BreakpointType.typeChange ||
           bp.type == BreakpointType.specialDoor) {
-        // Erzeuge Segment von startIndex bis kurz vor den Breakpoint
         if (endIndex > startIndex) {
           final List<NodeId> segmentNodes = path.sublist(startIndex, endIndex);
           if (segmentNodes.length >= 2 &&
               segmentNodes.last != lastProcessedNode) {
             SegmentType segType = _determineSegmentType(segmentNodes[0], graph);
-            // Türen immer als hallway behandeln
             if (segType == SegmentType.door) segType = SegmentType.hallway;
             segments.add(_createSegment(segmentNodes, segType, graph));
             lastProcessedNode = segmentNodes.last;
           }
         }
-
-        // Spezielle Behandlung für Typwechsel (z. B. Treppen, Aufzüge)
         final NodeId bpNode = path[endIndex];
         SegmentType bpType = _determineSegmentType(bpNode, graph);
-
-        // Für Notausgänge und Haupteingänge spezielle Behandlung
         if (bp.type == BreakpointType.specialDoor) {
           final Node? exitNode = graph.getNodeById(bpNode);
           if (exitNode != null) {
@@ -179,13 +169,7 @@ class SegmentsGenerator {
             if (endIndex + 1 < path.length) {
               exitNodes.add(path[endIndex + 1]);
             }
-
-            final RouteSegment exitSegment = _createSegment(
-              exitNodes,
-              SegmentType.exit,
-              graph,
-            );
-            segments.add(exitSegment);
+            segments.add(_createSegment(exitNodes, SegmentType.exit, graph));
             lastProcessedNode = bpNode;
           }
         } else if (bpType == SegmentType.stairs ||
@@ -203,23 +187,20 @@ class SegmentsGenerator {
             lastProcessedNode = bpNode;
           }
         }
-
-        // Wenn direkt nach diesem TypeChange ein Turn folgt, wollen wir den Abbiegungsknoten nicht verlieren
         final bool nextIsTurn =
             (i + 1 < breakpoints.length &&
                 breakpoints[i + 1].type == BreakpointType.turn);
-
         if (!nextIsTurn && (endIndex - startIndex) < 2) {
           startIndex = endIndex;
         } else if (nextIsTurn) {
-          startIndex = endIndex; // Knoten behalten für den nächsten Turn
+          startIndex = endIndex;
         } else {
           startIndex = endIndex + 1;
         }
       }
     }
 
-    // Verarbeitung des letzten Segments
+    // Letztes Segment verarbeiten
     if (startIndex < path.length) {
       final List<NodeId> lastSegmentNodes = path.sublist(startIndex);
       if (lastSegmentNodes.length >= 2) {
@@ -230,7 +211,6 @@ class SegmentsGenerator {
         if (lastNodeType == SegmentType.room ||
             lastNodeType == SegmentType.toilet ||
             lastNodeType == SegmentType.exit) {
-          // Füge den Rest als hallway hinzu, falls vorhanden
           if (lastSegmentNodes.length > 2) {
             final List<NodeId> hallwayNodes = lastSegmentNodes.sublist(
               0,
@@ -243,26 +223,22 @@ class SegmentsGenerator {
             }
           }
         } else {
-          // Normales Segment
           SegmentType segType = _determineSegmentType(
             lastSegmentNodes[0],
             graph,
           );
-          // Türen immer als hallway behandeln
           if (segType == SegmentType.door) segType = SegmentType.hallway;
           segments.add(_createSegment(lastSegmentNodes, segType, graph));
         }
       }
     }
 
-    // Füge das Destination-Segment hinzu, wenn es existiert
     if (destinationNodes.isNotEmpty) {
       segments.add(
         _createSegment(destinationNodes, SegmentType.destination, graph),
       );
     }
 
-    // Zusammenführen von Hallway-Segmenten
     return _mergeSegments(segments);
   }
 
@@ -539,61 +515,28 @@ class SegmentsGenerator {
     return breakpoints;
   }
 
-  /// Creates a segment based on type and nodes
+  /// Optimierte Segment-Erstellung mithilfe der Metadata-Registry
   RouteSegment _createSegment(
     List<NodeId> nodes,
     SegmentType type,
     CampusGraph graph,
   ) {
-    // Metadaten initialisieren
     final Map<String, dynamic> metadata = {};
-
-    // Debug-Ausgabe
     dev.log(
       "Erstelle $type-Segment mit ${nodes.length} Knoten: ${nodes.join(', ')}",
     );
 
-    // Metadaten basierend auf Segmenttyp hinzufügen
-    switch (type) {
-      case SegmentType.hallway:
-        _addHallwayMetadata(metadata, nodes, graph);
-        break;
-      case SegmentType.stairs:
-        _addStairsMetadata(metadata, nodes, graph);
-        break;
-      case SegmentType.elevator:
-        _addElevatorMetadata(metadata, nodes, graph);
-        break;
-      case SegmentType.room:
-        _addRoomMetadata(metadata, nodes, graph);
-        break;
-      case SegmentType.exit:
-        _addExitMetadata(metadata, nodes, graph);
-        break;
-      case SegmentType.toilet:
-        _addToiletMetadata(metadata, nodes, graph);
-        break;
-      case SegmentType.door:
-        _addDoorMetadata(metadata, nodes, graph);
-        break;
-      case SegmentType.origin:
-        _addOriginMetadata(metadata, nodes, graph);
-        break;
-      case SegmentType.destination:
-        _addDestinationMetadata(metadata, nodes, graph);
-        break;
-      default:
-        break;
+    // Nutzt den entsprechenden Metadata-Builder, wenn vorhanden.
+    if (_metadataBuilders.containsKey(type)) {
+      _metadataBuilders[type]!(metadata, nodes, graph);
     }
 
-    // Building and floor
+    // Gemeinsame Metadaten (z. B. Gebäude, Etage, Distanz)
     final Node? startNode = graph.getNodeById(nodes.first);
     if (startNode != null) {
       metadata['building'] = startNode.buildingName;
       metadata['floor'] = startNode.floorNumber;
     }
-
-    // Distanz berechnen
     if (type != SegmentType.destination && type != SegmentType.origin) {
       metadata[MetadataKeys.distance] = _calculatePathDistance(nodes, graph);
     }
@@ -846,89 +789,125 @@ class SegmentsGenerator {
     final node = graph.getNodeById(nodeId);
     if (node == null) return SegmentType.unknown;
 
-    if (node.isRoom) return SegmentType.room;
-    if (node.isCorridor) return SegmentType.hallway;
-    if (node.isStaircase) return SegmentType.stairs;
-    if (node.isElevator) return SegmentType.elevator;
-    if (node.isToilet) return SegmentType.toilet;
-    if (node.isDoor) return SegmentType.hallway;
-    if (node.isEmergencyExit) return SegmentType.exit;
+    // Define ordered type checks for clearer priority hierarchy
+    final typeChecks = <bool Function(Node), SegmentType>{
+      (n) => n.isRoom: SegmentType.room,
+      (n) => n.isCorridor: SegmentType.hallway,
+      (n) => n.isStaircase: SegmentType.stairs,
+      (n) => n.isElevator: SegmentType.elevator,
+      (n) => n.isToilet: SegmentType.toilet,
+      (n) => n.isDoor: SegmentType.hallway, // Doors treated as hallways
+      (n) => n.isEmergencyExit: SegmentType.exit,
+    };
+
+    // Return the first matching type or unknown
+    for (final entry in typeChecks.entries) {
+      if (entry.key(node)) return entry.value;
+    }
 
     return SegmentType.unknown;
   }
 
   /// Calculates the turn direction for a list of nodes
   String _calculateTurnDirection(List<NodeId> nodes, CampusGraph graph) {
-    final String straight = 'geradeaus';
-    // Für die Berechnung der Richtung brauchen wir mindestens 3 Knoten
-    if (nodes.length < 3) {
+    // Constants for better readability
+    const String straight = 'geradeaus';
+    const minNodeCount = 3;
+    const double minDirectionAngle = 10.0;
+    const double slightTurnThreshold = 30.0;
+    const double sharpTurnThreshold = 110.0;
+
+    // Early return for insufficient nodes
+    if (nodes.length < minNodeCount) return straight;
+
+    // Get the three nodes needed for direction calculation
+    final nodeTriple = _getNodeTriple(nodes, graph);
+    if (nodeTriple == null) return straight;
+
+    final (node1, node2, node3) = nodeTriple;
+
+    // Calculate vectors between nodes
+    final vectors = _calculateVectors(node1, node2, node3);
+    final (dx1, dy1, dx2, dy2, length1, length2) = vectors;
+
+    // Skip calculation if segments are too short
+    if (length1 < minSegmentLength || length2 < minSegmentLength) {
       return straight;
     }
 
-    // Holen der relevanten Knoten für die Richtungsberechnung
+    // Calculate normalized vectors
+    final normalized = _normalizeVectors(dx1, dy1, dx2, dy2, length1, length2);
+    final (nx1, ny1, nx2, ny2) = normalized;
+
+    // Calculate dot product and cross product
+    final dotProduct = nx1 * nx2 + ny1 * ny2;
+    final crossProduct = nx1 * ny2 - ny1 * nx2;
+
+    // Calculate angle in degrees with direction from cross product
+    final angle = acos(dotProduct.clamp(-1.0, 1.0)) * 180 / pi;
+    final signedAngle = crossProduct >= 0 ? angle : -angle;
+
+    // Determine direction based on angle
+    if (signedAngle.abs() < minDirectionAngle) {
+      return straight;
+    } else if (signedAngle > 0) {
+      // Left turns
+      if (signedAngle < slightTurnThreshold) return "leicht links";
+      if (signedAngle < sharpTurnThreshold) return "links";
+      return "links halten";
+    } else {
+      // Right turns
+      if (signedAngle > -slightTurnThreshold) return "leicht rechts";
+      if (signedAngle > -sharpTurnThreshold) return "rechts";
+      return "rechts halten";
+    }
+  }
+
+  /// Gets a triple of nodes from the node list if they exist
+  (Node, Node, Node)? _getNodeTriple(List<NodeId> nodes, CampusGraph graph) {
     final node1 = graph.getNodeById(nodes[0]);
     final node2 = graph.getNodeById(nodes[1]);
     final node3 = graph.getNodeById(nodes[2]);
 
     if (node1 == null || node2 == null || node3 == null) {
-      return straight;
+      return null;
     }
 
-    // Vektoren berechnen
+    return (node1, node2, node3);
+  }
+
+  /// Calculates vectors between three nodes
+  (int, int, int, int, double, double) _calculateVectors(
+    Node node1,
+    Node node2,
+    Node node3,
+  ) {
     final dx1 = node2.x - node1.x;
     final dy1 = node2.y - node1.y;
     final dx2 = node3.x - node2.x;
     final dy2 = node3.y - node2.y;
 
-    // Längen berechnen
     final length1 = sqrt(dx1 * dx1 + dy1 * dy1);
     final length2 = sqrt(dx2 * dx2 + dy2 * dy2);
 
-    if (length1 < minSegmentLength || length2 < minSegmentLength) {
-      return straight;
-    }
+    return (dx1, dy1, dx2, dy2, length1, length2);
+  }
 
-    // Normalisierte Vektoren
+  /// Normalizes vectors for direction calculation
+  (double, double, double, double) _normalizeVectors(
+    int dx1,
+    int dy1,
+    int dx2,
+    int dy2,
+    double length1,
+    double length2,
+  ) {
     final nx1 = dx1 / length1;
     final ny1 = dy1 / length1;
     final nx2 = dx2 / length2;
     final ny2 = dy2 / length2;
 
-    // Skalarprodukt für Winkelgröße
-    final dotProduct = nx1 * nx2 + ny1 * ny2;
-
-    // Kreuzprodukt für Winkelrichtung (positiv = links, negativ = rechts)
-    final crossProduct = nx1 * ny2 - ny1 * nx2;
-
-    // Winkel berechnen und Vorzeichen vom Kreuzprodukt übernehmen
-    final double angle = acos(dotProduct.clamp(-1.0, 1.0)) * 180 / pi;
-    final double angleDegrees = crossProduct >= 0 ? angle : -angle;
-
-    // Bestimme die Richtung basierend auf dem Winkel
-    final String direction;
-    if (angleDegrees.abs() < 10) {
-      direction = straight;
-    } else if (angleDegrees > 0) {
-      // Linksabbiegung
-      if (angleDegrees < 30) {
-        direction = "leicht links";
-      } else if (angleDegrees < 110) {
-        direction = "links";
-      } else {
-        direction = "links halten";
-      }
-    } else {
-      // Rechtsabbiegung
-      if (angleDegrees > -30) {
-        direction = "leicht rechts";
-      } else if (angleDegrees > -110) {
-        direction = "rechts";
-      } else {
-        direction = "rechts halten";
-      }
-    }
-
-    return direction;
+    return (nx1, ny1, nx2, ny2);
   }
 
   /// Calculates which side of a hallway a room is on
