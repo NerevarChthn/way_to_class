@@ -1,9 +1,7 @@
 // Panel für Entwickleroptionen
-import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
 import 'package:way_to_class/service/campus_graph_service.dart';
-import 'package:way_to_class/service/security/security_manager.dart';
 
 class DeveloperPanel extends StatelessWidget {
   final CampusGraphService graph;
