@@ -9,29 +9,48 @@ class InstructionGenerator {
   String? _lastUsedMiddleConnector;
   final String _unknown = '{Unbekannt}';
   final String _middleConnectorPlaceholder = '{middleConnector}';
-  final String _distanceWeightsPlaceholder = '{distanceWeight}';
   final String _hallSynonymsPlaceholder = '{hallSynonym}';
 
-  final List<String> _initialConnectors = ["zuerst", "als Erstes", "zunächst"];
+  final List<String> _initialConnectors = ['zuerst', 'als Erstes', 'zunächst'];
   final List<String> _middleConnectors = [
-    "dann",
-    "danach",
-    "anschließend",
-    "im Anschluss",
-    "schließlich",
-    "", // nicht immer Konnektor
+    'dann',
+    'danach',
+    'anschließend',
+    'im Anschluss',
+    'schließlich',
+    '', // nicht immer Konnektor
   ];
-  final List<String> _finalConnectors = [
-    "zuletzt",
-    "als letztes",
-    "zum Schluss",
-  ];
-  final List<String> _distanceWeights = ["etwa", "ungefähr", "ca."];
-  final List<String> _hallSynonyms = ["Flur", "Gang", "Korridor"];
+  final String _destRef = 'von dir';
+  final List<String> _hallSynonyms = ['Flur', 'Gang', 'Korridor'];
 
   final Map<String, List<String>> _generatedValues = {};
 
   // Optimierte Hilfsmethoden
+
+  final Map<int, List<String>> _distanceVariants = {
+    0: ['ein paar Schritte', 'wenige Meter', 'ein kleines Stück'],
+    10: ['etwa 10 Meter', 'ungefähr 10 Meter', 'ca. 10 Meter', 'einige Meter'],
+    20: ['etwa 20 Meter', 'ungefähr 20 Meter', 'ca. 20 Meter', 'ein Weilchen'],
+    50: [
+      'etwa 50 Meter',
+      'ungefähr 50 Meter',
+      'ca. 50 Meter',
+      'ein weites Stück',
+      'eine Weile',
+    ],
+    100: ['etwa 100 Meter', 'ungefähr 100 Meter', 'ca. 100 Meter', 'sehr weit'],
+  };
+
+  String _getRandomDistance(int distance) {
+    for (final threshold in _distanceVariants.keys.toList().reversed) {
+      if (distance >= threshold) {
+        return _distanceVariants[threshold]![_random.nextInt(
+          _distanceVariants[threshold]!.length,
+        )];
+      }
+    }
+    return '$distance Meter';
+  }
 
   String _getUniqueRandomValue(String category, List<String> options) {
     if (!_generatedValues.containsKey(category)) {
@@ -80,12 +99,6 @@ class InstructionGenerator {
     return connector;
   }
 
-  String _getRandomFinalConnector() =>
-      _finalConnectors[_random.nextInt(_finalConnectors.length)];
-
-  String _getRandomDistanceWeight() =>
-      _distanceWeights[_random.nextInt(_distanceWeights.length)];
-
   String _getRandomHallSynonym() =>
       _hallSynonyms[_random.nextInt(_hallSynonyms.length)];
 
@@ -122,8 +135,6 @@ class InstructionGenerator {
         // Versuche, Standard-Platzhalter zu verarbeiten
         if (placeholder == _middleConnectorPlaceholder) {
           buffer.write(_getRandomMiddleConnector());
-        } else if (placeholder == _distanceWeightsPlaceholder) {
-          buffer.write(_getRandomDistanceWeight());
         } else if (placeholder == _hallSynonymsPlaceholder) {
           buffer.write(_getRandomHallSynonym());
         } else {
@@ -161,7 +172,7 @@ class InstructionGenerator {
     final replacements = <String, String>{
       '{initialConnector}': _getRandomInitialConnector(),
       '{originName}': seg.metadata[MetadataKeys.originName] ?? _unknown,
-      '{hallSynonym}': _getRandomHallSynonym(),
+      _hallSynonymsPlaceholder: _getRandomHallSynonym(),
     };
 
     // Richtungsangabe hinzufügen, falls vorhanden
@@ -183,10 +194,11 @@ class InstructionGenerator {
 
     // Platzhalter-Map erstellen
     final replacements = <String, String>{
-      '{middleConnector}': _getRandomMiddleConnector(),
-      '{distanceWeight}': _getRandomDistanceWeight(),
-      '{hallSynonym}': _getRandomHallSynonym(),
-      '{distance}': (seg.metadata[MetadataKeys.distance] ?? 0).toString(),
+      _middleConnectorPlaceholder: _getRandomMiddleConnector(),
+      _hallSynonymsPlaceholder: _getRandomHallSynonym(),
+      '{distance}': _getRandomDistance(
+        (seg.metadata[MetadataKeys.distance] ?? 0),
+      ),
     };
 
     // Wähle Basistemplate für geraden Flur
@@ -225,14 +237,14 @@ class InstructionGenerator {
     return instruction;
   }
 
-  String _generateDoorInstruction(RouteSegment seg) {
-    // Implementierung folgt ähnlichem Muster
-    return "Unimplemented, available data: ${seg.metadata.keys}";
-  }
-
   String _generateDestinationInstruction(RouteSegment seg) {
-    // Implementierung folgt ähnlichem Muster
-    return "Unimplemented, available data: ${seg.metadata.keys}";
+    final template = _getRandomTemplate(InstructionTemplates.destination);
+    final replacements = <String, String>{
+      '{currentName}': seg.metadata[MetadataKeys.currentName] ?? _unknown,
+      '{side}': seg.metadata[MetadataKeys.side] ?? 'in unmittelbarer Nähe',
+      '{ref}': _random.nextBool() ? _destRef : '',
+    };
+    return _replacePlaceholders(template, replacements);
   }
 
   String _generateSegmentInstruction(RouteSegment seg) {
@@ -241,12 +253,10 @@ class InstructionGenerator {
         return _generateOriginInstruction(seg);
       case SegmentType.hallway:
         return _generateHallwayInstruction(seg);
-      case SegmentType.door:
-        return _generateDoorInstruction(seg);
       case SegmentType.destination:
         return _generateDestinationInstruction(seg);
       default:
-        return "{Segment noch unbekannt}";
+        return '{Segment noch unbekannt}';
     }
   }
 

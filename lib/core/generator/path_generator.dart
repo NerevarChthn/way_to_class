@@ -539,97 +539,125 @@ class PathGenerator {
     );
 
     if (startFloorTransitions.isEmpty || endFloorTransitions.isEmpty) {
+      dev.log("Keine Übergangspunkte gefunden für Etagenwechsel");
       return []; // Keine Übergangspunkte gefunden
     }
+
+    // Debug-Informationen
+    dev.log("Start: ${start.id} (${start.name}), Etage: ${start.floorCode}");
+    dev.log("Ziel: ${end.id} (${end.name}), Etage: ${end.floorCode}");
+    dev.log(
+      "Gefundene Übergangspunkte auf Startetage: ${startFloorTransitions.length}",
+    );
+    dev.log(
+      "Gefundene Übergangspunkte auf Zieletage: ${endFloorTransitions.length}",
+    );
 
     // Alle möglichen Kombinationen durchprobieren
     double bestPathCost = double.infinity;
     List<NodeId> bestPath = [];
 
-    // Priorisiere Treppenpfade über Aufzugspfade
-    final List<Node> startFloorStairs =
-        startFloorTransitions.where((node) => node.isStaircase).toList();
-    final List<Node> endFloorStairs =
-        endFloorTransitions.where((node) => node.isStaircase).toList();
-
-    // Wenn es Treppen auf beiden Etagen gibt, bevorzuge diese
-    final List<Node> startTransitionsToUse =
-        startFloorStairs.isNotEmpty ? startFloorStairs : startFloorTransitions;
-    final List<Node> endTransitionsToUse =
-        endFloorStairs.isNotEmpty ? endFloorStairs : endFloorTransitions;
-
-    for (final startTransition in startTransitionsToUse) {
-      final pathToTransition = calculatePath(
-        (start.id, startTransition.id), // Tupel-Konvertierung
-        graph,
+    // Gehe alle Übergangspunkte auf der Startetage durch
+    for (final startTransition in startFloorTransitions) {
+      dev.log(
+        "Prüfe Startübergang: ${startTransition.id} (${startTransition.name})",
       );
-      if (pathToTransition.isEmpty) continue;
 
-      for (final endTransition in endTransitionsToUse) {
+      // Finde Pfad vom Start zum Übergangspunkt auf der Startetage
+      final List<NodeId> pathToTransition = calculatePath((
+        start.id,
+        startTransition.id,
+      ), graph);
+
+      if (pathToTransition.isEmpty) {
+        dev.log("Kein Pfad zum Übergangspunkt ${startTransition.id} gefunden");
+        continue;
+      }
+
+      dev.log(
+        "Pfad zum Übergangspunkt ${startTransition.id} gefunden: ${pathToTransition.length} Knoten",
+      );
+
+      // Gehe alle Übergangspunkte auf der Zieletage durch
+      for (final endTransition in endFloorTransitions) {
+        dev.log(
+          "Prüfe Zielübergang: ${endTransition.id} (${endTransition.name})",
+        );
+
         // Prüfe, ob Übergänge verbunden sind (gleiche Treppe/Aufzug)
         if (_areConnectedTransitions(startTransition, endTransition)) {
-          final pathFromTransition = calculatePath(
-            (endTransition.id, end.id), // Tupel-Konvertierung
-            graph,
+          dev.log(
+            "Verbindung gefunden zwischen ${startTransition.id} und ${endTransition.id}",
           );
-          if (pathFromTransition.isEmpty) continue;
 
-          // Kombiniere Teilpfade
-          final List<NodeId> completePath = [
-            ...pathToTransition.sublist(0, pathToTransition.length - 1),
-            startTransition.id,
+          // Finde Pfad vom Übergangspunkt auf der Zieletage zum Ziel
+          final List<NodeId> pathFromTransition = calculatePath((
             endTransition.id,
-            ...pathFromTransition.sublist(1),
-          ];
+            end.id,
+          ), graph);
 
-          // Kosten berechnen
+          if (pathFromTransition.isEmpty) {
+            dev.log(
+              "Kein Pfad vom Übergangspunkt ${endTransition.id} zum Ziel ${end.id} gefunden",
+            );
+            continue;
+          }
+
+          dev.log(
+            "Pfad vom Übergangspunkt ${endTransition.id} zum Ziel gefunden: ${pathFromTransition.length} Knoten",
+          );
+
+          // Kombiniere die Teilpfade
+          final List<NodeId> completePath = [];
+
+          // Füge Pfad zum Übergang hinzu (ohne den letzten Knoten zu duplizieren)
+          completePath.addAll(
+            pathToTransition.sublist(0, pathToTransition.length),
+          );
+
+          // Überprüfe ob der zweite Pfad mit dem Übergangsknoten beginnt
+          if (completePath.last != endTransition.id) {
+            // Füge den Ziel-Übergangsknoten hinzu
+            completePath.add(endTransition.id);
+          }
+
+          // Füge den Rest des Pfades vom Übergang zum Ziel hinzu (ohne den ersten Knoten zu duplizieren)
+          if (pathFromTransition.length > 1) {
+            completePath.addAll(pathFromTransition.sublist(1));
+          }
+
+          // Berechne die Kosten dieses Pfades
           final double pathCost = _estimatePathCost(completePath, graph);
 
+          dev.log(
+            "Gesamtpfad gefunden mit ${completePath.length} Knoten und Kosten: $pathCost",
+          );
+
+          // Wenn dieser Pfad besser ist als der bisher beste, speichern
           if (pathCost < bestPathCost) {
             bestPathCost = pathCost;
-            bestPath = completePath;
+            bestPath = List<NodeId>.from(completePath);
+            dev.log("Neuer bester Pfad gefunden! Kosten: $pathCost");
           }
+        } else {
+          dev.log(
+            "Keine Verbindung zwischen ${startTransition.id} und ${endTransition.id}",
+          );
         }
       }
     }
 
-    // Wenn kein Treppenpfad gefunden wurde, probiere Aufzüge als Fallback
-    if (bestPath.isEmpty &&
-        startFloorStairs.isNotEmpty != startFloorTransitions.isNotEmpty) {
-      for (final startTransition in startFloorTransitions) {
-        final pathToTransition = calculatePath(
-          (start.id, startTransition.id), // Tupel-Konvertierung
-          graph,
-        );
-        if (pathToTransition.isEmpty) continue;
+    // Speziallösung für indirekte Pfade über andere Etagen
+    if (bestPath.isEmpty) {
+      dev.log("Versuche indirekte Verbindung über andere Etagen zu finden...");
+      bestPath = _findIndirectEtagePath(start, end, graph);
+    }
 
-        for (final endTransition in endFloorTransitions) {
-          // Prüfe, ob Übergänge verbunden sind (gleiche Treppe/Aufzug)
-          if (_areConnectedTransitions(startTransition, endTransition)) {
-            final pathFromTransition = calculatePath(
-              (endTransition.id, end.id), // Tupel-Konvertierung
-              graph,
-            );
-            if (pathFromTransition.isEmpty) continue;
-
-            // Kombiniere Teilpfade
-            final List<NodeId> completePath = [
-              ...pathToTransition.sublist(0, pathToTransition.length - 1),
-              startTransition.id,
-              endTransition.id,
-              ...pathFromTransition.sublist(1),
-            ];
-
-            // Kosten berechnen
-            final double pathCost = _estimatePathCost(completePath, graph);
-
-            if (pathCost < bestPathCost) {
-              bestPathCost = pathCost;
-              bestPath = completePath;
-            }
-          }
-        }
-      }
+    // Informiere über das Ergebnis
+    if (bestPath.isEmpty) {
+      dev.log("Kein möglicher Pfad über Etagen gefunden");
+    } else {
+      dev.log("Bester Pfad gefunden mit ${bestPath.length} Knoten");
     }
 
     return bestPath;
@@ -657,6 +685,161 @@ class PathGenerator {
     }
 
     return transitions;
+  }
+
+  /// Findet einen indirekten Pfad über andere Etagen, wenn kein direkter Pfad gefunden wurde
+  List<NodeId> _findIndirectEtagePath(Node start, Node end, CampusGraph graph) {
+    // Sammle alle Etagen im selben Gebäude
+    final Set<int> allFloors = {};
+    for (final nodeId in graph.allNodeIds) {
+      final node = graph.getNodeById(nodeId);
+      if (node != null && node.buildingCode == start.buildingCode) {
+        allFloors.add(node.floorCode);
+      }
+    }
+
+    // Entferne Start- und Zieletage
+    allFloors.remove(start.floorCode);
+    allFloors.remove(end.floorCode);
+
+    dev.log("Verfügbare Zwischenetagen: ${allFloors.join(', ')}");
+
+    double bestPathCost = double.infinity;
+    List<NodeId> bestPath = [];
+
+    // Versuche für jede mögliche Zwischenetage
+    for (final intermediateFloor in allFloors) {
+      dev.log("Versuche Pfad über Etage $intermediateFloor");
+
+      // Finde Übergangspunkte auf der Zwischenetage
+      final intermediateTransitions = _findTransitionNodes(
+        graph,
+        start.buildingCode,
+        intermediateFloor,
+      );
+
+      if (intermediateTransitions.isEmpty) {
+        dev.log("Keine Übergangspunkte auf Etage $intermediateFloor gefunden");
+        continue;
+      }
+
+      // 1. Pfad vom Start zur Zwischenetage finden
+      List<NodeId> pathToIntermediate = [];
+      Node? bestIntermediateStart;
+
+      // Übergangspunkte auf der Startetage finden
+      final startTransitions = _findTransitionNodes(
+        graph,
+        start.buildingCode,
+        start.floorCode,
+      );
+
+      // Pfad von Start zur Zwischenetage finden
+      for (final startTrans in startTransitions) {
+        for (final intermediateTrans in intermediateTransitions) {
+          if (_areConnectedTransitions(startTrans, intermediateTrans)) {
+            final pathToStart = calculatePath((start.id, startTrans.id), graph);
+            if (pathToStart.isNotEmpty) {
+              pathToIntermediate = pathToStart;
+              bestIntermediateStart = intermediateTrans;
+              break;
+            }
+          }
+        }
+        if (pathToIntermediate.isNotEmpty) break;
+      }
+
+      if (pathToIntermediate.isEmpty || bestIntermediateStart == null) {
+        dev.log(
+          "Keine Verbindung zur Zwischenetage $intermediateFloor gefunden",
+        );
+        continue;
+      }
+
+      // 2. Pfad von der Zwischenetage zum Ziel finden
+      List<NodeId> pathFromIntermediate = [];
+      Node? bestIntermediateEnd;
+
+      // Übergangspunkte auf der Zieletage finden
+      final endTransitions = _findTransitionNodes(
+        graph,
+        end.buildingCode,
+        end.floorCode,
+      );
+
+      // Pfad von Zwischenetage zum Ziel finden
+      for (final intermediateTrans in intermediateTransitions) {
+        for (final endTrans in endTransitions) {
+          if (_areConnectedTransitions(intermediateTrans, endTrans)) {
+            final pathToEnd = calculatePath((endTrans.id, end.id), graph);
+            if (pathToEnd.isNotEmpty) {
+              pathFromIntermediate = pathToEnd;
+              bestIntermediateEnd = intermediateTrans;
+              break;
+            }
+          }
+        }
+        if (pathFromIntermediate.isNotEmpty) break;
+      }
+
+      if (pathFromIntermediate.isEmpty || bestIntermediateEnd == null) {
+        dev.log(
+          "Keine Verbindung von der Zwischenetage $intermediateFloor zum Ziel gefunden",
+        );
+        continue;
+      }
+
+      // 3. Pfad auf der Zwischenetage finden
+      final intermediatePathStart = bestIntermediateStart;
+      final intermediatePathEnd = bestIntermediateEnd;
+
+      final intermediatePath = calculatePath((
+        intermediatePathStart.id,
+        intermediatePathEnd.id,
+      ), graph);
+
+      if (intermediatePath.isEmpty) {
+        dev.log("Kein Pfad auf der Zwischenetage $intermediateFloor gefunden");
+        continue;
+      }
+
+      // 4. Alle Teilpfade kombinieren
+      final List<NodeId> combinedPath = [];
+      combinedPath.addAll(pathToIntermediate);
+
+      // Verbindung zur Zwischenetage
+      if (combinedPath.last != bestIntermediateStart.id) {
+        combinedPath.add(bestIntermediateStart.id);
+      }
+
+      // Pfad auf der Zwischenetage
+      if (intermediatePath.length > 1) {
+        combinedPath.addAll(intermediatePath.sublist(1));
+      }
+
+      // Verbindung zur Zieletage
+      if (combinedPath.last != bestIntermediateEnd.id) {
+        combinedPath.add(bestIntermediateEnd.id);
+      }
+
+      // Pfad zum Ziel
+      for (int i = 1; i < pathFromIntermediate.length; i++) {
+        combinedPath.add(pathFromIntermediate[i]);
+      }
+
+      // Berechne die Kosten dieses Pfades
+      final pathCost = _estimatePathCost(combinedPath, graph);
+
+      if (pathCost < bestPathCost) {
+        bestPathCost = pathCost;
+        bestPath = List<NodeId>.from(combinedPath);
+        dev.log(
+          "Pfad über Zwischenetage $intermediateFloor gefunden! Kosten: $pathCost",
+        );
+      }
+    }
+
+    return bestPath;
   }
 
   /// Prüft, ob zwei Übergangsknoten verbunden sind (gleicher Aufzug/Treppe)
@@ -702,7 +885,40 @@ class PathGenerator {
       return true;
     }
 
-    // Fallback: Prüfe auf ähnliche Namen (falls vorhanden)
+    // VERBESSERT: Prüfe explizit die IDs mit Pattern-Matching
+    if (transition1.id.startsWith('t') && transition2.id.startsWith('t')) {
+      // Extrahiere Zahlen aus den IDs
+      final RegExp numPattern = RegExp(r'\d+');
+      final num1Matches = numPattern.allMatches(transition1.id);
+      final num2Matches = numPattern.allMatches(transition2.id);
+
+      if (num1Matches.isNotEmpty && num2Matches.isNotEmpty) {
+        try {
+          final int num1 = int.parse(num1Matches.first.group(0)!);
+          final int num2 = int.parse(num2Matches.first.group(0)!);
+
+          // Bekannte Treppenpaare basierend auf deinen Daten
+          final List<List<int>> knownStairPairs = [
+            [11, 16], // t11 <-> t16
+            [12, 15], // t12 <-> t15
+            [13, 14], // t13 <-> t14
+            [19, 20], // t19 <-> t20
+          ];
+
+          for (final pair in knownStairPairs) {
+            if ((num1 == pair[0] && num2 == pair[1]) ||
+                (num1 == pair[1] && num2 == pair[0])) {
+              dev.log("→ Bekanntes Treppenpaar gefunden: t$num1 <-> t$num2");
+              return true;
+            }
+          }
+        } catch (e) {
+          // Fehler beim Konvertieren ignorieren
+        }
+      }
+    }
+
+    // Fallback: Prüfe auf ähnliche Namen
     if (transition1.name.isNotEmpty && transition2.name.isNotEmpty) {
       final name1 = transition1.name.toLowerCase();
       final name2 = transition2.name.toLowerCase();

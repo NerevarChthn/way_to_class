@@ -103,7 +103,89 @@ class SegmentsGenerator {
       final _PathBreakpoint bp = breakpoints[i];
       final int endIndex = bp.index;
 
-      if (bp.type == BreakpointType.turn) {
+      // Spezialbehandlung für Treppen und Aufzüge mit höchster Priorität
+      if (bp.type == BreakpointType.staircase ||
+          bp.type == BreakpointType.elevator) {
+        if (endIndex > startIndex) {
+          final List<NodeId> segmentNodes = path.sublist(startIndex, endIndex);
+          if (segmentNodes.length >= 2 &&
+              segmentNodes.last != lastProcessedNode) {
+            SegmentType segType = _determineSegmentType(segmentNodes[0], graph);
+            if (segType == SegmentType.door) segType = SegmentType.hallway;
+            segments.add(_createSegment(segmentNodes, segType, graph));
+            lastProcessedNode = segmentNodes.last;
+          }
+        }
+
+        // Treppe/Aufzug selbst als Segment verarbeiten - VERBESSERT FÜR ZUSAMMENHÄNGENDE TREPPEN
+        // Finde das tatsächliche Start- und Endnode der Treppe/Aufzug
+        int startTransitionIndex = endIndex;
+        int endTransitionIndex = endIndex;
+
+        // Gehe rückwärts, um den Beginn der Treppe zu finden
+        while (startTransitionIndex > 0) {
+          final NodeId prevId = path[startTransitionIndex - 1];
+          final Node? prevNode = graph.getNodeById(prevId);
+          final bool isMatchingType =
+              bp.type == BreakpointType.staircase
+                  ? prevNode?.isStaircase ?? false
+                  : prevNode?.isElevator ?? false;
+
+          if (isMatchingType) {
+            startTransitionIndex--;
+          } else {
+            break;
+          }
+        }
+
+        // Gehe vorwärts, um das Ende der Treppe zu finden
+        while (endTransitionIndex < path.length - 1) {
+          final NodeId nextId = path[endTransitionIndex + 1];
+          final Node? nextNode = graph.getNodeById(nextId);
+          final bool isMatchingType =
+              bp.type == BreakpointType.staircase
+                  ? nextNode?.isStaircase ?? false
+                  : nextNode?.isElevator ?? false;
+
+          if (isMatchingType) {
+            endTransitionIndex++;
+          } else {
+            break;
+          }
+        }
+
+        // Erstelle das Treppensegment mit einem Knoten davor und danach für Kontext
+        final List<NodeId> transitionNodes = [];
+
+        // Füge einen Knoten vor der Treppe hinzu, wenn verfügbar
+        if (startTransitionIndex > 0 &&
+            path[startTransitionIndex - 1] != lastProcessedNode) {
+          transitionNodes.add(path[startTransitionIndex - 1]);
+        }
+
+        // Füge alle Treppenknoten hinzu
+        transitionNodes.addAll(
+          path.sublist(startTransitionIndex, endTransitionIndex + 1),
+        );
+
+        // Füge einen Knoten nach der Treppe hinzu, wenn verfügbar
+        if (endTransitionIndex + 1 < path.length) {
+          transitionNodes.add(path[endTransitionIndex + 1]);
+        }
+
+        // Segment erstellen (nur wenn es mindestens 2 Knoten hat)
+        if (transitionNodes.length >= 2) {
+          final SegmentType transitionType =
+              bp.type == BreakpointType.staircase
+                  ? SegmentType.stairs
+                  : SegmentType.elevator;
+          segments.add(_createSegment(transitionNodes, transitionType, graph));
+          lastProcessedNode = path[endTransitionIndex];
+        }
+
+        // Aktualisiere startIndex für das nächste Segment
+        startIndex = endTransitionIndex + 1;
+      } else if (bp.type == BreakpointType.turn) {
         if (endIndex > 0 && startIndex >= endIndex) {
           startIndex = endIndex - 1;
         }
@@ -239,115 +321,7 @@ class SegmentsGenerator {
       );
     }
 
-    return _mergeSegments(segments);
-  }
-
-  List<RouteSegment> _mergeSegments(List<RouteSegment> segments) {
-    final List<RouteSegment> merged = [];
-    // Wir wollen nur hallway- und door-Segmente zusammenführen.
-    final mergeGroupTypes = {SegmentType.hallway, SegmentType.door};
-
-    for (int i = 0; i < segments.length; i++) {
-      final RouteSegment current = segments[i];
-
-      // Segmente, die nicht in die Merge-Gruppe gehören, werden direkt übernommen.
-      if (!mergeGroupTypes.contains(current.type)) {
-        merged.add(current);
-        continue;
-      }
-
-      // Zunächst sammeln wir alle aufeinanderfolgenden Segmente, die in die Merge-Gruppe fallen
-      // und dieselbe Umgebung (building, floor) haben.
-      final List<RouteSegment> group = [current];
-      while (i + 1 < segments.length &&
-          mergeGroupTypes.contains(segments[i + 1].type)) {
-        final RouteSegment nextSeg = segments[i + 1];
-        if (nextSeg.metadata[MetadataKeys.building] ==
-                current.metadata[MetadataKeys.building] &&
-            nextSeg.metadata[MetadataKeys.floor] ==
-                current.metadata[MetadataKeys.floor]) {
-          group.add(nextSeg);
-          i++;
-        } else {
-          break;
-        }
-      }
-
-      // Nun teilen wir die Gruppe in Untergruppen auf:
-      // Jedes Mal, wenn ein Segment mit einer Richtungsänderung (direction ≠ "geradeaus")
-      // gefunden wird, schließen wir den aktuellen Merge-Block ab (einschließlich dieses Segments)
-      // und starten einen neuen Block.
-      final List<List<RouteSegment>> mergeBlocks = [];
-      List<RouteSegment> currentBlock = [];
-      for (final seg in group) {
-        currentBlock.add(seg);
-        // Wenn in den Metadaten eine Richtungsänderung (nicht "geradeaus") vorhanden ist,
-        // schließen wir den aktuellen Block ab.
-        if (seg.metadata.containsKey(MetadataKeys.direction) &&
-            seg.metadata[MetadataKeys.direction] !=
-                MetadataKeys.straightDirection) {
-          mergeBlocks.add(List<RouteSegment>.from(currentBlock));
-          currentBlock = [];
-        }
-      }
-      if (currentBlock.isNotEmpty) {
-        mergeBlocks.add(currentBlock);
-      }
-
-      // Für jeden Merge-Block führen wir das Zusammenführen durch:
-      for (final block in mergeBlocks) {
-        if (block.isEmpty) continue;
-        if (block.length == 1) {
-          merged.add(block.first);
-        } else {
-          final List<NodeId> mergedNodes = [];
-          int totalDistance = 0;
-          int doorCount = 0;
-          // Übernehme als Basis die Metadaten des letzten Segments im Block.
-          final Map<String, dynamic> commonMetadata = Map<String, dynamic>.from(
-            block.last.metadata,
-          );
-          for (final seg in block) {
-            // Knoten zusammenführen – Duplikate an den Übergängen vermeiden.
-            if (mergedNodes.isEmpty) {
-              mergedNodes.addAll(seg.nodes);
-            } else {
-              if (mergedNodes.last == seg.nodes.first) {
-                mergedNodes.addAll(seg.nodes.sublist(1));
-              } else {
-                mergedNodes.addAll(seg.nodes);
-              }
-            }
-            if (seg.metadata.containsKey(MetadataKeys.distance)) {
-              totalDistance += seg.metadata[MetadataKeys.distance] as int;
-            }
-            if (seg.type == SegmentType.door) {
-              doorCount++;
-            }
-            if (seg.metadata.containsKey(MetadataKeys.doorCount)) {
-              doorCount += seg.metadata[MetadataKeys.doorCount] as int;
-            }
-          }
-          commonMetadata[MetadataKeys.distance] = totalDistance;
-          commonMetadata[MetadataKeys.doorCount] = doorCount;
-          // Bestimme den Segmenttyp: Falls mindestens ein Segment als hallway markiert ist, wählen wir hallway.
-          final bool hasHallway = block.any(
-            (seg) => seg.type == SegmentType.hallway,
-          );
-          final SegmentType mergedType =
-              hasHallway ? SegmentType.hallway : SegmentType.door;
-          merged.add(
-            RouteSegment(
-              type: mergedType,
-              nodes: mergedNodes,
-              metadata: commonMetadata,
-            ),
-          );
-        }
-      }
-    }
-
-    return merged;
+    return segments;
   }
 
   /// Findet alle Breakpoints (kritische Punkte) im Pfad
@@ -356,19 +330,21 @@ class SegmentsGenerator {
     CampusGraph graph,
   ) {
     final List<_PathBreakpoint> breakpoints = [];
+    final Set<int> processedIndices = {};
 
     // Ausführliche Debug-Information für den Pfad
     dev.log("Suche Breakpoints in folgendem Pfad: ${path.join(' -> ')}");
 
-    // Zuerst nach Abbiegungen suchen, da diese höchste Priorität haben
+    // Breakpoints suchen
     for (int i = 1; i < path.length - 1; i++) {
+      if (processedIndices.contains(i)) continue;
       final NodeId prevId = path[i - 1];
       final NodeId currentId = path[i];
       final NodeId nextId = path[i + 1];
 
       if (nextId == path.last) {
         dev.log(
-          "Überspringe Abbiegungsprüfung bei $i ($currentId): Nächster Knoten ist das Ziel",
+          "Überspringe Prüfung bei $i ($currentId): Nächster Knoten ist das Ziel",
         );
 
         continue;
@@ -381,6 +357,99 @@ class SegmentsGenerator {
 
       if (prevNode == null || currentNode == null || nextNode == null) {
         continue;
+      }
+
+      if (currentNode.isStaircase) {
+        int startIndex = i;
+        int endIndex = i;
+
+        // Gehe rückwärts, um den Beginn der Treppe zu finden
+        while (startIndex > 0) {
+          final prevId = path[startIndex - 1];
+          final prevNode = graph.getNodeById(prevId);
+          if (prevNode != null && prevNode.isStaircase) {
+            startIndex--;
+          } else {
+            break;
+          }
+        }
+
+        // Gehe vorwärts, um das Ende der Treppe zu finden
+        while (endIndex < path.length - 1) {
+          final nextId = path[endIndex + 1];
+          final nextNode = graph.getNodeById(nextId);
+          if (nextNode != null && nextNode.isStaircase) {
+            endIndex++;
+          } else {
+            break;
+          }
+        }
+
+        // Wenn wir eine zusammenhängende Treppe gefunden haben
+        if (startIndex != endIndex || currentNode.isStaircase) {
+          dev.log(
+            "Zusammenhängende Treppe gefunden von Index $startIndex bis $endIndex",
+          );
+
+          // Markiere die Mitte der Treppe als Breakpoint
+          int middleIndex = (startIndex + endIndex) ~/ 2;
+          breakpoints.add(
+            _PathBreakpoint(middleIndex, BreakpointType.staircase),
+          );
+
+          // Markiere alle Indizes der Treppe als verarbeitet
+          for (int j = startIndex; j <= endIndex; j++) {
+            processedIndices.add(j);
+          }
+
+          // Springe zum Ende der Treppe
+          i = endIndex;
+        }
+      }
+
+      // Spezielle Erkennung für Aufzüge
+      if (currentNode.isElevator) {
+        int startIndex = i;
+        int endIndex = i;
+
+        // Gehe rückwärts, um den Beginn des Aufzugs zu finden
+        while (startIndex > 0) {
+          final prevId = path[startIndex - 1];
+          final prevNode = graph.getNodeById(prevId);
+          if (prevNode != null && prevNode.isElevator) {
+            startIndex--;
+          } else {
+            break;
+          }
+        }
+
+        // Gehe vorwärts, um das Ende des Aufzugs zu finden
+        while (endIndex < path.length - 1) {
+          final nextId = path[endIndex + 1];
+          final nextNode = graph.getNodeById(nextId);
+          if (nextNode != null && nextNode.isElevator) {
+            endIndex++;
+          } else {
+            break;
+          }
+        }
+
+        if (startIndex != endIndex || currentNode.isElevator) {
+          dev.log(
+            "Zusammenhängender Aufzug gefunden von Index $startIndex bis $endIndex",
+          );
+
+          int middleIndex = (startIndex + endIndex) ~/ 2;
+          breakpoints.add(
+            _PathBreakpoint(middleIndex, BreakpointType.elevator),
+          );
+
+          for (int j = startIndex; j <= endIndex; j++) {
+            processedIndices.add(j);
+          }
+
+          i = endIndex;
+        }
       }
 
       // Ignoriere Türen nicht mehr für die Abbiegungserkennung
@@ -439,6 +508,7 @@ class SegmentsGenerator {
 
     // Dann nach Typwechseln suchen (niedrigere Priorität)
     for (int i = 1; i < path.length - 1; i++) {
+      if (processedIndices.contains(i)) continue;
       // Wenn dieser Knoten bereits als Abbiegung markiert ist, überspringen
       if (breakpoints.any(
         (bp) => bp.index == i && bp.type == BreakpointType.turn,
@@ -511,6 +581,8 @@ class SegmentsGenerator {
     } else {
       dev.log("Keine Breakpoints gefunden im Pfad");
     }
+
+    breakpoints.sort((a, b) => a.index.compareTo(b.index));
 
     return breakpoints;
   }
@@ -928,8 +1000,10 @@ class SegmentsGenerator {
 /// Definition der Breakpoint-Typen im Pfad
 enum BreakpointType {
   turn, // Abbiegung im Flur
-  typeChange, // Änderung des Node-Typs (z.B. Flur → Treppe)
+  typeChange, // Änderung des Node-Typs allgemein (vllt redundant)
   specialDoor, // Spezielle Tür (Notausgang, Haupteingang)
+  staircase,
+  elevator,
 }
 
 /// Repräsentiert einen kritischen Punkt im Pfad

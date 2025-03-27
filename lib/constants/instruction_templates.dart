@@ -17,9 +17,9 @@ class InstructionTemplates {
 
   // HALLWAY TEMPLATES
   static const Set<String> hallway = {
-    'Gehe {middleConnector} {distanceWeight} {distance} Meter den {hallSynonym} entlang',
-    'Folge {middleConnector} dem {hallSynonym} für {distanceWeight} {distance} Meter',
-    'Laufe {middleConnector} {distanceWeight} {distance} Meter geradeaus durch den {hallSynonym}',
+    'Gehe {middleConnector} {distance} den {hallSynonym} entlang',
+    'Folge {middleConnector} dem {hallSynonym} für {distance}',
+    'Laufe {middleConnector} {distance} geradeaus durch den {hallSynonym}',
   };
 
   static const Set<String> hallwayWithTurn = {
@@ -64,16 +64,10 @@ class InstructionTemplates {
 
   // DESTINATION TEMPLATES
   static const Set<String> destination = {
-    '{finalConnector} findest du {destinationName} auf der {side} Seite',
-    '{finalConnector} befindet sich {destinationName} auf der {side} Seite',
-    '{finalConnector} ist {destinationName} auf der {side} Seite zu finden',
-    '{destinationName} liegt {finalConnector} zu deiner {side}',
-  };
-
-  static const Set<String> destinationWithDistance = {
-    '{finalConnector} findest du {destinationName} nach {distanceWeight} {distance} Metern auf der {side} Seite',
-    '{destinationName} befindet sich {finalConnector} {distanceWeight} {distance} Meter weiter auf der {side} Seite',
-    '{finalConnector} erreichst du {destinationName} in {distanceWeight} {distance} Metern auf der {side} Seite',
+    '{currentName} findest du {side} {ref}',
+    '{currentName} befindet sich {side} {ref}',
+    '{currentName} ist {side} {ref} zu finden',
+    '{currentName} liegt {side} {ref}',
   };
 
   // SPECIAL TEMPLATES
