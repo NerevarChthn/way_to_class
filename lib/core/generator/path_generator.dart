@@ -73,10 +73,12 @@ class PathGenerator {
 
     for (var neighborId in currentNode.weights.keys) {
       final neighbor = graph.getNodeById(neighborId);
-      if (neighbor == null || neighbor.isLocked || neighbor.isElevator) {
+      if (neighbor == null ||
+          neighbor.isLocked ||
+          (neighbor.isElevator && hasStaircaseInBuilding(current, graph))) {
         if (visualize) {
           dev.log(
-            '${isForward ? "→" : "←"} Ignoriere $neighborId (gesperrt oder Aufzug)',
+            '${isForward ? "→" : "←"} Ignoriere $neighborId (gesperrt, Aufzug mit Treppe verfügbar)',
           );
         }
         continue;
@@ -130,5 +132,20 @@ class PathGenerator {
     }
 
     return path;
+  }
+
+  /// Prüft, ob im aktuellen Gebäude Treppen vorhanden sind
+  bool hasStaircaseInBuilding(NodeId nodeId, CampusGraph currentGraph) {
+    final targetNode = currentGraph.getNodeById(nodeId);
+    if (targetNode == null) {
+      throw Exception('Knoten nicht gefunden');
+    }
+
+    final buildingCode = targetNode.buildingCode;
+
+    // Prüfe, ob es im gleichen Gebäude eine Treppe gibt
+    return currentGraph.allNodes.any(
+      (node) => node.buildingCode == buildingCode && node.isStaircase,
+    );
   }
 }

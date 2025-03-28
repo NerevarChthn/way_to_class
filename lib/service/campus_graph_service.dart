@@ -155,10 +155,11 @@ class CampusGraphService {
       throw Exception('Graph nicht geladen');
     }
 
-    final List<NodeId> path = _pathGenerator.calculatePath((
-      startId,
-      endId,
-    ), currentGraph!);
+    final List<NodeId> path = _pathGenerator.calculatePath(
+      (startId, endId),
+      currentGraph!,
+      visualize: true,
+    );
 
     dev.log('Pfad gefunden mit ${path.length} Knoten: ${path.join(" -> ")}');
     return path;
