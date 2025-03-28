@@ -1,1156 +1,134 @@
-import 'dart:math';
 import 'dart:developer' as dev;
 import 'package:way_to_class/constants/types.dart';
 import 'package:way_to_class/core/models/campus_graph.dart';
-import 'package:way_to_class/core/models/node.dart';
 
-/// Generator für optimale Pfade zwischen zwei Knoten
 class PathGenerator {
-  /// Debug-Flag für detailliertes Logging
-  bool enableLogging = false;
-
-  /// A*-Algorithmus mit Visualisierung und Logging
-  List<NodeId> findPathWithVisualization(
+  List<NodeId> calculatePath(
     Path path,
     CampusGraph graph, {
-    bool visualize = true,
+    bool visualize = false,
   }) {
-    enableLogging = true;
-    final result = calculatePath(path, graph);
-    enableLogging = false;
-    return result;
-  }
+    final startNode = graph.getNodeById(path.$1);
+    final endNode = graph.getNodeById(path.$2);
 
-  /// Algorithmus-Prozess als String-Darstellung
-  String getAlgorithmVisualization(Path path, CampusGraph graph) {
-    final NodeId startId = path.$1;
-    final NodeId endId = path.$2;
-
-    final Node? start = graph.getNodeById(startId);
-    final Node? end = graph.getNodeById(endId);
-
-    if (start == null || end == null) {
-      return "Fehler: Start- oder Zielknoten nicht gefunden.";
+    if (startNode == null || endNode == null) {
+      throw Exception("Start- oder Zielknoten nicht gefunden.");
     }
 
-    final buffer = StringBuffer();
-    buffer.writeln("=== A* ALGORITHMUS VISUALISIERUNG ===");
-    buffer.writeln("Start: $startId (${start.x}, ${start.y})");
-    buffer.writeln("Ziel:  $endId (${end.x}, ${end.y})");
-    buffer.writeln("Euklidische Distanz: ${_euclideanDistance(start, end)}");
-    buffer.writeln("======================================\n");
+    var forwardVisited = <NodeId, NodeId>{startNode.id: ''};
+    var backwardVisited = <NodeId, NodeId>{endNode.id: ''};
 
-    // A*-Algorithmus mit Logging ausführen
-    _visualizeAStarSearch(startId, endId, graph, buffer);
+    var forwardQueue = <NodeId>[startNode.id];
+    var backwardQueue = <NodeId>[endNode.id];
 
-    return buffer.toString();
-  }
-
-  // A*-Algorithmus mit Logging für Visualisierung
-  void _visualizeAStarSearch(
-    NodeId startId,
-    NodeId endId,
-    CampusGraph graph,
-    StringBuffer buffer,
-  ) {
-    // Heuristik
-    double heuristic(NodeId fromId, NodeId toId) {
-      final fromNode = graph.getNodeById(fromId);
-      final toNode = graph.getNodeById(toId);
-
-      if (fromNode == null || toNode == null) return 0;
-
-      final dx = toNode.x - fromNode.x;
-      final dy = toNode.y - fromNode.y;
-      return sqrt(dx * dx + dy * dy);
-    }
-
-    // Priority Queue
-    final openSet = _ManualPriorityQueue<_QueueItem>(
-      (a, b) => a.fScore.compareTo(b.fScore),
-    );
-    openSet.add(_QueueItem(startId, 0, heuristic(startId, endId)));
-
-    final Map<NodeId, double> gScore = {startId: 0};
-    final Map<NodeId, NodeId> cameFrom = {};
-    final Set<NodeId> closedSet = {};
-
-    buffer.writeln("=== ALGORITHMUS START ===");
-    int iteration = 0;
-
-    while (!openSet.isEmpty) {
-      iteration++;
-      final current = openSet.removeFirst().nodeId;
-      final currentNode = graph.getNodeById(current);
-
-      buffer.writeln("\n--- Iteration $iteration ---");
-      buffer.writeln(
-        "Aktueller Knoten: $current${_formatNodeInfo(currentNode)}",
+    while (forwardQueue.isNotEmpty && backwardQueue.isNotEmpty) {
+      if (visualize) dev.log('→ Vorwärtssuche: ${forwardQueue.join(", ")}');
+      final forwardIntersection = _searchStep(
+        forwardQueue,
+        forwardVisited,
+        backwardVisited,
+        graph,
+        visualize,
+        true,
       );
-
-      // Ziel erreicht
-      if (current == endId) {
-        buffer.writeln("ZIEL ERREICHT!");
-        final path = _reconstructPath(cameFrom, endId);
-        buffer.writeln("\n=== FINALER PFAD ===");
-        _visualizePath(path, graph, buffer);
-        buffer.writeln("Total Cost: ${_calculateActualPathCost(path, graph)}");
-        return;
+      if (forwardIntersection != null) {
+        return _buildPath(forwardVisited, backwardVisited, forwardIntersection);
       }
 
-      closedSet.add(current);
-      buffer.writeln(
-        "Besuchte Knoten: ${closedSet.length} (${_formatNodeSet(closedSet)})",
+      if (visualize) dev.log('← Rückwärtssuche: ${backwardQueue.join(", ")}');
+      final backwardIntersection = _searchStep(
+        backwardQueue,
+        backwardVisited,
+        forwardVisited,
+        graph,
+        visualize,
+        false,
       );
-
-      if (currentNode == null) {
-        buffer.writeln("Fehler: Knoten nicht gefunden!");
-        continue;
-      }
-
-      // Nachbarn
-      buffer.writeln("Nachbarn prüfen:");
-      for (final entry in currentNode.weights.entries) {
-        final neighborId = entry.key;
-        final weight = entry.value;
-        final neighbor = graph.getNodeById(neighborId);
-
-        // Skip-Bedingungen
-        String skipReason = "";
-        if (closedSet.contains(neighborId)) {
-          skipReason = "bereits besucht";
-        } else if (neighbor == null) {
-          skipReason = "nicht gefunden";
-        }
-
-        if (skipReason.isNotEmpty) {
-          buffer.writeln("  Nachbar $neighborId → übersprungen ($skipReason)");
-          continue;
-        }
-
-        // Prüfe auf Aufzug und ob Treppen verfügbar sind
-        if (neighbor!.isElevator) {
-          final bool stairsAvailable = _checkIfStairsAvailableInBuilding(
-            graph,
-            neighbor.buildingCode,
-            currentNode.floorCode,
-            neighbor.floorCode,
-          );
-
-          if (stairsAvailable) {
-            skipReason = "Aufzug übersprungen (Treppen verfügbar)";
-            buffer.writeln(
-              "  Nachbar $neighborId${_formatNodeInfo(neighbor)} → übersprungen ($skipReason)",
-            );
-            continue;
-          }
-        }
-
-        // Gewichtung
-        double weightMultiplier = 1.0;
-        String weightInfo = "";
-
-        if (neighbor.isStaircase) {
-          weightMultiplier =
-              1.5; // Reduziert von 2.0 auf 1.5, um Treppen zu bevorzugen
-          weightInfo = "Treppe (×1.5)";
-        } else if (neighbor.isElevator) {
-          weightMultiplier = 30.0; // Drastisch erhöht von 5.0 auf 30.0
-          weightInfo = "Aufzug (×30)";
-        }
-
-        if (neighbor.isStaircase && !neighbor.isAccessible) {
-          weightMultiplier = 10.0;
-          weightInfo = "Nicht barrierefreie Treppe (×10)";
-        }
-
-        // Wenn ein Aufzug betrachtet wird, prüfen ob Treppen im Gebäude verfügbar sind
-        if (neighbor.isElevator) {
-          final bool stairsAvailable = _checkIfStairsAvailableInBuilding(
-            graph,
-            neighbor.buildingCode,
-            currentNode.floorCode,
-            neighbor.floorCode,
-          );
-
-          if (stairsAvailable) {
-            weightMultiplier =
-                100.0; // Extrem hoher Malus wenn Treppen verfügbar sind
-            weightInfo = "Aufzug (×100, Treppen verfügbar)";
-          }
-        }
-
-        final double tentativeGScore =
-            gScore[current]! + (weight * weightMultiplier);
-
-        String evalInfo = "neu";
-        if (gScore.containsKey(neighborId)) {
-          if (tentativeGScore >= gScore[neighborId]!) {
-            buffer.writeln(
-              "  Nachbar $neighborId${_formatNodeInfo(neighbor)} → teurer Pfad (${tentativeGScore.toStringAsFixed(2)} vs. ${gScore[neighborId]!.toStringAsFixed(2)})",
-            );
-            continue;
-          }
-          evalInfo = "besser als vorheriger";
-        }
-
-        // Pfad aktualisieren
-        cameFrom[neighborId] = current;
-        gScore[neighborId] = tentativeGScore;
-        final hValue = heuristic(neighborId, endId);
-        final fScore = tentativeGScore + hValue;
-
-        buffer.writeln(
-          "  Nachbar $neighborId${_formatNodeInfo(neighbor)} → $evalInfo "
-          "g=${tentativeGScore.toStringAsFixed(2)}, "
-          "h=${hValue.toStringAsFixed(2)}, "
-          "f=${fScore.toStringAsFixed(2)} $weightInfo",
-        );
-
-        // Zur Queue hinzufügen, falls noch nicht enthalten
-        bool inOpenSet = openSet.items.any((item) => item.nodeId == neighborId);
-        if (!inOpenSet) {
-          openSet.add(_QueueItem(neighborId, tentativeGScore, fScore));
-        }
-      }
-
-      buffer.writeln("\nNoch zu prüfende Knoten: ${openSet.items.length}");
-      if (openSet.items.isNotEmpty) {
-        buffer.writeln("Queue (Top-5, nach f-Score sortiert):");
-        final topItems = openSet.items.take(5).toList();
-        for (int i = 0; i < topItems.length; i++) {
-          final item = topItems[i];
-          final node = graph.getNodeById(item.nodeId);
-          buffer.writeln(
-            "  ${i + 1}. ${item.nodeId}${_formatNodeInfo(node)} - "
-            "f=${item.fScore.toStringAsFixed(2)}, "
-            "g=${item.gScore.toStringAsFixed(2)}, "
-            "h=${(item.fScore - item.gScore).toStringAsFixed(2)}",
-          );
-        }
-      }
-    }
-
-    buffer.writeln("\nKEIN PFAD GEFUNDEN!");
-  }
-
-  /// Visualisiert einen Pfad mit Knotendetails
-  void _visualizePath(
-    List<NodeId> path,
-    CampusGraph graph,
-    StringBuffer buffer,
-  ) {
-    buffer.writeln("Pfadlänge: ${path.length} Knoten\n");
-
-    for (int i = 0; i < path.length; i++) {
-      final nodeId = path[i];
-      final node = graph.getNodeById(nodeId);
-
-      buffer.write("${i + 1}. $nodeId${_formatNodeInfo(node)}");
-
-      if (i < path.length - 1) {
-        final nextNode = graph.getNodeById(path[i + 1]);
-        if (node != null && nextNode != null) {
-          final weight = node.weights[path[i + 1]] ?? 0;
-          final dx = nextNode.x - node.x;
-          final dy = nextNode.y - node.y;
-          final distance = sqrt(dx * dx + dy * dy);
-
-          buffer.write(
-            " → Entfernung: ${distance.toStringAsFixed(2)}, Gewicht: $weight",
-          );
-
-          if (node.floorCode != nextNode.floorCode) {
-            buffer.write(
-              " (ETAGENWECHSEL von ${node.floorCode} nach ${nextNode.floorCode})",
-            );
-          }
-        }
-        buffer.writeln();
-      } else {
-        buffer.writeln(" (ZIEL)");
-      }
-    }
-  }
-
-  /// Berechnet die tatsächlichen Kosten eines Pfades
-  double _calculateActualPathCost(List<NodeId> path, CampusGraph graph) {
-    double cost = 0;
-
-    for (int i = 0; i < path.length - 1; i++) {
-      final current = graph.getNodeById(path[i]);
-      if (current == null) continue;
-
-      final weight = current.weights[path[i + 1]] ?? 0;
-      cost += weight;
-    }
-
-    return cost;
-  }
-
-  /// Formatiert einen NodeSet für die Ausgabe
-  String _formatNodeSet(Set<NodeId> nodeSet) {
-    if (nodeSet.isEmpty) return "leer";
-    if (nodeSet.length <= 3) return nodeSet.join(", ");
-    return "${nodeSet.take(3).join(", ")}, ...+${nodeSet.length - 3}";
-  }
-
-  /// Formatiert Knoteninfo für die Ausgabe
-  String _formatNodeInfo(Node? node) {
-    if (node == null) return " [NICHT GEFUNDEN]";
-    return " [${node.x},${node.y}, F${node.floorCode}, ${_getNodeTypeName(node)}]";
-  }
-
-  /// Gibt den Typ des Knotens als String zurück
-  String _getNodeTypeName(Node node) {
-    if (node.isRoom) return "Raum";
-    if (node.isCorridor) return "Flur";
-    if (node.isStaircase) return "Treppe";
-    if (node.isElevator) return "Aufzug";
-    if (node.isDoor) return "Tür";
-    if (node.isEmergencyExit) return "Notausgang";
-    if (node.isToilet) return "WC";
-    return "Unbekannt";
-  }
-
-  /// Berechnet die euklidische Distanz zwischen zwei Knoten
-  double _euclideanDistance(Node node1, Node node2) {
-    final dx = node2.x - node1.x;
-    final dy = node2.y - node1.y;
-    return sqrt(dx * dx + dy * dy);
-  }
-
-  List<NodeId> calculatePath(Path path, CampusGraph graph) {
-    final NodeId startId = path.$1;
-    final NodeId endId = path.$2;
-
-    if (enableLogging) {
-      dev.log("Starte Pfadberechnung von $startId nach $endId");
-    }
-
-    final Node? start = graph.getNodeById(startId);
-    final Node? end = graph.getNodeById(endId);
-
-    if (enableLogging) {
-      dev.log(
-        "Knoten abgerufen: Start = ${start != null ? start.id : 'null'}, Ziel = ${end != null ? end.id : 'null'}",
-      );
-    }
-
-    // Prüfe, ob Knoten existieren
-    if (start == null || end == null) {
-      if (enableLogging) {
-        dev.log(
-          "Fehler: Start- oder Zielknoten nicht gefunden. Start: $startId, Ziel: $endId",
-        );
-      }
-      return [];
-    }
-
-    // Wenn Start und Ziel identisch sind
-    if (startId == endId) {
-      if (enableLogging) {
-        dev.log("Start- und Zielknoten sind identisch: $startId");
-      }
-      return [startId];
-    }
-
-    // Prüfe, ob Start und Ziel im gleichen Gebäude und auf der gleichen Etage sind
-    if (start.buildingCode != end.buildingCode ||
-        start.floorCode != end.floorCode) {
-      if (enableLogging) {
-        dev.log(
-          "Gebäude- oder Etagenwechsel erkannt. Start: Gebäude ${start.buildingCode}, Etage ${start.floorCode}; Ziel: Gebäude ${end.buildingCode}, Etage ${end.floorCode}",
-        );
-      }
-      final crossFloorResult = _findCrossFloorPath(start, end, graph);
-      if (enableLogging) {
-        if (crossFloorResult.isEmpty) {
-          dev.log("Kein Pfad über Gebäude-/Etagenwechsel gefunden!");
-        } else {
-          dev.log(
-            "Pfad über Gebäude-/Etagenwechsel gefunden mit ${crossFloorResult.length} Knoten",
-          );
-        }
-      }
-      return crossFloorResult;
-    }
-
-    // A* Pfadsuche innerhalb einer Etage
-    if (enableLogging) {
-      dev.log(
-        "Starte A* Pfadsuche innerhalb der Etage von $startId nach $endId",
-      );
-    }
-    final result = _findPathAStar(startId, endId, graph);
-
-    if (enableLogging) {
-      if (result.isEmpty) {
-        dev.log("A* Pfadsuche: Kein Pfad gefunden!");
-      } else {
-        dev.log(
-          "A* Pfadsuche abgeschlossen. Pfad gefunden mit ${result.length} Knoten",
+      if (backwardIntersection != null) {
+        return _buildPath(
+          forwardVisited,
+          backwardVisited,
+          backwardIntersection,
         );
       }
     }
 
-    return result;
-  }
-
-  /// A*-Algorithmus mit zusätzlichem Logging
-  List<NodeId> _findPathAStar(NodeId startId, NodeId endId, CampusGraph graph) {
-    if (enableLogging) {
-      dev.log("A*-Suche gestartet von $startId nach $endId");
-    }
-
-    // Heuristik-Funktion (Euklidische Distanz)
-    double heuristic(NodeId fromId, NodeId toId) {
-      final Node? fromNode = graph.getNodeById(fromId);
-      final Node? toNode = graph.getNodeById(toId);
-
-      if (fromNode == null || toNode == null) return 0;
-
-      // Euklidische Distanz berechnen
-      final dx = toNode.x - fromNode.x;
-      final dy = toNode.y - fromNode.y;
-      return sqrt(dx * dx + dy * dy);
-    }
-
-    // Manuelle Priority Queue
-    final openSet = _ManualPriorityQueue<_QueueItem>(
-      (a, b) => a.fScore.compareTo(b.fScore),
-    );
-    openSet.add(_QueueItem(startId, 0, heuristic(startId, endId)));
-
-    // Tracking von bereits besuchten Knoten und Kosten
-    final Map<NodeId, double> gScore = {startId: 0};
-    final Map<NodeId, NodeId> cameFrom = {};
-    final Set<NodeId> closedSet = {};
-
-    while (!openSet.isEmpty) {
-      final current = openSet.removeFirst().nodeId;
-
-      // Ziel erreicht
-      if (current == endId) {
-        final result = _reconstructPath(cameFrom, endId);
-        if (enableLogging) {
-          dev.log("A*-Suche abgeschlossen, Pfadlänge: ${result.length}");
-        }
-        return result;
-      }
-
-      closedSet.add(current);
-
-      // Nachbarn durchlaufen - direkt auf dem Graphen
-      final Node? currentNode = graph.getNodeById(current);
-      if (currentNode == null) continue;
-
-      // Alle Kantengewichte durchgehen
-      for (final entry in currentNode.weights.entries) {
-        final neighborId = entry.key;
-        final weight = entry.value;
-
-        // Bereits besuchte Knoten überspringen
-        if (closedSet.contains(neighborId)) continue;
-
-        // Nachbar abrufen
-        final Node? neighbor = graph.getNodeById(neighborId);
-        if (neighbor == null) continue;
-
-        // WICHTIG: Prüfe auf Aufzüge bei verfügbaren Treppen und überspringe sie komplett
-        if (neighbor.isElevator) {
-          final bool stairsAvailable = _checkIfStairsAvailableInBuilding(
-            graph,
-            neighbor.buildingCode,
-            currentNode.floorCode,
-            neighbor.floorCode,
-          );
-
-          if (stairsAvailable) {
-            if (enableLogging) {
-              dev.log(
-                "Aufzug ${neighbor.id} wird übersprungen, da Treppen verfügbar sind (von ${currentNode.floorCode} nach ${neighbor.floorCode})",
-              );
-            }
-            continue; // Wichtig: Node komplett überspringen
-          }
-        }
-
-        // Berechneter Aufschlag für verschiedene Knotentypen
-        double weightMultiplier = 1.0;
-
-        // Kantengewicht basierend auf Knotentyp anpassen
-        if (neighbor.isStaircase) {
-          weightMultiplier = 1.5; // Reduziert, um Treppen stärker zu bevorzugen
-        } else if (neighbor.isElevator) {
-          weightMultiplier =
-              30.0; // Aufzüge werden gemieden, aber nicht ausgeschlossen
-        }
-
-        if (neighbor.isStaircase && !neighbor.isAccessible) {
-          weightMultiplier = 10.0; // Nicht barrierefreie Treppen stark meiden
-        }
-
-        // Neue Kosten zum Nachbarn
-        final double tentativeGScore =
-            gScore[current]! + (weight * weightMultiplier);
-
-        // Wenn dieser Weg teurer ist, überspringen
-        if (gScore.containsKey(neighborId) &&
-            tentativeGScore >= gScore[neighborId]!) {
-          continue;
-        }
-
-        // Dieser Weg ist besser, aktualisieren
-        cameFrom[neighborId] = current;
-        gScore[neighborId] = tentativeGScore;
-        final double fScore = tentativeGScore + heuristic(neighborId, endId);
-
-        // Zur offenen Menge hinzufügen, falls noch nicht enthalten
-        bool inOpenSet = false;
-        for (final item in openSet.items) {
-          if (item.nodeId == neighborId) {
-            inOpenSet = true;
-            break;
-          }
-        }
-        if (!inOpenSet) {
-          openSet.add(_QueueItem(neighborId, tentativeGScore, fScore));
-        }
-      }
-    }
-
-    // Kein Pfad gefunden
     return [];
   }
 
-  /// Findet einen Pfad zwischen Knoten auf verschiedenen Etagen oder in verschiedenen Gebäuden
-  List<NodeId> _findCrossFloorPath(Node start, Node end, CampusGraph graph) {
-    // Aufzüge und Treppen für Start- und Zieletage finden
-    final List<Node> startFloorTransitions = _findTransitionNodes(
-      graph,
-      start.buildingCode,
-      start.floorCode,
-    );
-    final List<Node> endFloorTransitions = _findTransitionNodes(
-      graph,
-      end.buildingCode,
-      end.floorCode,
-    );
+  NodeId? _searchStep(
+    List<NodeId> queue,
+    Map<NodeId, NodeId> visited,
+    Map<NodeId, NodeId> oppositeVisited,
+    CampusGraph graph,
+    bool visualize,
+    bool isForward,
+  ) {
+    final current = queue.removeAt(0);
+    final currentNode = graph.getNodeById(current);
 
-    if (startFloorTransitions.isEmpty || endFloorTransitions.isEmpty) {
-      dev.log("Keine Übergangspunkte gefunden für Etagenwechsel");
-      return []; // Keine Übergangspunkte gefunden
-    }
+    if (currentNode == null) return null;
 
-    // Debug-Informationen
-    dev.log("Start: ${start.id} (${start.name}), Etage: ${start.floorCode}");
-    dev.log("Ziel: ${end.id} (${end.name}), Etage: ${end.floorCode}");
-    dev.log(
-      "Gefundene Übergangspunkte auf Startetage: ${startFloorTransitions.length}",
-    );
-    dev.log(
-      "Gefundene Übergangspunkte auf Zieletage: ${endFloorTransitions.length}",
-    );
+    if (visualize) dev.log('${isForward ? "→" : "←"} Besuch: $current');
 
-    // Alle möglichen Kombinationen durchprobieren
-    double bestPathCost = double.infinity;
-    List<NodeId> bestPath = [];
-
-    // Gehe alle Übergangspunkte auf der Startetage durch
-    for (final startTransition in startFloorTransitions) {
-      dev.log(
-        "Prüfe Startübergang: ${startTransition.id} (${startTransition.name})",
-      );
-
-      // Finde Pfad vom Start zum Übergangspunkt auf der Startetage
-      final List<NodeId> pathToTransition = calculatePath((
-        start.id,
-        startTransition.id,
-      ), graph);
-
-      if (pathToTransition.isEmpty) {
-        dev.log("Kein Pfad zum Übergangspunkt ${startTransition.id} gefunden");
+    for (var neighborId in currentNode.weights.keys) {
+      final neighbor = graph.getNodeById(neighborId);
+      if (neighbor == null || neighbor.isLocked || neighbor.isElevator) {
+        if (visualize) {
+          dev.log(
+            '${isForward ? "→" : "←"} Ignoriere $neighborId (gesperrt oder Aufzug)',
+          );
+        }
         continue;
       }
 
-      dev.log(
-        "Pfad zum Übergangspunkt ${startTransition.id} gefunden: ${pathToTransition.length} Knoten",
-      );
+      if (!visited.containsKey(neighborId)) {
+        visited[neighborId] = current;
+        queue.add(neighborId);
 
-      // Gehe alle Übergangspunkte auf der Zieletage durch
-      for (final endTransition in endFloorTransitions) {
-        dev.log(
-          "Prüfe Zielübergang: ${endTransition.id} (${endTransition.name})",
-        );
-
-        // Prüfe, ob Übergänge verbunden sind (gleiche Treppe/Aufzug)
-        if (_areConnectedTransitions(startTransition, endTransition)) {
+        if (visualize) {
           dev.log(
-            "Verbindung gefunden zwischen ${startTransition.id} und ${endTransition.id}",
+            '${isForward ? "→" : "←"} Entdeckt: $neighborId durch $current',
           );
+        }
 
-          // Finde Pfad vom Übergangspunkt auf der Zieletage zum Ziel
-          final List<NodeId> pathFromTransition = calculatePath((
-            endTransition.id,
-            end.id,
-          ), graph);
-
-          if (pathFromTransition.isEmpty) {
+        if (oppositeVisited.containsKey(neighborId)) {
+          if (visualize) {
             dev.log(
-              "Kein Pfad vom Übergangspunkt ${endTransition.id} zum Ziel ${end.id} gefunden",
+              '${isForward ? "→" : "←"} Schnittpunkt gefunden: $neighborId',
             );
-            continue;
           }
-
-          dev.log(
-            "Pfad vom Übergangspunkt ${endTransition.id} zum Ziel gefunden: ${pathFromTransition.length} Knoten",
-          );
-
-          // Kombiniere die Teilpfade
-          final List<NodeId> completePath = [];
-
-          // Füge Pfad zum Übergang hinzu (ohne den letzten Knoten zu duplizieren)
-          completePath.addAll(
-            pathToTransition.sublist(0, pathToTransition.length),
-          );
-
-          // Überprüfe ob der zweite Pfad mit dem Übergangsknoten beginnt
-          if (completePath.last != endTransition.id) {
-            // Füge den Ziel-Übergangsknoten hinzu
-            completePath.add(endTransition.id);
-          }
-
-          // Füge den Rest des Pfades vom Übergang zum Ziel hinzu (ohne den ersten Knoten zu duplizieren)
-          if (pathFromTransition.length > 1) {
-            completePath.addAll(pathFromTransition.sublist(1));
-          }
-
-          // Berechne die Kosten dieses Pfades
-          final double pathCost = _estimatePathCost(completePath, graph);
-
-          dev.log(
-            "Gesamtpfad gefunden mit ${completePath.length} Knoten und Kosten: $pathCost",
-          );
-
-          // Wenn dieser Pfad besser ist als der bisher beste, speichern
-          if (pathCost < bestPathCost) {
-            bestPathCost = pathCost;
-            bestPath = List<NodeId>.from(completePath);
-            dev.log("Neuer bester Pfad gefunden! Kosten: $pathCost");
-          }
-        } else {
-          dev.log(
-            "Keine Verbindung zwischen ${startTransition.id} und ${endTransition.id}",
-          );
+          return neighborId;
         }
-      }
-    }
-
-    // Speziallösung für indirekte Pfade über andere Etagen
-    if (bestPath.isEmpty) {
-      dev.log("Versuche indirekte Verbindung über andere Etagen zu finden...");
-      bestPath = _findIndirectEtagePath(start, end, graph);
-    }
-
-    // Informiere über das Ergebnis
-    if (bestPath.isEmpty) {
-      dev.log("Kein möglicher Pfad über Etagen gefunden");
-    } else {
-      dev.log("Bester Pfad gefunden mit ${bestPath.length} Knoten");
-    }
-
-    return bestPath;
-  }
-
-  /// Findet alle Übergangsknoten (Treppen, Aufzüge) auf einer bestimmten Etage
-  List<Node> _findTransitionNodes(
-    CampusGraph graph,
-    int buildingCode,
-    int floorCode,
-  ) {
-    final List<Node> transitions = [];
-
-    // Etwas optimiert durch direkte Filterung des Typs
-    for (final nodeId in graph.allNodeIds) {
-      final node = graph.getNodeById(nodeId);
-      if (node != null &&
-          node.buildingCode == buildingCode &&
-          node.floorCode == floorCode) {
-        // Nur wenn Treppe oder Aufzug
-        if (node.isStaircase || node.isElevator) {
-          transitions.add(node);
-        }
-      }
-    }
-
-    return transitions;
-  }
-
-  /// Findet einen indirekten Pfad über andere Etagen, wenn kein direkter Pfad gefunden wurde
-  List<NodeId> _findIndirectEtagePath(Node start, Node end, CampusGraph graph) {
-    // Sammle alle Etagen im selben Gebäude
-    final Set<int> allFloors = {};
-    for (final nodeId in graph.allNodeIds) {
-      final node = graph.getNodeById(nodeId);
-      if (node != null && node.buildingCode == start.buildingCode) {
-        allFloors.add(node.floorCode);
-      }
-    }
-
-    // Entferne Start- und Zieletage
-    allFloors.remove(start.floorCode);
-    allFloors.remove(end.floorCode);
-
-    dev.log("Verfügbare Zwischenetagen: ${allFloors.join(', ')}");
-
-    double bestPathCost = double.infinity;
-    List<NodeId> bestPath = [];
-
-    // Versuche für jede mögliche Zwischenetage
-    for (final intermediateFloor in allFloors) {
-      dev.log("Versuche Pfad über Etage $intermediateFloor");
-
-      // Finde Übergangspunkte auf der Zwischenetage
-      final intermediateTransitions = _findTransitionNodes(
-        graph,
-        start.buildingCode,
-        intermediateFloor,
-      );
-
-      if (intermediateTransitions.isEmpty) {
-        dev.log("Keine Übergangspunkte auf Etage $intermediateFloor gefunden");
-        continue;
-      }
-
-      // 1. Pfad vom Start zur Zwischenetage finden
-      List<NodeId> pathToIntermediate = [];
-      Node? bestIntermediateStart;
-
-      // Übergangspunkte auf der Startetage finden
-      final startTransitions = _findTransitionNodes(
-        graph,
-        start.buildingCode,
-        start.floorCode,
-      );
-
-      // Pfad von Start zur Zwischenetage finden
-      for (final startTrans in startTransitions) {
-        for (final intermediateTrans in intermediateTransitions) {
-          if (_areConnectedTransitions(startTrans, intermediateTrans)) {
-            final pathToStart = calculatePath((start.id, startTrans.id), graph);
-            if (pathToStart.isNotEmpty) {
-              pathToIntermediate = pathToStart;
-              bestIntermediateStart = intermediateTrans;
-              break;
-            }
-          }
-        }
-        if (pathToIntermediate.isNotEmpty) break;
-      }
-
-      if (pathToIntermediate.isEmpty || bestIntermediateStart == null) {
+      } else if (visualize) {
         dev.log(
-          "Keine Verbindung zur Zwischenetage $intermediateFloor gefunden",
-        );
-        continue;
-      }
-
-      // 2. Pfad von der Zwischenetage zum Ziel finden
-      List<NodeId> pathFromIntermediate = [];
-      Node? bestIntermediateEnd;
-
-      // Übergangspunkte auf der Zieletage finden
-      final endTransitions = _findTransitionNodes(
-        graph,
-        end.buildingCode,
-        end.floorCode,
-      );
-
-      // Pfad von Zwischenetage zum Ziel finden
-      for (final intermediateTrans in intermediateTransitions) {
-        for (final endTrans in endTransitions) {
-          if (_areConnectedTransitions(intermediateTrans, endTrans)) {
-            final pathToEnd = calculatePath((endTrans.id, end.id), graph);
-            if (pathToEnd.isNotEmpty) {
-              pathFromIntermediate = pathToEnd;
-              bestIntermediateEnd = intermediateTrans;
-              break;
-            }
-          }
-        }
-        if (pathFromIntermediate.isNotEmpty) break;
-      }
-
-      if (pathFromIntermediate.isEmpty || bestIntermediateEnd == null) {
-        dev.log(
-          "Keine Verbindung von der Zwischenetage $intermediateFloor zum Ziel gefunden",
-        );
-        continue;
-      }
-
-      // 3. Pfad auf der Zwischenetage finden
-      final intermediatePathStart = bestIntermediateStart;
-      final intermediatePathEnd = bestIntermediateEnd;
-
-      final intermediatePath = calculatePath((
-        intermediatePathStart.id,
-        intermediatePathEnd.id,
-      ), graph);
-
-      if (intermediatePath.isEmpty) {
-        dev.log("Kein Pfad auf der Zwischenetage $intermediateFloor gefunden");
-        continue;
-      }
-
-      // 4. Alle Teilpfade kombinieren
-      final List<NodeId> combinedPath = [];
-      combinedPath.addAll(pathToIntermediate);
-
-      // Verbindung zur Zwischenetage
-      if (combinedPath.last != bestIntermediateStart.id) {
-        combinedPath.add(bestIntermediateStart.id);
-      }
-
-      // Pfad auf der Zwischenetage
-      if (intermediatePath.length > 1) {
-        combinedPath.addAll(intermediatePath.sublist(1));
-      }
-
-      // Verbindung zur Zieletage
-      if (combinedPath.last != bestIntermediateEnd.id) {
-        combinedPath.add(bestIntermediateEnd.id);
-      }
-
-      // Pfad zum Ziel
-      for (int i = 1; i < pathFromIntermediate.length; i++) {
-        combinedPath.add(pathFromIntermediate[i]);
-      }
-
-      // Berechne die Kosten dieses Pfades
-      final pathCost = _estimatePathCost(combinedPath, graph);
-
-      if (pathCost < bestPathCost) {
-        bestPathCost = pathCost;
-        bestPath = List<NodeId>.from(combinedPath);
-        dev.log(
-          "Pfad über Zwischenetage $intermediateFloor gefunden! Kosten: $pathCost",
+          '${isForward ? "→" : "←"} Übersprungen (bereits besucht): $neighborId',
         );
       }
     }
-
-    return bestPath;
+    return null;
   }
 
-  /// Prüft, ob zwei Übergangsknoten verbunden sind (gleicher Aufzug/Treppe)
-  bool _areConnectedTransitions(Node transition1, Node transition2) {
-    // Debug-Ausgabe
-    dev.log(
-      "Prüfe Verbindung zwischen: ${transition1.id} (${transition1.name}, ${transition1.floorCode}) und ${transition2.id} (${transition2.name}, ${transition2.floorCode})",
-    );
-
-    // Gleicher Typ (beide Treppen oder beide Aufzüge)
-    if (transition1.type != transition2.type) {
-      dev.log(
-        "→ Unterschiedlicher Typ: ${transition1.type} vs ${transition2.type}",
-      );
-      return false;
-    }
-
-    // Gleiches Gebäude
-    if (transition1.buildingCode != transition2.buildingCode) {
-      dev.log(
-        "→ Unterschiedliches Gebäude: ${transition1.buildingCode} vs ${transition2.buildingCode}",
-      );
-      return false;
-    }
-
-    // Verschiedene Etagen
-    if (transition1.floorCode == transition2.floorCode) {
-      dev.log("→ Gleiche Etage: ${transition1.floorCode}");
-      return false;
-    }
-
-    // VERBESSERT: Prüfe direkte Nachbarschaft in den Kantengewichten
-    if (transition1.weights.containsKey(transition2.id)) {
-      dev.log(
-        "→ Direkte Verbindung gefunden: ${transition1.id} → ${transition2.id}",
-      );
-      return true;
-    }
-    if (transition2.weights.containsKey(transition1.id)) {
-      dev.log(
-        "→ Direkte Verbindung gefunden: ${transition2.id} → ${transition1.id}",
-      );
-      return true;
-    }
-
-    // VERBESSERT: Prüfe explizit die IDs mit Pattern-Matching
-    if (transition1.id.startsWith('t') && transition2.id.startsWith('t')) {
-      // Extrahiere Zahlen aus den IDs
-      final RegExp numPattern = RegExp(r'\d+');
-      final num1Matches = numPattern.allMatches(transition1.id);
-      final num2Matches = numPattern.allMatches(transition2.id);
-
-      if (num1Matches.isNotEmpty && num2Matches.isNotEmpty) {
-        try {
-          final int num1 = int.parse(num1Matches.first.group(0)!);
-          final int num2 = int.parse(num2Matches.first.group(0)!);
-
-          // Bekannte Treppenpaare basierend auf deinen Daten
-          final List<List<int>> knownStairPairs = [
-            [11, 16], // t11 <-> t16
-            [12, 15], // t12 <-> t15
-            [13, 14], // t13 <-> t14
-            [19, 20], // t19 <-> t20
-          ];
-
-          for (final pair in knownStairPairs) {
-            if ((num1 == pair[0] && num2 == pair[1]) ||
-                (num1 == pair[1] && num2 == pair[0])) {
-              dev.log("→ Bekanntes Treppenpaar gefunden: t$num1 <-> t$num2");
-              return true;
-            }
-          }
-        } catch (e) {
-          // Fehler beim Konvertieren ignorieren
-        }
-      }
-    }
-
-    // Fallback: Prüfe auf ähnliche Namen
-    if (transition1.name.isNotEmpty && transition2.name.isNotEmpty) {
-      final name1 = transition1.name.toLowerCase();
-      final name2 = transition2.name.toLowerCase();
-
-      // Wenn beide Namen Treppen- oder Aufzugsnummern enthalten
-      if ((name1.contains("treppe") || name1.contains("aufzug")) &&
-          (name2.contains("treppe") || name2.contains("aufzug"))) {
-        // Extrahiere Nummern aus Namen
-        final RegExp numPattern = RegExp(r'\d+');
-        final num1Matches = numPattern.allMatches(name1);
-        final num2Matches = numPattern.allMatches(name2);
-
-        if (num1Matches.isNotEmpty && num2Matches.isNotEmpty) {
-          final num1 = num1Matches.first.group(0);
-          final num2 = num2Matches.first.group(0);
-
-          if (num1 == num2) {
-            dev.log("→ Verbindung gefunden durch gleiche Nummer: $num1");
-            return true;
-          }
-        }
-      }
-    }
-
-    // Keine Verbindung gefunden
-    dev.log(
-      "→ Keine Verbindung gefunden zwischen ${transition1.id} und ${transition2.id}",
-    );
-    return false;
-  }
-
-  /// Schätzt die Kosten eines Pfades
-  double _estimatePathCost(List<NodeId> path, CampusGraph graph) {
-    double cost = 0;
-
-    for (int i = 0; i < path.length - 1; i++) {
-      final Node? current = graph.getNodeById(path[i]);
-      if (current == null) continue;
-
-      // Direktes Gewicht aus den Kantengewichten
-      final double edgeWeight = current.weights[path[i + 1]] ?? 10.0;
-
-      // Zusätzliche Kosten für Etagenwechsel
-      final Node? next = graph.getNodeById(path[i + 1]);
-      if (next != null && current.floorCode != next.floorCode) {
-        cost += 20.0; // Etagenwechsel ist teuer
-      }
-
-      cost += edgeWeight;
-    }
-
-    return cost;
-  }
-
-  /// Verbesserte Prüfung ob Treppen zwischen zwei Etagen im selben Gebäude verfügbar sind
-  bool _checkIfStairsAvailableInBuilding(
-    CampusGraph graph,
-    int buildingCode,
-    int startFloorCode,
-    int endFloorCode,
+  List<NodeId> _buildPath(
+    Map<NodeId, NodeId> forwardVisited,
+    Map<NodeId, NodeId> backwardVisited,
+    NodeId intersection,
   ) {
-    // Wenn auf der gleichen Etage, keine Treppen nötig
-    if (startFloorCode == endFloorCode) {
-      return false;
+    var path = <NodeId>[];
+
+    var current = intersection;
+    while (current.isNotEmpty) {
+      path.add(current);
+      current = forwardVisited[current] ?? '';
     }
+    path = path.reversed.toList();
 
-    // Statischer Cache für bereits gefundene Treppenverbindungen
-    final Map<String, bool> connectionCache = {};
-
-    // Cache-Key erstellen
-    final String cacheKey = '$buildingCode-$startFloorCode-$endFloorCode';
-
-    // Wenn Ergebnis im Cache, dieses zurückgeben
-    if (connectionCache.containsKey(cacheKey)) {
-      return connectionCache[cacheKey]!;
-    }
-
-    // Direkter Check: Gibt es Treppen, die beide Etagen verbinden?
-    final stairsOnStartFloor = <Node>[];
-    final stairsOnEndFloor = <Node>[];
-
-    // Sammel alle Treppennoten auf Start- und Zieletage
-    for (final nodeId in graph.allNodeIds) {
-      final node = graph.getNodeById(nodeId);
-      if (node != null &&
-          node.buildingCode == buildingCode &&
-          node.isStaircase) {
-        if (node.floorCode == startFloorCode) {
-          stairsOnStartFloor.add(node);
-        } else if (node.floorCode == endFloorCode) {
-          stairsOnEndFloor.add(node);
-        }
-      }
-    }
-
-    // Wenn keine Treppen auf einer der Etagen gefunden wurden
-    if (stairsOnStartFloor.isEmpty || stairsOnEndFloor.isEmpty) {
-      connectionCache[cacheKey] = false;
-      return false;
-    }
-
-    // Wir suchen nun explizit nach benutzbaren Treppen
-    bool hasAccessibleStairs = false;
-
-    // Prüfe alle möglichen Kombinationen von Treppen
-    for (final startStair in stairsOnStartFloor) {
-      for (final endStair in stairsOnEndFloor) {
-        if (_areConnectedTransitions(startStair, endStair)) {
-          // Treppen sind verbunden
-          connectionCache[cacheKey] = true;
-
-          // Prüfe auf Zugänglichkeit
-          if (startStair.isAccessible && endStair.isAccessible) {
-            hasAccessibleStairs = true;
-          }
-
-          // Wenn wir zugängliche Treppen gefunden haben, bevorzugen wir diese
-          if (hasAccessibleStairs) {
-            return true;
-          }
-        }
-      }
-    }
-
-    // Wenn wir Treppen gefunden haben (auch nicht-zugängliche), geben wir true zurück
-    if (connectionCache[cacheKey] == true) {
-      return true;
-    }
-
-    // Überprüfe auch indirekte Verbindungen durch andere Etagen
-    connectionCache[cacheKey] = _checkForIndirectStairConnections(
-      graph,
-      buildingCode,
-      startFloorCode,
-      endFloorCode,
-      stairsOnStartFloor,
-    );
-
-    return connectionCache[cacheKey]!;
-  }
-
-  /// Prüft auf indirekte Treppenverbindungen über Zwischenetagen
-  bool _checkForIndirectStairConnections(
-    CampusGraph graph,
-    int buildingCode,
-    int startFloorCode,
-    int endFloorCode,
-    List<Node> startStairs,
-  ) {
-    // Sammle alle verfügbaren Etagen im Gebäude
-    final Set<int> floors = {};
-
-    for (final nodeId in graph.allNodeIds) {
-      final node = graph.getNodeById(nodeId);
-      if (node != null && node.buildingCode == buildingCode) {
-        floors.add(node.floorCode);
-      }
-    }
-
-    // Entferne Start- und Zieletage
-    floors.remove(startFloorCode);
-    floors.remove(endFloorCode);
-
-    // Prüfe für jede Zwischenetage, ob es einen Pfad gibt
-    for (final intermediateFloor in floors) {
-      // Prüfe, ob es Treppen von der Startetage zur Zwischenetage gibt
-      final hasConnectionToIntermediate = _checkIfStairsAvailableInBuilding(
-        graph,
-        buildingCode,
-        startFloorCode,
-        intermediateFloor,
-      );
-
-      // Prüfe, ob es Treppen von der Zwischenetage zur Zieletage gibt
-      final hasConnectionFromIntermediate = _checkIfStairsAvailableInBuilding(
-        graph,
-        buildingCode,
-        intermediateFloor,
-        endFloorCode,
-      );
-
-      // Wenn beide Verbindungen existieren, gibt es einen indirekten Pfad
-      if (hasConnectionToIntermediate && hasConnectionFromIntermediate) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  /// Rekonstruiert den Pfad aus der Vorgänger-Map
-  List<NodeId> _reconstructPath(Map<NodeId, NodeId> cameFrom, NodeId current) {
-    final path = <NodeId>[current];
-
-    while (cameFrom.containsKey(current)) {
-      current = cameFrom[current]!;
-      path.insert(0, current);
+    current = backwardVisited[intersection] ?? '';
+    while (current.isNotEmpty) {
+      path.add(current);
+      current = backwardVisited[current] ?? '';
     }
 
     return path;
   }
-}
-
-/// Manuelle Implementierung einer Priority Queue
-class _ManualPriorityQueue<T> {
-  final List<T> _items = [];
-  final int Function(T a, T b) _compare;
-
-  _ManualPriorityQueue(this._compare);
-
-  void add(T item) {
-    _items.add(item);
-    _items.sort(_compare);
-  }
-
-  T removeFirst() {
-    if (_items.isEmpty) {
-      throw StateError("Queue is empty");
-    }
-    return _items.removeAt(0);
-  }
-
-  bool get isEmpty => _items.isEmpty;
-
-  Iterable<T> get items => _items;
-}
-
-/// Hilfsklasse für die Prioritätswarteschlange
-class _QueueItem {
-  final NodeId nodeId;
-  final double gScore;
-  final double fScore;
-
-  _QueueItem(this.nodeId, this.gScore, this.fScore);
 }

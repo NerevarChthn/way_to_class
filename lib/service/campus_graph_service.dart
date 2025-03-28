@@ -155,7 +155,7 @@ class CampusGraphService {
       throw Exception('Graph nicht geladen');
     }
 
-    final List<NodeId> path = _pathGenerator.findPathWithVisualization((
+    final List<NodeId> path = _pathGenerator.calculatePath((
       startId,
       endId,
     ), currentGraph!);
