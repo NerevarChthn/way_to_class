@@ -30,7 +30,7 @@ class _MapViewToggleState extends State<MapViewToggle> {
 
         // Toggle button
         Positioned(
-          bottom: 20,
+          top: 80,
           left: 20,
           child: FloatingActionButton(
             heroTag: 'viewToggleButton',

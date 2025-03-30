@@ -137,6 +137,7 @@ class _FloorViewerState extends State<FloorViewer>
             right: 20,
             child: Card(
               elevation: 4,
+              color: Colors.white.withOpacity(0.85),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -199,6 +200,7 @@ class _FloorViewerState extends State<FloorViewer>
             bottom: isLegendVisible ? 20 : -300,
             child: Card(
               elevation: 4,
+              color: Colors.white.withOpacity(0.85),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -230,29 +232,134 @@ class _FloorViewerState extends State<FloorViewer>
                     Expanded(
                       child: ListView(
                         children: const [
-                          ColorLegendItem(color: Color(0xFF7EC636), label: 'Seminarraum'),
-                          ColorLegendItem(color: Color(0xFFD81B60), label: 'Computerraum'),
-                          ColorLegendItem(color: Color(0xFF82441E), label: 'Labor'),
-                          ColorLegendItem(color: Color(0xFF8A94FF), label: 'Büro'),
-                          ColorLegendItem(color: Color(0xFF03468F), label: 'Mensa'),
-                          ColorLegendItem(color: Color(0xFFFF88D5), label: 'WC Damen'),
-                          ColorLegendItem(color: Color(0xFF17D9FF), label: 'WC Herren'),
-                          ColorLegendItem(color: Color(0xFFB1FF00), label: 'Behinderten WC'),
-                          ColorLegendItem(color: Color(0xFFD2D2D2), label: 'Außenanlagen'),
-                          ColorLegendItem(color: Color(0xFF007355), label: 'Automat'),
-                          ColorLegendItem(color: Color(0xFFF59A23), label: 'Aufzug'),
-                          ColorLegendItem(color: Color(0xFF0000FF), label: 'Wasserspender'),
-                          ColorLegendItem(color: Color(0xFFD20000), label: 'Bibliothek',),
-                          ColorLegendItem(color: Color(0xFF000000), label: 'Hausmeister/IT'),
-                          ColorLegendItem(color: Color(0xFF6BEAE4), label: 'Verwaltung'),
-                          ColorLegendItem(color: Color(0xFFFF9797), label: 'Beratung'),
-                          ColorLegendItem(color: Color(0xFF82218B), label: 'Öffentlichkeitsarbeiter'),
-                          ColorLegendItem(color: Color(0xFF9B9B9B), label: 'Kopierer/Teeküche'),
-                          ColorLegendItem(color: Color(0xFFD287FF), label: 'Lager'),
-                          ColorLegendItem(color: Color(0xFFF65353), label: 'BMZ'),
-                          ColorLegendItem(color: Color(0xFFFFD4B7), label: 'EDV'),
-                          ColorLegendItem(color: Color(0xFFFF21B3), label: 'Serverraum'),
-                          ColorLegendItem(color: Color(0xFFFFFF00), label: 'Forschungszentrum'),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFB5E28C,
+                            ), // Pastel green for Seminarraum
+                            label: 'Seminarraum',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFEE92B1,
+                            ), // Already pastel pink for Computerraum
+                            label: 'Computerraum',
+                          ),
+                          ColorLegendItem(
+                            color: Color(0xFFBE9C85), // Pastel brown for Labor
+                            label: 'Labor',
+                          ),
+                          ColorLegendItem(
+                            color: Color(0xFFC5CAFF), // Pastel blue for Büro
+                            label: 'Büro',
+                          ),
+                          ColorLegendItem(
+                            color: Color(0xFF9BBDEE), // Pastel navy for Mensa
+                            label: 'Mensa',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFFFBBE6,
+                            ), // Pastel pink for WC Damen (already pastelish)
+                            label: 'WC Damen',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFA5EDFF,
+                            ), // Pastel blue for WC Herren
+                            label: 'WC Herren',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFDAFFAB,
+                            ), // Pastel lime for Behinderten WC
+                            label: 'Behinderten WC',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFE8E8E8,
+                            ), // Lighter gray for Außenanlagen
+                            label: 'Außenanlagen',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFF97CDBA,
+                            ), // Pastel green for Automat
+                            label: 'Automat',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFFFCA94,
+                            ), // Pastel orange for Aufzug
+                            label: 'Aufzug',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFA3A3FF,
+                            ), // Pastel blue for Wasserspender
+                            label: 'Wasserspender',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFFFB0B0,
+                            ), // Pastel red for Bibliothek
+                            label: 'Bibliothek',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFF767676,
+                            ), // Lighter black for Hausmeister/IT
+                            label: 'Hausmeister/IT',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFBDF5F1,
+                            ), // Already pastel aqua for Verwaltung
+                            label: 'Verwaltung',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFFFCACA,
+                            ), // Lighter pastel pink for Beratung
+                            label: 'Beratung',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFD595DA,
+                            ), // Pastel purple for Öffentlichkeitsarbeiter
+                            label: 'Öffentlichkeitsarbeiter',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFCDCDCD,
+                            ), // Lighter gray for Kopierer/Teeküche
+                            label: 'Kopierer/Teeküche',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFE8C2FF,
+                            ), // Pastel lavender for Lager
+                            label: 'Lager',
+                          ),
+                          ColorLegendItem(
+                            color: Color(0xFFFFADAD), // Pastel coral for BMZ
+                            label: 'BMZ',
+                          ),
+                          ColorLegendItem(
+                            color: Color(0xFFFFE6D6), // Lighter peach for EDV
+                            label: 'EDV',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFFF9ED3,
+                            ), // Pastel hot pink for Serverraum
+                            label: 'Serverraum',
+                          ),
+                          ColorLegendItem(
+                            color: Color(
+                              0xFFFFFFC7,
+                            ), // Pastel yellow for Forschungszentrum
+                            label: 'Forschungszentrum',
+                          ),
                         ],
                       ),
                     ),

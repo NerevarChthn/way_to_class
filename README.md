@@ -252,7 +252,7 @@ Die Anwendung verwendet mehrere Datenquellen:
 - **Raumsuche weiter verfeinert**, um zusätzliche Schreibvarianten zu erkennen  
 - **Treppen-Logik justiert**, sodass sie in mehr Szenarien die erwartete Priorisierung aufweist  
 
-### PDCA-Zyklus – Woche 6 (27. März – 2. April 2025)
+### Woche 6 (27. März – 2. April 2025)
 
 #### Plan (Planen)
 - **Entwickler-Panel & Debugging-Tools**: Erstellung einer UI mit Werkzeugen zur Validierung und Fehlerbehebung  
@@ -288,7 +288,6 @@ Die Anwendung verwendet mehrere Datenquellen:
 - **MapViewToggle Widget optimiert**, um eine intuitivere Benutzererfahrung zu gewährleisten  
 
 ## Entwicklungstagebuch
----
 
 ### 20. Februar 2025
 ---
@@ -473,11 +472,28 @@ Die Anwendung verwendet mehrere Datenquellen:
 | **String Extensions**                    | Implementierung von Methoden zur String-Modifikation, einschließlich `capitalize()`, `addPeriod()`, `normalizeSpaces()` | Jeremy |
 | **InstructionGenerator – Finale Version** | Fertigstellung der finalen Version des `InstructionGenerator` mit erweiterten Methoden zur Generierung von Navigationsanweisungen, Platzhalter-Ersetzung und optimierter Anweisungslogik | Jeremy |
 
+### 23. März 2025
+---
+| Thema                                    | Beschreibung                                                      | Verantwortlich |
+|------------------------------------------|------------------------------------------------------------------|---------------|
+| **JSON 1. OG B**                  | Erstes Obergeschoss vom B-Gebäude geschrieben | Pia |
+
+### 24. März 2025
+---
+| Thema                                    | Beschreibung                                                      | Verantwortlich |
+|------------------------------------------|------------------------------------------------------------------|---------------|
+| **JSON 2. OG D**                  | Zweites Obergeschoss vom D-Gebäude geschrieben | Pia |
+| **JSON B Anfang**                  | Anfangen, B-Gebäude zu schreiben | Pia |
+
+
 ### 25. März 2025
 ---
 | Thema                                    | Beschreibung                                                      | Verantwortlich |
 |------------------------------------------|------------------------------------------------------------------|---------------|
 | **Raumsuche optimiert**                  | Raumsuche erkennt jetzt auch Räume, wenn man potenzielle Nullen weglässt (z.B. a4 findet auch A004) | Jeremy |
+| **Legende Raumfarben**                  | Legende mit allen Farben und deren Bedeutung befüllen | Pia |
+| **JSON Erdgeschoss B**                  | Erdgeschoss vom B-Gebäude fertig geschrieben | Pia |
+
 
 ### 26. März 2025
 ---
