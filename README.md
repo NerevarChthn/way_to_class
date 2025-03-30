@@ -525,3 +525,13 @@ Die Anwendung verwendet mehrere Datenquellen:
 | **MapViewToggle Widget** | Implementierung eines neuen Widget-Systems zum Umschalten zwischen Kartenansicht (FloorViewer) und Graphenansicht (GraphViewScreen) mit einem FloatingActionButton | Jeremy |
 | **Verbesserte UI Navigation** | Erweiterung der Benutzeroberfläche um einen kontextabhängigen Toggle-Button, der dynamisch seinen Icon und Tooltip basierend auf dem aktuellen Anzeigemodus ändert | Jeremy |
 | **State Management für Ansichtsmodi** | Integration eines zustandsbasierten Ansichtsumschalters, der den aktuellen Anzeigemodus (Karte oder Graph) persistent hält und nahtlos zwischen den Ansichten wechselt | Jeremy |
+
+### 31. März 2025
+---
+| Thema                                    | Beschreibung                                                      | Verantwortlich |
+|------------------------------------------|------------------------------------------------------------------|---------------|
+| **Verbesserter Routen-Validator** | Implementierung einer umfangreichen Filterlogik für den Routen-Validator, die Flure, Treppen und Aufzüge korrekt ausschließt und nur relevante Start- und Zielpunkte berücksichtigt | Jeremy |
+| **Detaillierte Ergebnisanalyse** | Erweiterung der Validator-Detailansicht mit Suchfunktion, Fehlerfilterung und übersichtlicher Darstellung der Routen einschließlich Erfolgs-/Fehlerstatus | Jeremy |
+| **Fortschrittsvisualisierung** | Integration eines verbesserten Fortschrittsmonitors mit Prozentangaben, graphischer Darstellung und statistischer Auswertung der Validierungsergebnisse | Jeremy |
+| **Optimierte Testparametrisierung** | Implementierung von anpassbaren Testeinstellungen für die Anzahl zu testender Routen und verbesserter Benutzeroberfläche für Teststeuerung | Jeremy |
+| **JSON Fixes** | Mithilfe Routenvalidator fehlerhafte Einträge im JSON finden und korrigieren | Jeremy |

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:way_to_class/constants/node_data.dart';
 import 'package:way_to_class/service/campus_graph_service.dart';
 
 class RouteValidatorScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
   int _testedRoutes = 0;
   int _failedRoutes = 0;
   int _maxRoutesToTest = 100;
+  int _excludedNodes = 0;
   StreamSubscription? _validationSubscription;
 
   @override
@@ -45,6 +47,7 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
       _totalRoutes = 0;
       _testedRoutes = 0;
       _failedRoutes = 0;
+      _excludedNodes = 0;
     });
 
     try {
@@ -55,6 +58,7 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
             _totalRoutes = data['total'] ?? 0;
             _testedRoutes = data['tested'] ?? 0;
             _failedRoutes = data['failed'] ?? 0;
+            _excludedNodes = data['excluded'] ?? 0;
 
             if (data['result'] != null) {
               _results.add(data['result']);
@@ -82,13 +86,28 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
     }
   }
 
+  bool _shouldIncludeNode(String nodeId) {
+    switch (widget.graphService.currentGraph?.getNodeById(nodeId)?.type) {
+      case nodeCorridor:
+        return false;
+      case nodeStaircase:
+        return false;
+      case nodeElevator:
+        return false;
+      default:
+        return true;
+    }
+  }
+
   Stream<Map<String, dynamic>> _validateRoutes(int maxRoutes) async* {
     if (widget.graphService.currentGraph == null) {
       throw Exception('Graph nicht geladen');
     }
 
     final graph = widget.graphService.currentGraph!;
-    final nodeIds = graph.allNodeIds; // Use the official getter
+    final allNodeIds = graph.allNodeIds;
+    final nodeIds = allNodeIds.where(_shouldIncludeNode).toList();
+    final excludedCount = allNodeIds.length - nodeIds.length;
     final total = nodeIds.length * nodeIds.length;
     int tested = 0;
     int failed = 0;
@@ -113,6 +132,7 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
               'total': total,
               'tested': tested,
               'failed': failed,
+              'excluded': excludedCount,
               'result': {
                 'startId': startId,
                 'targetId': targetId,
@@ -126,6 +146,7 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
               'total': total,
               'tested': tested,
               'failed': failed,
+              'excluded': excludedCount,
               'result': {
                 'startId': startId,
                 'targetId': targetId,
@@ -140,6 +161,7 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
             'total': total,
             'tested': tested,
             'failed': failed,
+            'excluded': excludedCount,
             'result': {
               'startId': startId,
               'targetId': targetId,
@@ -240,7 +262,8 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
             const SizedBox(height: 8),
             Text(
               'Dieser Test validiert die Routenberechnung zwischen verschiedenen Knotenpunkten im Graph. '
-              'Er überprüft, ob eine Route zwischen zwei zufälligen Punkten gefunden werden kann.',
+              'Er überprüft, ob eine Route zwischen zwei zufälligen Punkten gefunden werden kann. '
+              'Flure, Treppen und Aufzüge werden als Start-/Zielpunkte ausgeschlossen.',
               style: theme.textTheme.bodyMedium,
             ),
           ],
@@ -250,6 +273,17 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
   }
 
   Widget _buildControls(ThemeData theme) {
+    final double nodesCount =
+        widget.graphService.currentGraph?.allNodes
+            .where(
+              (n) =>
+                  n.type != nodeCorridor &&
+                  n.type != nodeStaircase &&
+                  n.type != nodeElevator,
+            )
+            .length
+            .toDouble() ??
+        100;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -274,7 +308,7 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
                   child: Slider(
                     value: _maxRoutesToTest.toDouble(),
                     min: 10,
-                    max: 1000,
+                    max: nodesCount * nodesCount,
                     divisions: 99,
                     label: _maxRoutesToTest.toString(),
                     onChanged:
@@ -415,6 +449,16 @@ class _RouteValidatorScreenState extends State<RouteValidatorScreen> {
                 ),
               ],
             ),
+            if (_excludedNodes > 0) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Ausgeschlossen: $_excludedNodes Transitknoten (Flure, Treppen, Aufzüge)',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -572,7 +616,6 @@ class _RouteDetailDialogState extends State<RouteDetailDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Filter results based on search and filter options
     final filteredResults =
         widget.results.where((result) {
           if (_showOnlyErrors && (result['success'] ?? false)) {
@@ -613,7 +656,6 @@ class _RouteDetailDialogState extends State<RouteDetailDialog> {
           ),
           child: Column(
             children: [
-              // Handle and header
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -656,8 +698,6 @@ class _RouteDetailDialogState extends State<RouteDetailDialog> {
                   ],
                 ),
               ),
-
-              // Search and filter
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -693,8 +733,6 @@ class _RouteDetailDialogState extends State<RouteDetailDialog> {
                   ],
                 ),
               ),
-
-              // Results list
               Expanded(
                 child:
                     filteredResults.isEmpty
