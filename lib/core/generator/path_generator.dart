@@ -78,7 +78,7 @@ class PathGenerator {
           (neighbor.isElevator && hasStaircaseInBuilding(current, graph))) {
         if (visualize) {
           dev.log(
-            '${isForward ? "→" : "←"} Ignoriere $neighborId (gesperrt, Aufzug mit Treppe verfügbar)',
+            '${isForward ? "→" : "←"} Ignoriere $neighborId (gesperrt, Treppe verfügbar)',
           );
         }
         continue;

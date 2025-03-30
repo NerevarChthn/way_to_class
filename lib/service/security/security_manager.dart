@@ -42,7 +42,7 @@ class SecurityManager {
   }
 
   // Verschlüssele Daten
-  static Future<String> encryptData(String plainText) async {
+  static String encryptData(String plainText) {
     try {
       final encrypter = encrypt.Encrypter(encrypt.AES(_encryptionKey));
       final encrypted = encrypter.encrypt(plainText, iv: _iv);
@@ -56,7 +56,7 @@ class SecurityManager {
   }
 
   // Entschlüssele Daten
-  static Future<String> decryptData(String encryptedText) async {
+  static String decryptData(String encryptedText) {
     try {
       // Extrahiere IV und verschlüsselte Daten
       final parts = encryptedText.split(':');
@@ -76,11 +76,11 @@ class SecurityManager {
   }
 
   // Test der Verschlüsselung
-  static Future<bool> verifyEncryption() async {
+  static bool verifyEncryption() {
     try {
       const testMessage = 'Verschlüsselungstest 1234';
-      final encrypted = await encryptData(testMessage);
-      final decrypted = await decryptData(encrypted);
+      final encrypted = encryptData(testMessage);
+      final decrypted = decryptData(encrypted);
 
       // Überprüfe, ob die Entschlüsselung korrekt funktioniert
       final success = decrypted == testMessage;

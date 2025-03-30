@@ -296,11 +296,7 @@ Um sicherzustellen, dass unsere Lösung stets auf dem richtigen Weg bleibt und n
 
 ### 27. März 2025
 ---
-| Thema                                    | Beschreibung                                                      | Verantwortlich |
-|------------------------------------------|------------------------------------------------------------------|---------------|
-| **Entwickler-Panel** | Implementierung eines erweiterbaren Entwicklerpanels mit Tools zur Validierung und Fehlerbehebung | Jeremy |
-| **Routen-Validator** | Entwicklung eines automatisierten Tools zur Überprüfung der Pfade zwischen allen möglichen Knotenpaaren im Graphen | Jeremy |
-| **Verschlüsselungstests** | Integration von Werkzeugen zur Überprüfung der Cache-Verschlüsselung | Jeremy |
+
 
 ### 28. März 2025
 ---
@@ -323,3 +319,6 @@ Um sicherzustellen, dass unsere Lösung stets auf dem richtigen Weg bleibt und n
 |------------------------------------------|------------------------------------------------------------------|---------------|
 | **Erweiterte Breakpoint-Erkennung** | Implementierung spezieller Breakpoint-Typen (Abbiegung, Treppe, Aufzug, Typwechsel) mit hierarchischer Priorisierung | Jeremy |
 | **Zusammenhängende Treppensegmente** | Algorithmus zur Erkennung von zusammenhängenden Treppen als einheitliches Segment mit Start-/Endpunkterkennung | Jeremy |
+| **MapViewToggle Widget** | Implementierung eines neuen Widget-Systems zum Umschalten zwischen Kartenansicht (FloorViewer) und Graphenansicht (GraphViewScreen) mit einem FloatingActionButton | Jeremy |
+| **Verbesserte UI Navigation** | Erweiterung der Benutzeroberfläche um einen kontextabhängigen Toggle-Button, der dynamisch seinen Icon und Tooltip basierend auf dem aktuellen Anzeigemodus ändert | Jeremy |
+| **State Management für Ansichtsmodi** | Integration eines zustandsbasierten Ansichtsumschalters, der den aktuellen Anzeigemodus (Karte oder Graph) persistent hält und nahtlos zwischen den Ansichten wechselt | Jeremy |

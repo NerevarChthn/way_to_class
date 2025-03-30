@@ -34,9 +34,14 @@ class RouteSegment {
 
   /// Creates a new segment from a JSON representation
   factory RouteSegment.fromJson(Map<String, dynamic> json) {
+    List<NodeId> nodeIds = [];
+    if (json['nodes'] != null) {
+      nodeIds = (json['nodes'] as List).map((e) => e as String).toList();
+    }
+
     return RouteSegment(
       type: SegmentType.values[json['type']],
-      nodes: [],
+      nodes: nodeIds,
       metadata: json['metadata'],
     );
   }
@@ -47,9 +52,12 @@ class RouteSegment {
     return {
       'type': type.index,
       'metadata': metadata,
-      // Node IDs are excluded because they're not needed for text generation
+      'nodes': nodes, // Added nodes to serialization for better debugging
     };
   }
+
+  /// Getter for node IDs for backward compatibility
+  List<NodeId> get nodeIds => nodes;
 
   /// Provides a readable string representation for debugging
   @override

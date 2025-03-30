@@ -195,4 +195,7 @@ class CampusGraph {
   List<String> get nodeNames => _nodes.values.map((node) => node.name).toList();
   int get nodeCount => _nodes.length;
   List<Node> get allNodes => _nodes.values.toList();
+
+  /// Gibt Zugriff auf die Nodes Map für Entwicklertools
+  Map<NodeId, Node> get nodes => _nodes;
 }

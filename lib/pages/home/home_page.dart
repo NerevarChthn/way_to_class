@@ -1,18 +1,21 @@
 import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:way_to_class/components/settings_menu.dart';
 import 'package:way_to_class/constants/other.dart';
 import 'package:way_to_class/core/models/campus_graph.dart';
 import 'package:way_to_class/core/models/route_segments.dart';
 import 'package:way_to_class/core/utils/injection.dart';
-import 'package:way_to_class/pages/graph_view_page.dart';
+import 'package:way_to_class/pages/debugging/developer_options_screen.dart';
 import 'package:way_to_class/pages/home/components/nav_bar.dart';
 import 'package:way_to_class/pages/home/components/quick_access_panel.dart';
 import 'package:way_to_class/pages/home/components/route_desc_panel.dart';
 import 'package:way_to_class/pages/home/components/search_panel.dart';
+import 'package:way_to_class/pages/map_view_toggle.dart';
 import 'package:way_to_class/pages/prof_page.dart';
-import 'package:way_to_class/screens/settings_dropdown.dart';
 import 'package:way_to_class/service/campus_graph_service.dart';
+import 'package:way_to_class/theme/manager.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -41,6 +44,9 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
   String? _loadError;
   List<String> _nodeNames = [];
+
+  // Cache-Einstellung
+  bool _isCacheEnabled = true;
 
   @override
   void initState() {
@@ -274,13 +280,30 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _toggleCacheEnabled(bool value) {
+    setState(() {
+      _isCacheEnabled = value;
+      _graphService.setCacheEnabled(value);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campus Navigator'),
         elevation: 0,
-        actions: [const SettingsDropdown()],
+        actions: [
+          SettingsMenu(
+            isDarkMode: themeManager.themeMode == ThemeMode.dark,
+            isCacheEnabled: _isCacheEnabled,
+            onDarkModeChanged: (value) => themeManager.toggleTheme(),
+            onCacheEnabledChanged: _toggleCacheEnabled,
+            onDeveloperOptionsPressed: () => _openDeveloperOptions(context),
+          ),
+        ],
       ),
       body: PageView(
         physics: const NeverScrollableScrollPhysics(),
@@ -288,11 +311,25 @@ class _HomePageState extends State<HomePage> {
         onPageChanged: (index) {
           setState(() => _currentIndex = index);
         },
-        children: [_buildNavigationPage(), GraphViewScreen(), ProfTablePage()],
+        children: [
+          _buildNavigationPage(),
+          const MapViewToggle(),
+          ProfTablePage(),
+        ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
+      ),
+    );
+  }
+
+  void _openDeveloperOptions(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => DeveloperOptionsScreen(graphService: _graphService),
       ),
     );
   }
@@ -344,7 +381,7 @@ class _HomePageState extends State<HomePage> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+            theme.colorScheme.primaryContainer.withAlpha(128),
             theme.colorScheme.surface,
           ],
         ),
