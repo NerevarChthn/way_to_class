@@ -4,104 +4,291 @@ Diese Flutter-App bietet eine Navigation innerhalb eines Campus-Gebäudes. Mithi
 
 ## Projektstruktur
 
-- **main.dart:**  
-  Der Einstiegspunkt der App, in dem die MaterialApp initialisiert und das Provider-basierte Theme-Management eingerichtet wird. Die HomePage wird als Startseite gesetzt.
+Die Way2Class-App ist modular aufgebaut und folgt dem Clean Architecture-Prinzip. Die wichtigsten Verzeichnisse und Dateien sind wie folgt organisiert:
 
-- **HomePage:**  
-  Die Hauptseite der App mit reaktiver Benutzeroberfläche zum Navigieren auf dem Campus. Bietet Eingabefelder für Start- und Zielpunkt, Schnellzugriffsfunktionen und die Wegbeschreibungsanzeige.
+### Kern-Komponenten
+```
+lib/
+├── core/  # Kernfunktionalitäten und Business-Logik
+│   ├── generator/  # Komponenten zur Generierung von Routen
+│   │   ├── instruction_generator.dart  # Generiert natürlichsprachliche Anweisungen
+│   │   ├── path_generator.dart  # Berechnet den Pfad zwischen zwei Punkten
+│   │   └── segment_generator.dart  # Wandelt Pfade in semantische Segmente um
+│   ├── model/  # Datenmodelle der Anwendung
+│   │   ├── campus_graph.dart  # Graph-Modell für den Campus
+│   │   ├── node.dart  # Repräsentation eines Knotens (Raum, Flur, etc.)
+│   │   ├── route_segment.dart  # Modell für Routensegmente
+│   │   └── segment_metadata.dart  # Metadaten für Routensegmente
+│   └── utils/  # Hilfsfunktionen
+│       ├── extensions.dart  # String- und andere Erweiterungen
+│       └── logger.dart  # Logging-Funktionalität
+```
 
-- **Service Layer:**
-  - **GraphService:**  
-    Implementiert als Singleton, stellt eine zentrale Zugriffsschnittstelle für Graph-Funktionalitäten bereit. Verwaltet das Laden, Caching und die Wiederverwendung von Graph-Daten.
-  - **SecurityManager:**  
-    Bietet Verschlüsselungsfunktionalität für sensible Daten wie Cache-Inhalte und API-Keys.
+### Service-Schicht
+```
+lib/
+├── service/  # Dienste und APIs
+│   ├── api/  # API-Kommunikation
+│   │   └── gemini_api.dart  # Anbindung an Google Gemini API
+│   ├── security/  # Sicherheits-Services
+│   │   └── security_manager.dart  # Ver- und Entschlüsselung von Cache-Daten
+│   ├── campus_graph_service.dart  # Hauptservice für Campus-Navigation
+│   ├── path_cache_service.dart  # Caching von berechneten Pfaden
+│   └── theme_manager.dart  # Verwaltung des App-Themes
+```
 
-- **Graph & Node:**  
-  - **Graph:**  
-    Enthält die Kernlogik der Navigation - implementiert den A*-Algorithmus zur Pfadfindung, verwaltet das Caching der Routenstrukturen (mit Verschlüsselung) und lädt Graphdaten aus JSON-Dateien.
-  - **Node:**  
-    Repräsentiert einzelne Knoten im Graphen mit Typinformationen (implementiert als Bitmasken), Koordinaten und Gewichtungen für die Pfadberechnung.
+### Präsentationsschicht
+```
+lib/
+├── pages/  # App-Seiten und UI
+│   ├── debugging/  # Entwicklertools
+│   │   ├── cache_stats_tab.dart  # Cache-Statistiken
+│   │   ├── developer_panel.dart  # Haupt-Entwickleroptionen
+│   │   ├── encryption_test_tab.dart  # Tests für Verschlüsselungsfunktionen
+│   │   └── route_validator_tab.dart  # Validierung von Routen
+│   ├── home/  # Hauptbereich der App
+│   │   ├── components/  # UI-Komponenten der Hauptseite
+│   │   │   ├── quick_access_panel.dart  # Schnellzugriff auf wichtige Funktionen
+│   │   │   └── route_description.dart  # Anzeige der Wegbeschreibung
+│   │   └── home_page.dart  # Hauptseite der App
+│   ├── map/  # Kartenansicht
+│   │   ├── floor_viewer.dart  # Betrachter für Etagenpläne
+│   │   └── graph_view_screen.dart  # Visualisierung des Campus-Graphen
+│   ├── settings/  # Einstellungen
+│   │   └── settings_menu.dart  # Einstellungsmenü
+│   └── map_view_toggle.dart  # Umschalter zwischen Karten- und Graphansicht
+```
 
-- **NavigationHelper & RouteSegment:**  
-  - **NavigationHelper:**  
-    Wandelt berechnete Pfade in strukturierte RouteSegment-Objekte um und generiert natürlichsprachliche Wegbeschreibungen.
-  - **RouteSegment:**  
-    Definiert einzelne Abschnitte einer Route (z.B. "geradeaus gehen", "links abbiegen", "Treppe hoch") mit typsicheren Segmenttypen und zugehörigen Metadaten.
+### Ressourcen
+```
+assets/  # Externe Ressourcen
+├── floors/  # Etagenpläne als PNG-Dateien
+│   ├── a_f0.png  # Haus A, Erdgeschoss
+│   └── ...
+├── haus_a/  # Graphdaten für Haus A
+│   ├── haus_a_f0.json  # Erdgeschoss
+│   └── ...
+├── haus_b/  # Graphdaten für Haus B
+├── haus_c/  # Graphdaten für Haus C
+├── haus_d/  # Graphdaten für Haus D
+└── haus_e/  # Graphdaten für Haus E
+```
 
-- **UI-Komponenten:**
-  - **SearchPanel:** Eingabefelder und Suche für Start- und Zielorte
-  - **QuickAccessPanel:** Schnellzugriff auf häufig verwendete Funktionen
-  - **RouteDescriptionPanel:** Anzeige der generierten Wegbeschreibungen
-  - **DeveloperPanel:** Entwicklerwerkzeuge für Debugging und Tests
-  - **GraphViewScreen:** Visualisierung des Campus-Graphen
+### Konfigurationsressourcen
+```
+lib/
+├── constants/  # Konstanten und Typdefinitionen
+│   ├── route_templates.dart  # Textvorlagen für Wegbeschreibungen
+│   ├── theme/  # Theme-Definitionen
+│   │   ├── dark_theme.dart  # Dunkles Theme
+│   │   └── light_theme.dart  # Helles Theme
+│   └── types.dart  # Typdefinitionen und Enums
+├── di/  # Dependency Injection
+│   └── service_locator.dart  # Registrierung von Services mit GetIt
+└── main.dart  # Einstiegspunkt der Anwendung
+```
 
-- **Theme Management:**
-  - **ThemeManager:** ChangeNotifier-basierte Klasse zur Verwaltung des App-Themes
-  - **LightTheme & DarkTheme:** Separate Konfigurationen für helles und dunkles Erscheinungsbild
+### Hauptdateien
 
-- **Hilfsfunktionen:**  
-  Zusätzliche Methoden zur Berechnung von Distanzen, Richtungen, Erkennung von Übergängen und zur Optimierung der Cache-Verwaltung.
+- **main.dart**: Initialisiert die App, Dependency Injection und Theme-Manager
+- **campus_graph_service.dart**: Zentraler Service für das Laden des Graphen und die Berechnung von Routen
+- **path_generator.dart**: Implementierung des bidirektionalen Suchalgorithmus
+- **segment_generator.dart**: Umwandlung der berechneten Pfade in semantische Segmente
+- **instruction_generator.dart**: Generierung natürlichsprachlicher Anweisungen aus Segmenten
 
-## Erweiterung
-**TODO:**
-korrekte daten ins json, system hinter koordinaten und weights erläutern
+### Datenhaltung
 
-## Qualitätssicherung und Entwicklungskontrolle
+Die Anwendung verwendet mehrere Datenquellen:
+- **JSON-Dateien**: Enthalten die Graphstruktur des Campus mit Knoten und Kanten
+- **PNG-Dateien**: Visuelle Darstellung der Etagenpläne
+- **Secure Storage**: Sichere Speicherung von Verschlüsselungsschlüsseln
+- **SharedPreferences**: Persistenz von Benutzereinstellungen und Cache-Daten
 
-Um sicherzustellen, dass unsere Lösung stets auf dem richtigen Weg bleibt und nicht in falsche Richtungen entwickelt wird, haben wir folgende Maßnahmen implementiert:
+## PDCA Wochenplan
 
-### Kontinuierliche Validierung
+### Woche 1 (20.–26. Februar 2025)
 
-- **Automatisierte Routentests**: 
-  - Implementierung von Tests für alle möglichen Routen im Graphen
-  - Validierung der Pfadfindung mit bekannten Start- und Zielpunkten
-  - Überprüfung der Wegbeschreibungen auf Korrektheit und Verständlichkeit
+#### Plan (Planen)
+- **Kartenintegration**: Methode zur Verarbeitung von PNG-Karten entwickeln  
+- **API-Anbindung**: Gemini-API in das System integrieren  
+- **UI-Funktionalität**: Interaktive Kartendarstellung mit Zoom und Dragging hinzufügen  
+- **Benutzerinteraktion**: Raumauswahl über Dropdown und Chat-Integration mit Gemini  
 
-  ```dart
-  void testAllRoutes() {
-    final allNodes = graph.nodeMap.keys.toList();
-    int totalRoutes = 0;
-    int failedRoutes = 0;
-    
-    for (String start in allNodes) {
-      for (String target in allNodes) {
-        if (start != target) {
-          totalRoutes++;
-          try {
-            final path = graph.findPath(start, target);
-            if (path.isEmpty) failedRoutes++;
-          } catch (e) {
-            failedRoutes++;
-            print('Fehler bei Route $start -> $target: $e');
-          }
-        }
-      }
-    }
-    
-    print('Getestet: $totalRoutes Routen, Fehler: $failedRoutes');
-  }
+#### Do (Umsetzen)
+- PNG-Karten erfolgreich in Bytecode umgewandelt  
+- API-Service für Gemini-Requests implementiert  
+- Erste Version der UI mit `InteractiveViewer` für Kartensteuerung  
+- Zwei `FloatingActionButtons` für Chat und Professorenliste ergänzt  
+- Markdown-Widget für die Darstellung des Gemini-Responses integriert  
 
-### Manuelle Feldvalidierung
-- Regelmäßige Gebäude-Begehungen zur Datenprüfung
-- Sofortige Dokumentation und Korrektur von Abweichungen
+#### Check (Überprüfen)
+- Tests zur Prompt-Generierung für bessere Wegbeschreibungen  
+- Erste Optimierung der Text-Prompts durchgeführt  
+- Error-Handling für API-Anfragen implementiert  
+- Verschiedene Gemini-Modelle getestet, um bestes Ergebnis zu ermitteln  
 
-### Iterative Entwicklung
-- Kurze Zyklen mit realem Nutzerfeedback
-- Anpassung auf Basis gesammelter Nutzerbedürfnisse
+#### Act (Anpassen)
+- Verbesserungen an der Prompt-Generierung für klarere Antworten  
+- Fehlerhandling optimiert, um Limits der API besser zu handhaben  
+- UI-Elemente an Feedback angepasst (z. B. Darstellung der API-Antworten)  
 
-### Modularität und Architektur
-- Klare Trennung von Datenmodell, Algorithmus und UI
-- Nutzung austauschbarer, unabhängiger Komponenten
+### Woche 2 (27. Februar – 5. März 2025)
 
-### Code-Qualität
-- Regelmäßige Code-Reviews und Pair Programming
-- Proaktives Refactoring zur Vermeidung technischer Schulden
+#### Plan (Planen)
+- **Graph-Implementierung**: Erstellung eines Campus-Graphen mit JSON-Nodes und Edges  
+- **Algorithmus-Entwicklung**: Implementierung von Dijkstra und A\*-Algorithmus zur Pfadberechnung  
+- **Navigation & Optimierung**: Verbesserte Routenführung mit Schritt-/Distanzabschätzung  
+- **Graph-Visualisierung**: Separate Ansicht zur Überprüfung der Graphstruktur  
+- **Nutzerfreundlichkeit**: Autocomplete für Start- und Zielauswahl, Caching für schnellere Berechnungen  
+- **UI-Anpassungen**: Einstellungen, farbliche Gruppierung, und eine Legende zur besseren Orientierung  
 
-### Validierung und Fehlerdokumentation
-- Visuelle Pfadprüfung zur Validierung berechneter Ergebnisse
-- Dokumentation erkannter Fehler und frühzeitige Reparatur
+#### Do (Umsetzen)
+- Campus-Graph als JSON-Struktur erstellt und visualisiert  
+- Dijkstra und A\*-Algorithmus zur Navigation implementiert  
+- Routenoptimierung mit sinnvoller Segmentierung der Flurabschnitte  
+- Generative AI (`google_generative_ai`-Paket) für Wegbeschreibungen genutzt  
+- Debugging und Fehlerbehebung für Routenberechnung durchgeführt  
+- Einstellungsseite für Nutzer erstellt  
+- Farbgruppen und Legende zur Raumklassifizierung hinzugefügt  
+- A- und E-Gebäude überprüft und dokumentiert  
+
+#### Check (Überprüfen)
+- Routenberechnungen getestet und Fehler identifiziert  
+- Debugging-Tools verbessert, um Probleme schneller zu finden  
+- Farbliche Gruppierung und Legende auf Verständlichkeit geprüft  
+- Navigationsergebnisse mit realen Wegen abgeglichen  
+
+#### Act (Anpassen)
+- Optimierungen am Graphen und Algorithmus basierend auf Debugging-Ergebnissen  
+- Anpassung der Farbzuordnung für bessere Übersichtlichkeit  
+- Verbesserte UI in den Einstellungen für einfachere Bedienung  
+- Caching-Mechanismus für schnellere Routenberechnung verbessert  
+
+### Woche 3 (6.-12. März 2025)
+
+#### Plan (Planen)
+- **Theme-Manager**: Implementierung eines Theme-Management-Systems mit Light- und Dark-Mode  
+- **Professoren-Tabelle**: Extraktion und Umwandlung von HTML-Tabellen zur interaktiven Darstellung  
+- **Wegbeschreibungsgenerierung**: Einführung einer strukturierten Generierung mit `PathGenerator`, `SegmentsGenerator` und `InstructionGenerator`  
+- **A*-Optimierung**: Verbesserte Heuristik, Gewichtungsmultiplikatoren und effizientere Etagen-/Gebäudewechsel-Logik  
+- **Logging & Visualisierung**: Einführung eines detaillierten Logging-Mechanismus zur Analyse der A*-Schritte  
+- **Segment-Merging**: Zusammenführen angrenzender Segmente zur Vereinheitlichung der Routenbeschreibung  
+- **JSON-Tool**: Entwicklung eines Skriptes zur Erstellung von JSON-Dateien für Raum- und Graphdaten  
+
+#### Do (Umsetzen)
+- **Theme-Management** als `ChangeNotifier` mit `Provider`-Pattern integriert  
+- **Professoren-Tabelle** mit Echtzeit-Suche, Sortierung und interaktiven Elementen umgesetzt  
+- **Neue Wegbeschreibungsgenerierung** mit strukturierten Segmenten implementiert  
+- **A*-Optimierung** mit Gewichtungsmultiplikatoren und neuer Heuristik verbessert  
+- **Logging-Mechanismus** für den A*-Algorithmus implementiert und visuell aufbereitet  
+- **JSON-Daten** für Räume erstellt, Gitter-Koordinaten definiert und falsche Raumdaten korrigiert  
+
+#### Check (Überprüfen)
+- **Themenwechsel getestet** und UI-Anpassungen vorgenommen  
+- **Wegbeschreibung validiert**: Generierte Anweisungen mit realen Wegen abgeglichen  
+- **A*-Optimierung überprüft**: Performance und Routenqualität analysiert  
+- **Logging-Visualisierung evaluiert**: Fehlerhafte Berechnungen durch Logs nachvollzogen  
+- **Raumdaten abgeglichen** und fehlerhafte Informationen korrigiert  
+
+#### Act (Anpassen)
+- **Feinabstimmung des A*-Algorithmus** durch Anpassung der Gewichtungen  
+- **Optimierung der JSON-Daten** für eine effizientere Verarbeitung  
+- **Segment-Merging verbessert**, um noch präzisere Anweisungen zu erzeugen  
+- **Erweiterung der Logging-Visualisierung** für detailliertere Debugging-Informationen  
+- **Fehlende Raumdaten ergänzt** und Farblegende überarbeitet  
+
+### Woche 4 (13.–19. März 2025)
+
+#### Plan (Planen)
+- **Gebäudezeichnungen**: Fertigstellung aller Gebäudezeichnungen für verschiedene Etagen  
+- **JSON-Daten**: Erstellung der JSON-Dateien für das E- und A-Gebäude  
+- **InstructionGenerator**: Entwicklung einer Klasse zur Generierung natürlicher Sprach-Anweisungen für die Navigation  
+- **Visuelle Darstellung**: Tests zur optimalen Anzeige der Karten in der App  
+
+#### Do (Umsetzen)
+- **Alle Gebäudezeichnungen fertiggestellt**  
+- **JSON-Dateien für E-Gebäude (1. & 2. OG) und A-Gebäude (EG – 3. OG) erstellt**  
+- **InstructionGenerator implementiert** mit zufälliger Satzbaustein-Auswahl basierend auf Segmenttypen  
+- **Korrekturen an JSON-Daten für A-Gebäude vorgenommen**  
+- **Erste Tests zur Kartendarstellung in der App durchgeführt**  
+
+#### Check (Überprüfen)
+- **Gebäudezeichnungen überprüft**: Vergleich mit realen Grundrissen und Anpassung kleiner Details  
+- **JSON-Daten validiert**: Strukturelle Fehler und fehlende Daten identifiziert und korrigiert  
+- **InstructionGenerator getestet**: Generierte Wegbeschreibungen hinsichtlich Verständlichkeit und Natürlichkeit geprüft  
+- **Kartendarstellung evaluiert**: Erste visuelle Tests zur Anzeige von Karten in der App  
+
+#### Act (Anpassen)
+- **JSON-Korrekturen** für das A-Gebäude durchgeführt  
+- **InstructionGenerator weiter verfeinert**, um noch natürlichere Wegbeschreibungen zu erzeugen  
+- **Erste Anpassungen an der Kartenvisualisierung vorgenommen**, um eine bessere Darstellung in der App zu gewährleisten  
+
+### Woche 5 (20.-26. März 2025)
+
+#### Plan (Planen)
+- **String Extensions**: Implementierung nützlicher String-Methoden für die Verarbeitung von Texten  
+- **Finalisierung des InstructionGenerators**: Erweiterung der Navigationsanweisungen durch Platzhalter-Ersetzung und optimierte Logik  
+- **Optimierung der Raumsuche**: Verbesserung der Suchfunktion, sodass sie auch bei fehlenden Nullen korrekt arbeitet  
+- **Treppen- und Aufzugserkennung**: Entwicklung eines Erkennungsmechanismus für vertikale Verbindungen  
+- **Bevorzugung von Treppen**: Anpassung des Routing-Algorithmus zur priorisierten Nutzung von Treppen  
+
+#### Do (Umsetzen)
+- **String Extensions implementiert** (`capitalize()`, `addPeriod()`, `normalizeSpaces()`)  
+- **InstructionGenerator finalisiert** mit präziseren Anweisungen und logischen Verbesserungen  
+- **Raumsuche verbessert**, sodass sie auch unvollständige Eingaben erkennt  
+- **Treppen- und Aufzugserkennung umgesetzt**, inklusive direkter ID-Analyse zur besseren Zuordnung  
+- **Routing-Algorithmus angepasst**, um Treppen bevorzugt zu nutzen, wenn sie verfügbar sind  
+
+#### Check (Überprüfen)
+- **Test der String Extensions** auf verschiedene Anwendungsfälle  
+- **InstructionGenerator validiert** durch Testläufe mit generierten Anweisungen  
+- **Raumsuche überprüft** mit realen Eingaben und variierenden Suchmustern  
+- **Treppen-/Aufzugslogik getestet** durch Simulation unterschiedlicher Gebäudewechsel  
+- **Routing-Algorithmus analysiert**, ob Treppen in den meisten Fällen korrekt bevorzugt werden  
+
+#### Act (Anpassen)
+- **String Extensions optimiert**, um weitere Randfälle abzudecken  
+- **InstructionGenerator leicht angepasst**, um inkonsistente Formulierungen zu vermeiden  
+- **Raumsuche weiter verfeinert**, um zusätzliche Schreibvarianten zu erkennen  
+- **Treppen-Logik justiert**, sodass sie in mehr Szenarien die erwartete Priorisierung aufweist  
+
+### PDCA-Zyklus – Woche 6 (27. März – 2. April 2025)
+
+#### Plan (Planen)
+- **Entwickler-Panel & Debugging-Tools**: Erstellung einer UI mit Werkzeugen zur Validierung und Fehlerbehebung  
+- **Routen-Validator**: Entwicklung eines Tools zur Überprüfung aller Pfade im Graphen  
+- **Verschlüsselungstests & Cache-Analyse**: Überprüfung der Cache-Verschlüsselung und Implementierung einer Statistik-Oberfläche  
+- **Performance-Optimierung der HomePage**: Vermeidung unnötiger Neuberechnungen und Verbesserung des State Managements  
+- **Umstellung auf bidirektionale Suche**: Ersetzung von A* durch eine effizientere bidirektionale Suche  
+- **Erweitertes Logging-System**: Einführung eines mehrstufigen, optimierten Loggings zur Analyse der Pfadfindung  
+- **Breakpoint-Optimierung & Treppensegmentierung**: Verbesserung der Erkennung von Treppen und anderen Breakpoints  
+- **MapViewToggle Widget**: Integration eines UI-Elements zum Umschalten zwischen Karten- und Graphenansicht  
+
+#### Do (Umsetzen)
+- **Entwickler-Panel mit TabBar-UI implementiert**  
+- **Routen-Validator entwickelt und getestet** mit detaillierter Ergebnisanzeige  
+- **Cache-Statistiken & Verschlüsselungstests in die Developer-UI integriert**  
+- **Performance-Optimierungen umgesetzt**: Graph wird nun nur einmal beim Start geladen  
+- **Bidirektionale Suche erfolgreich implementiert** mit schnellerer Pfadfindung  
+- **Logging-System überarbeitet** und doppelte Log-Meldungen entfernt  
+- **Breakpoint-Typen & zusammenhängende Treppensegmente erkannt und verarbeitet**  
+- **MapViewToggle Widget & State Management für Ansichtsmodi entwickelt**  
+
+#### Check (Überprüfen)
+- **Debugging-Tools getestet** auf verschiedene Fehlerfälle  
+- **Performance getestet**, insbesondere Ladezeiten und Speichernutzung  
+- **Bidirektionale Suche validiert** mit Testfällen und Vergleichen zur A*-Methode  
+- **Logging analysiert**, ob die neuen Mechanismen redundante Einträge vermeiden  
+- **UI-Navigation überprüft**, ob das Umschalten zwischen Karten- und Graphansicht reibungslos funktioniert  
+
+#### Act (Anpassen)
+- **Verbesserungen am Entwickler-Panel**, um zusätzliche Debugging-Optionen hinzuzufügen  
+- **Logging weiter optimiert**, um spezifischere Debug-Informationen zu liefern  
+- **Treppensegment-Erkennung angepasst**, um komplexere Szenarien abzudecken  
+- **MapViewToggle Widget optimiert**, um eine intuitivere Benutzererfahrung zu gewährleisten  
 
 ## Entwicklungstagebuch
+---
 
 ### 20. Februar 2025
 ---
@@ -174,6 +361,11 @@ Um sicherzustellen, dass unsere Lösung stets auf dem richtigen Weg bleibt und n
 | **Farbliche Gruppierung** | Anpassung der Farbgruppen für Räume | Pia |
 | **Legende für Farbzuordnung** | Erstellung einer Legende zur Farbzuordnung | Pia |
 
+### 6. März 2025
+---
+| Thema                     | Beschreibung | Verantwortlich |
+|---------------------------|-------------|---------------|
+| **Debugging** | Finden und lösen von Fehlern bei der Pfadsuche | Jeremy |
 
 ### 7. März 2025
 ---
@@ -296,7 +488,18 @@ Um sicherzustellen, dass unsere Lösung stets auf dem richtigen Weg bleibt und n
 
 ### 27. März 2025
 ---
-
+| Thema                                    | Beschreibung                                                      | Verantwortlich |
+|------------------------------------------|------------------------------------------------------------------|---------------|
+| **Entwickler-Panel** | Implementierung eines erweiterbaren Entwicklerpanels mit Tools zur Validierung und Fehlerbehebung | Jeremy |
+| **Routen-Validator** | Entwicklung eines automatisierten Tools zur Überprüfung der Pfade zwischen allen möglichen Knotenpaaren im Graphen mit detaillierter Ergebnisanzeige und Filtermöglichkeiten | Jeremy |
+| **Verschlüsselungstests** | Integration von Werkzeugen zur Überprüfung und Validierung der Cache-Verschlüsselung mit Visualisierung von Original-, verschlüsselten und entschlüsselten Daten | Jeremy |
+| **Cache-Statistiken** | Implementierung einer visuellen Analyse-Oberfläche zur Überwachung von Cache-Nutzung, Erfolgsraten und Speicherverbrauch | Jeremy |
+| **TabBar-basierte Developer-UI** | Entwicklung einer benutzerfreundlichen Oberfläche für Entwickleroptionen mit TabBar für einfache Navigation zwischen verschiedenen Debugging-Werkzeugen | Jeremy |
+| **Security Manager Implementierung** | Entwicklung eines umfassenden Security Managers zur sicheren Verschlüsselung von Cache-Daten mit AES-Verschlüsselung und sicherem Schlüsselmanagement | Jeremy |
+| **Sichere Schlüsselverwaltung** | Integration von Flutter Secure Storage zur sicheren Speicherung von Verschlüsselungsschlüsseln im nativen Keystore/Keychain des Geräts | Jeremy |
+| **Automatische Verschlüsselungsprüfung** | Implementierung automatischer Verifizierungsmechanismen zur Überprüfung der korrekten Funktionalität von Ver- und Entschlüsselung | Jeremy |
+| **Error-Handling** | Robuste Fehlerbehandlung für sämtliche kryptographische Operationen mit Fallback-Mechanismen für Fehlersituationen | Jeremy |
+| **Flexible Cipher-Integration** | Modularisierung der Verschlüsselungslogik für einfache Erweiterbarkeit und zukünftige kryptographische Anpassungen | Jeremy |
 
 ### 28. März 2025
 ---
