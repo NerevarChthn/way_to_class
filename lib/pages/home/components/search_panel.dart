@@ -35,8 +35,6 @@ class SearchPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Startpunkt-Eingabe
-            Text('Start', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 4),
             NodeAutocompleteField(
               nodeNames: nodeNames,
               hintText: 'Startpunkt wählen',
@@ -52,24 +50,17 @@ class SearchPanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Ziel', style: theme.textTheme.labelLarge),
-                      const SizedBox(height: 4),
-                      NodeAutocompleteField(
-                        nodeNames: nodeNames,
-                        hintText: 'Zielpunkt wählen',
-                        prefixIcon: Icons.flag_outlined,
-                        initialValue: zielValue,
-                        onSelected: onZielChanged,
-                      ),
-                    ],
+                  child: NodeAutocompleteField(
+                    nodeNames: nodeNames,
+                    hintText: 'Zielpunkt wählen',
+                    prefixIcon: Icons.flag_outlined,
+                    initialValue: zielValue,
+                    onSelected: onZielChanged,
                   ),
                 ),
                 // Tausch-Button
                 Padding(
-                  padding: const EdgeInsets.only(top: 24, left: 8),
+                  padding: const EdgeInsets.only(top: 4, left: 8),
                   child: ElevatedButton(
                     onPressed: onSwap,
                     style: ElevatedButton.styleFrom(
