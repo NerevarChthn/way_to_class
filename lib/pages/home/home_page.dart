@@ -77,7 +77,13 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isLoading = false;
         _nodeNames = graph.nodeNames;
-        log('Graph geladen: ${_nodeNames.length} Knoten');
+        _nodeNames.removeWhere(
+          (n) =>
+              n.contains('Flur') ||
+              n.contains('Aufzug') ||
+              n.contains('Treppe'),
+        );
+        log('Graph geladen: ${graph.nodeNames.length} Knoten');
       });
     } catch (e) {
       setState(() {

@@ -227,7 +227,6 @@
         "x": 54,
         "y": 41,
         "weights": {
-            "me": 3.0,
             "h141": 14.0,
             "h143": 22.0
         }
@@ -239,53 +238,30 @@
         "y": 41,
         "weights": {
             "h142": 14.0,
-            "h140": 14.0,
-            "mc": 3.0
-        }
-    },
-    "m3": {
-        "name": "Mensa Ausgang",
-        "data": 1317,
-        "x": 54,
-        "y": 44,
-        "weights": {
-            "h142": 3.0,
-            "md": 9.0
+            "h140": 14.0
         }
     },
     "md": {
-        "name": "Mensa",
+        "name": "Mensa hinten",
         "data": 1313,
         "x": 54,
         "y": 53,
         "weights": {
-            "mb": 14.0,
-            "me": 9.0
-        }
-    },
-    "mc": {
-        "name": "Mensa Ausgang",
-        "data": 5413,
-        "x": 40,
-        "y": 44,
-        "weights": {
-            "h141": 3.0,
-            "mb": 9.0
+            "mb": 14.0
         }
     },
     "mb": {
-        "name": "Mensa",
+        "name": "Mensa vorne",
         "data": 1313,
         "x": 40,
         "y": 53,
         "weights": {
             "md": 14.0,
-            "mc": 9.0,
             "ma": 3.0
         }
     },
     "ma": {
-        "name": "Mensa",
+        "name": "Mensa Eingang",
         "data": 1313,
         "x": 37,
         "y": 53,
