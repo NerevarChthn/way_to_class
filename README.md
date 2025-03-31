@@ -551,3 +551,13 @@ Die Anwendung verwendet mehrere Datenquellen:
 | **Fortschrittsvisualisierung** | Integration eines verbesserten Fortschrittsmonitors mit Prozentangaben, graphischer Darstellung und statistischer Auswertung der Validierungsergebnisse | Jeremy |
 | **Optimierte Testparametrisierung** | Implementierung von anpassbaren Testeinstellungen für die Anzahl zu testender Routen und verbesserter Benutzeroberfläche für Teststeuerung | Jeremy |
 | **JSON Fixes** | Mithilfe Routenvalidator fehlerhafte Einträge im JSON finden und korrigieren | Jeremy |
+
+### 1. April 2025
+---
+| Thema                                    | Beschreibung                                                      | Verantwortlich |
+|------------------------------------------|------------------------------------------------------------------|---------------|
+| **Außenbereich-Erkennung** | Implementierung einer speziellen Kennzeichnung für Außenwege mit eigenem Property-Bit und entsprechender Metadaten-Integration in Wegbeschreibungen | Jeremy |
+| **Mensa-Optimierung** | Bereinigung der Mensa-Datenpunkte in den JSON-Dateien, sodass nur noch der Haupteingang als Navigationsziel verfügbar ist | Jeremy |
+| **Verbesserte Raumsuche** | Implementierung eines intelligenten Filters in der Raumsuche, der Flure, Treppen und andere nicht-navigierbare Knoten aus den Suchresultaten ausschließt | Jeremy |
+| **Professorentabelle Navigation** | Fehlerbehebung in der Verknüpfung zwischen Professorentabelle und Navigation, sodass direkte Raumnavigation von der Tabelle aus fehlerfrei funktioniert zu den Büros | Jeremy |
+| **Hochauflösende Karten** | Aktualisierung aller Kartenmaterialien auf hochauflösende Versionen mit verbessertem Zoom-Verhalten und Detailgenauigkeit auch bei starker Vergrößerung | Jeremy |
