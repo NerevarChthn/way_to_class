@@ -680,6 +680,10 @@ class SegmentsGenerator {
     final Node? hallwayNode = graph.getNodeById(nodes.last);
     if (hallwayNode != null && hallwayNode.name.isNotEmpty) {
       metadata['currentName'] = hallwayNode.name;
+
+      if (hallwayNode.isOutside) {
+        metadata[MetadataKeys.outside] = 'Außenbereich';
+      }
     }
 
     // Durchgang durch Türen zählen

@@ -544,6 +544,20 @@ class CampusGraphService {
     }
   }
 
+  /// Löscht den Cache und zeigt eine Statusmeldung
+  Future<String> clearCache() async {
+    try {
+      final int cacheEntries = _routeSegmentsCache.length;
+      await clearRouteCache();
+
+      // Rückgabe einer Erfolgsmeldung mit Anzahl der gelöschten Einträge
+      return 'Cache erfolgreich geleert ($cacheEntries Einträge)';
+    } catch (e) {
+      dev.log('Fehler beim Löschen des Caches: $e');
+      return 'Fehler beim Löschen des Caches: ${e.toString()}';
+    }
+  }
+
   /// Findet den nächsten Punkt vom angegebenen Typ
   String findNearestPointOfInterest(NodeId startId, PointOfInterestType type) {
     if (currentGraph == null) {

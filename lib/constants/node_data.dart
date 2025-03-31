@@ -27,7 +27,7 @@ const int floor3 = 0x280; // 0000 0010 1000 0000 (3. OG = 5)
 const int floor4 = 0x300; // 0000 0011 0000 0000 (4. OG = 6)
 const int floor5 = 0x380; // 0000 0011 1000 0000 (5. OG = 7)
 
-/// Properties (Bits 10-13)
+/// Properties (Bits 10-14)
 const int propMask = 0xFC0; // 0000 1111 1100 0000
 const int propAccessible = 0x400; // 0000 0100 0000 0000 (Bit 10 - Barrierefrei)
 const int propEmergencyExit =
@@ -35,3 +35,4 @@ const int propEmergencyExit =
 const int propEntranceExit =
     0x1000; // 0001 0000 0000 0000 (Bit 12 - Ein-/Ausgang)
 const int propLocked = 0x2000; // 0010 0000 0000 0000 (Bit 13 - Abgeschlossen)
+const int hallOutside = 0x4000; // 0100 0000 0000 0000 (Bit 14 - Draußen)

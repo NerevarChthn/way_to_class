@@ -468,6 +468,15 @@ class _HomePageState extends State<HomePage> {
             onDarkModeChanged: (value) => themeManager.toggleTheme(),
             onCacheEnabledChanged: _toggleCacheEnabled,
             onDeveloperOptionsPressed: () => _openDeveloperOptions(context),
+            onClearCachePressed: () {
+              _graphService.clearCache();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Cache geleert'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
           ),
         ],
       ),

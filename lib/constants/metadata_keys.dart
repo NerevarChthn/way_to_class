@@ -9,6 +9,7 @@ class MetadataKeys {
   static const String currentName = 'currentName';
   static const String building = 'building';
   static const String floor = 'floor';
+  static const String outside = 'outside';
 
   // Landmarks
   static const String landmark = 'landmark';

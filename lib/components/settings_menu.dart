@@ -6,6 +6,7 @@ class SettingsMenu extends StatelessWidget {
   final ValueChanged<bool> onDarkModeChanged;
   final ValueChanged<bool> onCacheEnabledChanged;
   final VoidCallback onDeveloperOptionsPressed;
+  final VoidCallback onClearCachePressed;
 
   const SettingsMenu({
     super.key,
@@ -14,6 +15,7 @@ class SettingsMenu extends StatelessWidget {
     required this.onDarkModeChanged,
     required this.onCacheEnabledChanged,
     required this.onDeveloperOptionsPressed,
+    required this.onClearCachePressed,
   });
 
   @override
@@ -49,6 +51,31 @@ class SettingsMenu extends StatelessWidget {
                 onCacheEnabledChanged(value);
                 Navigator.pop(context);
               },
+            ),
+            PopupMenuItem<String>(
+              value: 'clear_cache',
+              onTap: () {
+                // Slight delay to allow menu to close first
+                Future.delayed(
+                  const Duration(milliseconds: 50),
+                  onClearCachePressed,
+                );
+              },
+              child: ListTile(
+                leading: Icon(
+                  Icons.cleaning_services,
+                  color: theme.colorScheme.error,
+                ),
+                title: Text(
+                  'Cache löschen',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                visualDensity: VisualDensity.compact,
+              ),
             ),
             const PopupMenuItem(enabled: false, height: 1, child: Divider()),
             PopupMenuItem<String>(

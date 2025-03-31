@@ -91,4 +91,5 @@ class Node {
   bool get isEmergencyExit => hasProperty(propEmergencyExit);
   bool get isAccessible => hasProperty(propAccessible);
   bool get isLocked => hasProperty(propLocked);
+  bool get isOutside => hasProperty(hallOutside);
 }

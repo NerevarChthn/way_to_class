@@ -195,7 +195,9 @@ class InstructionGenerator {
     // Platzhalter-Map erstellen
     final replacements = <String, String>{
       _middleConnectorPlaceholder: _getRandomMiddleConnector(),
-      _hallSynonymsPlaceholder: _getRandomHallSynonym(),
+      _hallSynonymsPlaceholder:
+          seg.metadata[MetadataKeys.outside] ?? _getRandomHallSynonym(),
+
       '{distance}': _getRandomDistance(
         (seg.metadata[MetadataKeys.distance] ?? 0),
       ),
