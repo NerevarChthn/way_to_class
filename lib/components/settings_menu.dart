@@ -53,6 +53,7 @@ class SettingsMenu extends StatelessWidget {
             const PopupMenuItem(enabled: false, height: 1, child: Divider()),
             PopupMenuItem<String>(
               value: 'developer',
+              onTap: onDeveloperOptionsPressed,
               child: ListTile(
                 leading: Icon(
                   Icons.developer_mode,
@@ -68,7 +69,6 @@ class SettingsMenu extends StatelessWidget {
                 dense: true,
                 visualDensity: VisualDensity.compact,
               ),
-              onTap: onDeveloperOptionsPressed,
             ),
           ],
     );

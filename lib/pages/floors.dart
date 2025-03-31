@@ -10,10 +10,10 @@ class FloorViewer extends StatefulWidget {
 class _FloorViewerState extends State<FloorViewer>
     with SingleTickerProviderStateMixin {
   final List<String> floorImages = [
-    'assets/floor_0.png',
-    'assets/floor_1.png',
-    'assets/floor_2.png',
-    'assets/floor_3.png',
+    'assets/images/floor_0.jpg',
+    'assets/images/floor_1.jpg',
+    'assets/images/floor_2.jpg',
+    'assets/images/floor_3.jpg',
   ];
 
   final List<String> floorNames = [

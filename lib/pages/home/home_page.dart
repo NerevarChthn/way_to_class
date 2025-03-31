@@ -48,6 +48,10 @@ class _HomePageState extends State<HomePage> {
   // Cache-Einstellung
   bool _isCacheEnabled = true;
 
+  // Callback für Room-Selection vom ProfTablePage
+  final GlobalKey<ProfTablePageState> _profTableKey =
+      GlobalKey<ProfTablePageState>();
+
   @override
   void initState() {
     super.initState();
@@ -280,48 +284,45 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _toggleCacheEnabled(bool value) {
-    setState(() {
-      _isCacheEnabled = value;
-      _graphService.setCacheEnabled(value);
-    });
+  void _handleRoomSelected(String roomCode) {
+    if (roomCode.isNotEmpty) {
+      final matchingRoom = _findMatchingRoom(roomCode);
+      if (matchingRoom.isNotEmpty) {
+        setState(() {
+          _zielValue = matchingRoom;
+          _currentIndex = 0; // Switch to navigation tab
+          _pageController.jumpToPage(0);
+        });
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Raum "$matchingRoom" als Ziel ausgewählt'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        // Show error if no matching room was found
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Konnte keinen passenden Raum für "$roomCode" finden',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context, listen: false);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Campus Navigator'),
-        elevation: 0,
-        actions: [
-          SettingsMenu(
-            isDarkMode: themeManager.themeMode == ThemeMode.dark,
-            isCacheEnabled: _isCacheEnabled,
-            onDarkModeChanged: (value) => themeManager.toggleTheme(),
-            onCacheEnabledChanged: _toggleCacheEnabled,
-            onDeveloperOptionsPressed: () => _openDeveloperOptions(context),
-          ),
-        ],
-      ),
-      body: PageView(
-        physics: const NeverScrollableScrollPhysics(),
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() => _currentIndex = index);
-        },
-        children: [
-          _buildNavigationPage(),
-          const MapViewToggle(),
-          ProfTablePage(),
-        ],
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-      ),
-    );
+  String _findMatchingRoom(String targetRoom) {
+    for (final nodeName in _nodeNames) {
+      if (nodeName.contains(targetRoom)) {
+        return nodeName;
+      }
+    }
+    return '';
   }
 
   void _openDeveloperOptions(BuildContext context) {
@@ -332,6 +333,12 @@ class _HomePageState extends State<HomePage> {
             (context) => DeveloperOptionsScreen(graphService: _graphService),
       ),
     );
+  }
+
+  void _toggleCacheEnabled(bool value) {
+    setState(() {
+      _isCacheEnabled = value;
+    });
   }
 
   Widget _buildNavigationPage() {
@@ -437,6 +444,45 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeManager = Provider.of<ThemeManager>(context, listen: false);
+
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        actions: [
+          SettingsMenu(
+            isDarkMode: themeManager.themeMode == ThemeMode.dark,
+            isCacheEnabled: _isCacheEnabled,
+            onDarkModeChanged: (value) => themeManager.toggleTheme(),
+            onCacheEnabledChanged: _toggleCacheEnabled,
+            onDeveloperOptionsPressed: () => _openDeveloperOptions(context),
+          ),
+        ],
+      ),
+      body: PageView(
+        physics: const NeverScrollableScrollPhysics(),
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() => _currentIndex = index);
+        },
+        children: [
+          _buildNavigationPage(),
+          const MapViewToggle(),
+          ProfTablePage(
+            key: _profTableKey,
+            onRoomSelected: _handleRoomSelected,
+          ),
+        ],
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
       ),
     );
   }

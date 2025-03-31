@@ -19,7 +19,7 @@ class CustomBottomNavBar extends StatelessWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -27,16 +27,16 @@ class CustomBottomNavBar extends StatelessWidget {
       ),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
-        onTap: onTap,
+        onTap: onTap, // Simply call the provided onTap callback
         elevation: 0,
         backgroundColor: Colors.transparent,
         selectedItemColor: theme.colorScheme.primary,
-        unselectedItemColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-        selectedLabelStyle: TextStyle(
+        unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
+        selectedLabelStyle: const TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 12,
         ),
-        unselectedLabelStyle: TextStyle(
+        unselectedLabelStyle: const TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 12,
         ),

@@ -4,13 +4,15 @@ import 'package:way_to_class/service/html/html_find.dart'; // fetchHtml()
 import 'package:way_to_class/service/html/html_parse.dart'; // parseHtml()
 
 class ProfTablePage extends StatefulWidget {
-  const ProfTablePage({super.key});
+  final Function(String)? onRoomSelected;
+
+  const ProfTablePage({super.key, this.onRoomSelected});
 
   @override
-  State<ProfTablePage> createState() => _ProfTablePageState();
+  ProfTablePageState createState() => ProfTablePageState();
 }
 
-class _ProfTablePageState extends State<ProfTablePage> {
+class ProfTablePageState extends State<ProfTablePage> {
   late Future<List<Map<String, String>>> personsFuture;
 
   @override
@@ -24,23 +26,29 @@ class _ProfTablePageState extends State<ProfTablePage> {
     return parseHtml(html); // HTML parsen
   }
 
+  // External API to select a room from code
+  void selectRoom(String roomCode) {
+    if (widget.onRoomSelected != null) {
+      widget.onRoomSelected!(roomCode);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Map<String, String>>>(
       future: personsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator()); // Ladeanzeige
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
-          return Center(
-            child: Text('Fehler: ${snapshot.error}'),
-          ); // Fehleranzeige
+          return Center(child: Text('Fehler: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(
-            child: Text('Keine Daten gefunden.'),
-          ); // Leere Datenanzeige
+          return const Center(child: Text('Keine Daten gefunden.'));
         } else {
-          return PersonsPage(persons: snapshot.data!); // Daten anzeigen
+          return PersonsPage(
+            persons: snapshot.data!,
+            onRoomSelected: widget.onRoomSelected,
+          );
         }
       },
     );
