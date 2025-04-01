@@ -25,8 +25,6 @@ class InstructionGenerator {
 
   final Map<String, List<String>> _generatedValues = {};
 
-  // Optimierte Hilfsmethoden
-
   final Map<int, List<String>> _distanceVariants = {
     0: ['ein paar Schritte', 'wenige Meter', 'ein kleines Stück'],
     10: ['etwa 10 Meter', 'ungefähr 10 Meter', 'ca. 10 Meter', 'einige Meter'],
@@ -102,8 +100,6 @@ class InstructionGenerator {
   String _getRandomHallSynonym() =>
       _hallSynonyms[_random.nextInt(_hallSynonyms.length)];
 
-  // Neue Hilfsmethoden für optimierte String-Operationen
-
   /// Wählt zufällig ein Template aus einem Set
   String _getRandomTemplate(Set<String> templates) {
     final templateList = templates.toList();
@@ -150,6 +146,30 @@ class InstructionGenerator {
     // Rest des Textes hinzufügen
     buffer.write(text.substring(lastPosition));
     return buffer.toString();
+  }
+
+  String _generateSegmentInstruction(RouteSegment seg) {
+    switch (seg.type) {
+      case SegmentType.origin:
+        return _generateOriginInstruction(seg);
+      case SegmentType.hallway:
+        return _generateHallwayInstruction(seg);
+      case SegmentType.destination:
+        return _generateDestinationInstruction(seg);
+      case SegmentType.stairs:
+        return _generateStairsInstruction(seg);
+      default:
+        return 'Fehler: Segment konnte nicht identifiziert werden. Vorhandene Daten: ${seg.metadata.keys}';
+    }
+  }
+
+  List<String> generateInstructions(List<RouteSegment> route) {
+    reset();
+    return List.generate(
+      route.length,
+      (index) =>
+          _generateSegmentInstruction(route[index]).optimizeInstruction(),
+    );
   }
 
   /// Generiert eine Anweisung für einen Ursprungsabschnitt (optimiert)
@@ -308,34 +328,10 @@ class InstructionGenerator {
     }
   }
 
-  String _generateSegmentInstruction(RouteSegment seg) {
-    switch (seg.type) {
-      case SegmentType.origin:
-        return _generateOriginInstruction(seg);
-      case SegmentType.hallway:
-        return _generateHallwayInstruction(seg);
-      case SegmentType.destination:
-        return _generateDestinationInstruction(seg);
-      case SegmentType.stairs:
-        return _generateStairsInstruction(seg);
-      default:
-        return 'Fehler: Segment konnte nicht identifiziert werden. Vorhandene Daten: ${seg.metadata.keys}';
-    }
-  }
-
   // Reset-Methode für neue Navigationspfade
   void reset() {
     _lastUsedMiddleConnector = null;
     _generatedValues.clear();
-  }
-
-  List<String> generateInstructions(List<RouteSegment> route) {
-    reset();
-    return List.generate(
-      route.length,
-      (index) =>
-          _generateSegmentInstruction(route[index]).optimizeInstruction(),
-    );
   }
 }
 

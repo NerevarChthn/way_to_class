@@ -684,7 +684,7 @@ class SegmentsGenerator {
     return breakpoints;
   }
 
-  /// Optimierte Segment-Erstellung mithilfe der Metadata-Registry
+  /// Segment-Erstellung mit Metadaten
   RouteSegment _createSegment(
     List<NodeId> nodes,
     SegmentType type,
@@ -711,6 +711,206 @@ class SegmentsGenerator {
     }
 
     return RouteSegment(type: type, nodes: nodes, metadata: metadata);
+  }
+
+  /// Calculates the total distance of a path
+  int _calculatePathDistance(List<NodeId> nodes, CampusGraph graph) {
+    double distance = 0;
+
+    for (int i = 0; i < nodes.length - 1; i++) {
+      final node1 = graph.getNodeById(nodes[i]);
+      final node2 = graph.getNodeById(nodes[i + 1]);
+
+      if (node1 != null && node2 != null) {
+        distance += _calculateDistance(node1, node2);
+      }
+    }
+
+    return distance.round();
+  }
+
+  /// Calculates the Euclidean distance between two nodes
+  double _calculateDistance(Node node1, Node node2) {
+    final dx = node2.x - node1.x;
+    final dy = node2.y - node1.y;
+    return sqrt(dx * dx + dy * dy);
+  }
+
+  /// Determines the segment type for a node based on Node properties
+  SegmentType _determineSegmentType(NodeId nodeId, CampusGraph graph) {
+    final node = graph.getNodeById(nodeId);
+    if (node == null) return SegmentType.unknown;
+
+    // Define ordered type checks for clearer priority hierarchy
+    final typeChecks = <bool Function(Node), SegmentType>{
+      (n) => n.isRoom: SegmentType.room,
+      (n) => n.isCorridor: SegmentType.hallway,
+      (n) => n.isStaircase: SegmentType.stairs,
+      (n) => n.isElevator: SegmentType.elevator,
+      (n) => n.isToilet: SegmentType.toilet,
+      (n) => n.isDoor: SegmentType.hallway, // Doors treated as hallways
+      (n) => n.isEmergencyExit: SegmentType.exit,
+    };
+
+    // Return the first matching type or unknown
+    for (final entry in typeChecks.entries) {
+      if (entry.key(node)) return entry.value;
+    }
+
+    return SegmentType.unknown;
+  }
+
+  /// Calculates the turn direction for a list of nodes
+  String _calculateTurnDirection(List<NodeId> nodes, CampusGraph graph) {
+    // Constants for better readability
+    const String straight = 'geradeaus';
+    const minNodeCount = 3;
+    const double minDirectionAngle = 10.0;
+    //const double slightTurnThreshold = 30.0;
+    //const double sharpTurnThreshold = 110.0;
+
+    // Early return for insufficient nodes
+    if (nodes.length < minNodeCount) return straight;
+
+    // Get the three nodes needed for direction calculation
+    final nodeTriple = _getNodeTriple(nodes, graph);
+    if (nodeTriple == null) return straight;
+
+    final (node1, node2, node3) = nodeTriple;
+
+    // Calculate vectors between nodes
+    final vectors = _calculateVectors(node1, node2, node3);
+    final (dx1, dy1, dx2, dy2, length1, length2) = vectors;
+
+    // Skip calculation if segments are too short
+    if (length1 < minSegmentLength || length2 < minSegmentLength) {
+      return straight;
+    }
+
+    // Calculate normalized vectors
+    final normalized = _normalizeVectors(dx1, dy1, dx2, dy2, length1, length2);
+    final (nx1, ny1, nx2, ny2) = normalized;
+
+    // Calculate dot product and cross product
+    final dotProduct = nx1 * nx2 + ny1 * ny2;
+    final crossProduct = nx1 * ny2 - ny1 * nx2;
+
+    // Calculate angle in degrees with direction from cross product
+    final angle = acos(dotProduct.clamp(-1.0, 1.0)) * 180 / pi;
+    final signedAngle = crossProduct >= 0 ? angle : -angle;
+
+    // Determine direction based on angle
+    if (signedAngle.abs() < minDirectionAngle) {
+      return straight;
+    } else if (signedAngle > 0) {
+      // Left turns
+      //if (signedAngle < slightTurnThreshold) return "leicht links";
+      //if (signedAngle < sharpTurnThreshold) return "links";
+      return "links";
+    } else {
+      // Right turns
+      //if (signedAngle > -slightTurnThreshold) return "rechts";
+      //if (signedAngle > -sharpTurnThreshold) return "rechts";
+      return "rechts";
+    }
+  }
+
+  /// Gets a triple of nodes from the node list if they exist
+  (Node, Node, Node)? _getNodeTriple(List<NodeId> nodes, CampusGraph graph) {
+    final node1 = graph.getNodeById(nodes[0]);
+    final node2 = graph.getNodeById(nodes[1]);
+    final node3 = graph.getNodeById(nodes[2]);
+
+    if (node1 == null || node2 == null || node3 == null) {
+      return null;
+    }
+
+    return (node1, node2, node3);
+  }
+
+  /// Calculates vectors between three nodes
+  (int, int, int, int, double, double) _calculateVectors(
+    Node node1,
+    Node node2,
+    Node node3,
+  ) {
+    final dx1 = node2.x - node1.x;
+    final dy1 = node2.y - node1.y;
+    final dx2 = node3.x - node2.x;
+    final dy2 = node3.y - node2.y;
+
+    final length1 = sqrt(dx1 * dx1 + dy1 * dy1);
+    final length2 = sqrt(dx2 * dx2 + dy2 * dy2);
+
+    return (dx1, dy1, dx2, dy2, length1, length2);
+  }
+
+  /// Normalizes vectors for direction calculation
+  (double, double, double, double) _normalizeVectors(
+    int dx1,
+    int dy1,
+    int dx2,
+    int dy2,
+    double length1,
+    double length2,
+  ) {
+    final nx1 = dx1 / length1;
+    final ny1 = dy1 / length1;
+    final nx2 = dx2 / length2;
+    final ny2 = dy2 / length2;
+
+    return (nx1, ny1, nx2, ny2);
+  }
+
+  /// Calculates which side of a hallway a room is on based on the user's direction of travel
+  String _calculateSide(
+    Node corridorNode,
+    Node roomNode, {
+    Node? previousNode,
+  }) {
+    // If we have a previous node to determine direction of travel
+    if (previousNode != null) {
+      // Calculate movement direction vector
+      final directionX = corridorNode.x - previousNode.x;
+      final directionY = corridorNode.y - previousNode.y;
+
+      // Calculate vector from corridor to room
+      final roomVectorX = roomNode.x - corridorNode.x;
+      final roomVectorY = roomNode.y - corridorNode.y;
+
+      // Use cross product to determine if room is on left or right
+      // Cross product in 2D: a.x * b.y - a.y * b.x
+      final crossProduct = directionX * roomVectorY - directionY * roomVectorX;
+
+      // If cross product is positive, room is on the left; if negative, on the right
+      return crossProduct > 0
+          ? "links"
+          : crossProduct == 0
+          ? "direkt gegenüber"
+          : "rechts";
+    } else {
+      // Fallback to a simpler heuristic if we don't have direction information
+      // This is less accurate but better than nothing
+      final dx = roomNode.x - corridorNode.x;
+      final dy = roomNode.y - corridorNode.y;
+
+      // Assume corridor orientation based on which dimension has greater difference
+      if (dx.abs() > dy.abs()) {
+        // Corridor runs horizontally
+        return dy > 0
+            ? "rechts"
+            : dy == 0
+            ? "direkt gegenüber"
+            : "links";
+      } else {
+        // Corridor runs vertically
+        return dx > 0
+            ? "rechts"
+            : dx == 0
+            ? "direkt gegenüber"
+            : "links";
+      }
+    }
   }
 
   /// Adds metadata for a door segment
@@ -973,206 +1173,6 @@ class SegmentsGenerator {
 
     metadata['currentName'] = toiletNode.name;
     metadata['accessible'] = toiletNode.isAccessible;
-  }
-
-  /// Calculates the total distance of a path
-  int _calculatePathDistance(List<NodeId> nodes, CampusGraph graph) {
-    double distance = 0;
-
-    for (int i = 0; i < nodes.length - 1; i++) {
-      final node1 = graph.getNodeById(nodes[i]);
-      final node2 = graph.getNodeById(nodes[i + 1]);
-
-      if (node1 != null && node2 != null) {
-        distance += _calculateDistance(node1, node2);
-      }
-    }
-
-    return distance.round();
-  }
-
-  /// Calculates the Euclidean distance between two nodes
-  double _calculateDistance(Node node1, Node node2) {
-    final dx = node2.x - node1.x;
-    final dy = node2.y - node1.y;
-    return sqrt(dx * dx + dy * dy);
-  }
-
-  /// Determines the segment type for a node based on Node properties
-  SegmentType _determineSegmentType(NodeId nodeId, CampusGraph graph) {
-    final node = graph.getNodeById(nodeId);
-    if (node == null) return SegmentType.unknown;
-
-    // Define ordered type checks for clearer priority hierarchy
-    final typeChecks = <bool Function(Node), SegmentType>{
-      (n) => n.isRoom: SegmentType.room,
-      (n) => n.isCorridor: SegmentType.hallway,
-      (n) => n.isStaircase: SegmentType.stairs,
-      (n) => n.isElevator: SegmentType.elevator,
-      (n) => n.isToilet: SegmentType.toilet,
-      (n) => n.isDoor: SegmentType.hallway, // Doors treated as hallways
-      (n) => n.isEmergencyExit: SegmentType.exit,
-    };
-
-    // Return the first matching type or unknown
-    for (final entry in typeChecks.entries) {
-      if (entry.key(node)) return entry.value;
-    }
-
-    return SegmentType.unknown;
-  }
-
-  /// Calculates the turn direction for a list of nodes
-  String _calculateTurnDirection(List<NodeId> nodes, CampusGraph graph) {
-    // Constants for better readability
-    const String straight = 'geradeaus';
-    const minNodeCount = 3;
-    const double minDirectionAngle = 10.0;
-    //const double slightTurnThreshold = 30.0;
-    //const double sharpTurnThreshold = 110.0;
-
-    // Early return for insufficient nodes
-    if (nodes.length < minNodeCount) return straight;
-
-    // Get the three nodes needed for direction calculation
-    final nodeTriple = _getNodeTriple(nodes, graph);
-    if (nodeTriple == null) return straight;
-
-    final (node1, node2, node3) = nodeTriple;
-
-    // Calculate vectors between nodes
-    final vectors = _calculateVectors(node1, node2, node3);
-    final (dx1, dy1, dx2, dy2, length1, length2) = vectors;
-
-    // Skip calculation if segments are too short
-    if (length1 < minSegmentLength || length2 < minSegmentLength) {
-      return straight;
-    }
-
-    // Calculate normalized vectors
-    final normalized = _normalizeVectors(dx1, dy1, dx2, dy2, length1, length2);
-    final (nx1, ny1, nx2, ny2) = normalized;
-
-    // Calculate dot product and cross product
-    final dotProduct = nx1 * nx2 + ny1 * ny2;
-    final crossProduct = nx1 * ny2 - ny1 * nx2;
-
-    // Calculate angle in degrees with direction from cross product
-    final angle = acos(dotProduct.clamp(-1.0, 1.0)) * 180 / pi;
-    final signedAngle = crossProduct >= 0 ? angle : -angle;
-
-    // Determine direction based on angle
-    if (signedAngle.abs() < minDirectionAngle) {
-      return straight;
-    } else if (signedAngle > 0) {
-      // Left turns
-      //if (signedAngle < slightTurnThreshold) return "leicht links";
-      //if (signedAngle < sharpTurnThreshold) return "links";
-      return "links";
-    } else {
-      // Right turns
-      //if (signedAngle > -slightTurnThreshold) return "rechts";
-      //if (signedAngle > -sharpTurnThreshold) return "rechts";
-      return "rechts";
-    }
-  }
-
-  /// Gets a triple of nodes from the node list if they exist
-  (Node, Node, Node)? _getNodeTriple(List<NodeId> nodes, CampusGraph graph) {
-    final node1 = graph.getNodeById(nodes[0]);
-    final node2 = graph.getNodeById(nodes[1]);
-    final node3 = graph.getNodeById(nodes[2]);
-
-    if (node1 == null || node2 == null || node3 == null) {
-      return null;
-    }
-
-    return (node1, node2, node3);
-  }
-
-  /// Calculates vectors between three nodes
-  (int, int, int, int, double, double) _calculateVectors(
-    Node node1,
-    Node node2,
-    Node node3,
-  ) {
-    final dx1 = node2.x - node1.x;
-    final dy1 = node2.y - node1.y;
-    final dx2 = node3.x - node2.x;
-    final dy2 = node3.y - node2.y;
-
-    final length1 = sqrt(dx1 * dx1 + dy1 * dy1);
-    final length2 = sqrt(dx2 * dx2 + dy2 * dy2);
-
-    return (dx1, dy1, dx2, dy2, length1, length2);
-  }
-
-  /// Normalizes vectors for direction calculation
-  (double, double, double, double) _normalizeVectors(
-    int dx1,
-    int dy1,
-    int dx2,
-    int dy2,
-    double length1,
-    double length2,
-  ) {
-    final nx1 = dx1 / length1;
-    final ny1 = dy1 / length1;
-    final nx2 = dx2 / length2;
-    final ny2 = dy2 / length2;
-
-    return (nx1, ny1, nx2, ny2);
-  }
-
-  /// Calculates which side of a hallway a room is on based on the user's direction of travel
-  String _calculateSide(
-    Node corridorNode,
-    Node roomNode, {
-    Node? previousNode,
-  }) {
-    // If we have a previous node to determine direction of travel
-    if (previousNode != null) {
-      // Calculate movement direction vector
-      final directionX = corridorNode.x - previousNode.x;
-      final directionY = corridorNode.y - previousNode.y;
-
-      // Calculate vector from corridor to room
-      final roomVectorX = roomNode.x - corridorNode.x;
-      final roomVectorY = roomNode.y - corridorNode.y;
-
-      // Use cross product to determine if room is on left or right
-      // Cross product in 2D: a.x * b.y - a.y * b.x
-      final crossProduct = directionX * roomVectorY - directionY * roomVectorX;
-
-      // If cross product is positive, room is on the left; if negative, on the right
-      return crossProduct > 0
-          ? "links"
-          : crossProduct == 0
-          ? "direkt gegenüber"
-          : "rechts";
-    } else {
-      // Fallback to a simpler heuristic if we don't have direction information
-      // This is less accurate but better than nothing
-      final dx = roomNode.x - corridorNode.x;
-      final dy = roomNode.y - corridorNode.y;
-
-      // Assume corridor orientation based on which dimension has greater difference
-      if (dx.abs() > dy.abs()) {
-        // Corridor runs horizontally
-        return dy > 0
-            ? "rechts"
-            : dy == 0
-            ? "direkt gegenüber"
-            : "links";
-      } else {
-        // Corridor runs vertically
-        return dx > 0
-            ? "rechts"
-            : dx == 0
-            ? "direkt gegenüber"
-            : "links";
-      }
-    }
   }
 }
 
