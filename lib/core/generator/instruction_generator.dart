@@ -291,6 +291,8 @@ extension StringExtension on String {
     bool lastWasSpace =
         true; // Startet true, um führende Leerzeichen zu entfernen
     bool needsPeriod = true;
+    int nonSpaceLength =
+        0; // Länge ohne Berücksichtigung von Leerzeichen am Ende
 
     // Durchlaufe den String einmal und führe alle Optimierungen durch
     for (int i = 0; i < length; i++) {
@@ -313,6 +315,9 @@ extension StringExtension on String {
       }
 
       lastWasSpace = false;
+      nonSpaceLength =
+          buffer
+              .length; // Aktualisiere die Länge des Textes ohne Leerzeichen am Ende
 
       // Prüfe, ob der String bereits mit einem Satzzeichen endet
       if (i == length - 1 && (char == '.' || char == '!' || char == '?')) {
@@ -320,11 +325,14 @@ extension StringExtension on String {
       }
     }
 
-    // Füge einen Punkt hinzu, falls nötig
-    if (needsPeriod && buffer.isNotEmpty) {
-      buffer.write('.');
-    }
+    // Entferne Leerzeichen am Ende
+    final String result = buffer.toString();
+    final String trimmed = result.substring(0, nonSpaceLength);
 
-    return buffer.toString();
+    // Füge einen Punkt hinzu, falls nötig
+    if (needsPeriod) {
+      return '$trimmed.';
+    }
+    return trimmed;
   }
 }

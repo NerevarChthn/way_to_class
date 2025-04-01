@@ -74,7 +74,12 @@ flutter:
     - assets/haus_b/haus_b_f1.json
     - assets/haus_a/haus_a_f0.json
     - assets/haus_a/haus_a_f1.json
+    - assets/haus_a/haus_a_f2.json
+    - assets/haus_a/haus_a_f3.json
+    - assets/haus_d/haus_d_f2.json
     - assets/haus_e/haus_e_f1.json
+    - assets/haus_e/haus_e_f2.json
+    - assets/haus_e/haus_e_f0.json
     - assets/images/floor_0.jpg
     - assets/images/floor_1.jpg
     - assets/images/floor_2.jpg
