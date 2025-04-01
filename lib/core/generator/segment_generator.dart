@@ -659,9 +659,20 @@ class SegmentsGenerator {
       metadata['currentName'] = roomNode.name;
     }
 
-    // Seite des Flurs (links/rechts)
-    if (nodes.length >= 2) {
+    // Seite des Flurs (links/rechts) mit Richtungskontext
+    if (nodes.length >= 3) {
       final hallwayNode = graph.getNodeById(nodes[nodes.length - 2]);
+      final previousNode = graph.getNodeById(nodes[nodes.length - 3]);
+
+      if (hallwayNode != null && roomNode != null && previousNode != null) {
+        metadata['side'] = _calculateSide(
+          hallwayNode,
+          roomNode,
+          previousNode: previousNode,
+        );
+      }
+    } else if (nodes.length == 2) {
+      final hallwayNode = graph.getNodeById(nodes[0]);
       if (hallwayNode != null && roomNode != null) {
         metadata['side'] = _calculateSide(hallwayNode, roomNode);
       }
@@ -802,11 +813,22 @@ class SegmentsGenerator {
 
     metadata['currentName'] = roomNode.name;
 
-    // Side of hallway (left/right)
-    if (nodes.length >= 2) {
-      final prevNode = graph.getNodeById(nodes[nodes.length - 2]);
-      if (prevNode != null) {
-        metadata['side'] = _calculateSide(prevNode, roomNode);
+    // Side of hallway (left/right) with direction context
+    if (nodes.length >= 3) {
+      final corridorNode = graph.getNodeById(nodes[nodes.length - 2]);
+      final previousNode = graph.getNodeById(nodes[nodes.length - 3]);
+
+      if (corridorNode != null && previousNode != null) {
+        metadata['side'] = _calculateSide(
+          corridorNode,
+          roomNode,
+          previousNode: previousNode,
+        );
+      }
+    } else if (nodes.length == 2) {
+      final corridorNode = graph.getNodeById(nodes[0]);
+      if (corridorNode != null) {
+        metadata['side'] = _calculateSide(corridorNode, roomNode);
       }
     }
   }
@@ -986,17 +1008,42 @@ class SegmentsGenerator {
     return (nx1, ny1, nx2, ny2);
   }
 
-  /// Calculates which side of a hallway a room is on
-  String _calculateSide(Node corridorNode, Node roomNode) {
-    final dx = roomNode.x - corridorNode.x;
-    final dy = roomNode.y - corridorNode.y;
+  /// Calculates which side of a hallway a room is on based on the user's direction of travel
+  String _calculateSide(
+    Node corridorNode,
+    Node roomNode, {
+    Node? previousNode,
+  }) {
+    // If we have a previous node to determine direction of travel
+    if (previousNode != null) {
+      // Calculate movement direction vector
+      final directionX = corridorNode.x - previousNode.x;
+      final directionY = corridorNode.y - previousNode.y;
 
-    // Simplified calculation: If corridor runs horizontally (larger dx)
-    if (dx.abs() > dy.abs()) {
-      return dy > 0 ? "rechts" : "links";
+      // Calculate vector from corridor to room
+      final roomVectorX = roomNode.x - corridorNode.x;
+      final roomVectorY = roomNode.y - corridorNode.y;
+
+      // Use cross product to determine if room is on left or right
+      // Cross product in 2D: a.x * b.y - a.y * b.x
+      final crossProduct = directionX * roomVectorY - directionY * roomVectorX;
+
+      // If cross product is positive, room is on the left; if negative, on the right
+      return crossProduct > 0 ? "links" : "rechts";
     } else {
-      // If corridor runs vertically (larger dy)
-      return dx > 0 ? "rechts" : "links";
+      // Fallback to a simpler heuristic if we don't have direction information
+      // This is less accurate but better than nothing
+      final dx = roomNode.x - corridorNode.x;
+      final dy = roomNode.y - corridorNode.y;
+
+      // Assume corridor orientation based on which dimension has greater difference
+      if (dx.abs() > dy.abs()) {
+        // Corridor runs horizontally
+        return dy > 0 ? "rechts" : "links";
+      } else {
+        // Corridor runs vertically
+        return dx > 0 ? "rechts" : "links";
+      }
     }
   }
 }

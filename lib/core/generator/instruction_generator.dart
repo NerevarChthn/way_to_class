@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:math' show Random;
 
 import 'package:way_to_class/constants/instruction_templates.dart';
@@ -249,6 +250,15 @@ class InstructionGenerator {
     return _replacePlaceholders(template, replacements);
   }
 
+  String _generateStairsInstruction(RouteSegment seg) {
+    final template = _getRandomTemplate(InstructionTemplates.stairs);
+    log('Metadata: ${seg.metadata}');
+    final replacements = <String, String>{
+      '{direction}': seg.metadata[MetadataKeys.direction] ?? _unknown,
+    };
+    return _replacePlaceholders(template, replacements);
+  }
+
   String _generateSegmentInstruction(RouteSegment seg) {
     switch (seg.type) {
       case SegmentType.origin:
@@ -257,6 +267,8 @@ class InstructionGenerator {
         return _generateHallwayInstruction(seg);
       case SegmentType.destination:
         return _generateDestinationInstruction(seg);
+      case SegmentType.stairs:
+        return _generateStairsInstruction(seg);
       default:
         return '{Segment noch unbekannt}';
     }

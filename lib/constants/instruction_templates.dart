@@ -52,7 +52,6 @@ class InstructionTemplates {
     'Nimm {middleConnector} die Treppe {direction}',
     'Gehe {middleConnector} die Treppe {direction}',
     'Benutze {middleConnector} die Treppe, um {direction} zu gelangen',
-    'Steige {middleConnector} die Treppe {direction}',
   };
 
   // ELEVATOR TEMPLATES
