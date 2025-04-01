@@ -170,7 +170,7 @@ Die Anwendung verwendet mehrere Datenquellen:
 - **Theme-Manager**: Implementierung eines Theme-Management-Systems mit Light- und Dark-Mode  
 - **Professoren-Tabelle**: Extraktion und Umwandlung von HTML-Tabellen zur interaktiven Darstellung  
 - **Wegbeschreibungsgenerierung**: Einführung einer strukturierten Generierung mit `PathGenerator`, `SegmentsGenerator` und `InstructionGenerator`  
-- **A*-Optimierung**: Verbesserte Heuristik, Gewichtungsmultiplikatoren und effizientere Etagen-/Gebäudewechsel-Logik  
+- **A-Star-Optimierung**: Verbesserte Heuristik, Gewichtungsmultiplikatoren und effizientere Etagen-/Gebäudewechsel-Logik  
 - **Logging & Visualisierung**: Einführung eines detaillierten Logging-Mechanismus zur Analyse der A*-Schritte  
 - **Segment-Merging**: Zusammenführen angrenzender Segmente zur Vereinheitlichung der Routenbeschreibung  
 - **JSON-Tool**: Entwicklung eines Skriptes zur Erstellung von JSON-Dateien für Raum- und Graphdaten  
@@ -179,7 +179,7 @@ Die Anwendung verwendet mehrere Datenquellen:
 - **Theme-Management** als `ChangeNotifier` mit `Provider`-Pattern integriert  
 - **Professoren-Tabelle** mit Echtzeit-Suche, Sortierung und interaktiven Elementen umgesetzt  
 - **Neue Wegbeschreibungsgenerierung** mit strukturierten Segmenten implementiert  
-- **A*-Optimierung** mit Gewichtungsmultiplikatoren und neuer Heuristik verbessert  
+- **A-Star-Optimierung** mit Gewichtungsmultiplikatoren und neuer Heuristik verbessert  
 - **Logging-Mechanismus** für den A*-Algorithmus implementiert und visuell aufbereitet  
 - **JSON-Daten** für Räume erstellt, Gitter-Koordinaten definiert und falsche Raumdaten korrigiert  
 
