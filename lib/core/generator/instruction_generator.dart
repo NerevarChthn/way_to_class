@@ -312,7 +312,7 @@ class InstructionGenerator {
       case SegmentType.stairs:
         return _generateStairsInstruction(seg);
       default:
-        return '{Segment noch unbekannt}';
+        return 'Fehler: Segment konnte nicht identifiziert werden. Vorhandene Daten: ${seg.metadata.keys}';
     }
   }
 
