@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
@@ -27,7 +29,7 @@ Future<void> initApp() async {
     try {
       await SecurityManager.initialize();
     } catch (securityError) {
-      print(
+      log(
         'Fehler bei der Initialisierung des SecurityManagers: $securityError',
       );
       // App kann trotzdem weiterlaufen, Cache wird evtl. unverschlüsselt sein
@@ -38,13 +40,11 @@ Future<void> initApp() async {
       final campusGraphService = getIt<CampusGraphService>();
       await campusGraphService.initialize();
     } catch (graphError) {
-      print(
-        'Fehler bei der Initialisierung des CampusGraphService: $graphError',
-      );
+      log('Fehler bei der Initialisierung des CampusGraphService: $graphError');
       // App kann trotzdem starten, aber evtl. ohne Cache
     }
   } catch (e) {
-    print('Fehler bei der App-Initialisierung: $e');
+    log('Fehler bei der App-Initialisierung: $e');
   }
 }
 
