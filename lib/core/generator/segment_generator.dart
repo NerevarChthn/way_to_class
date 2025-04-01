@@ -44,6 +44,8 @@ class SegmentsGenerator {
     dev.log("Verarbeite Pfad mit ${path.length} Knoten: ${path.join(', ')}");
 
     final List<RouteSegment> segments = [];
+    // Set zum Verfolgen der Knoten, die bereits in Treppen/Aufzugssegmenten verwendet wurden
+    final Set<NodeId> nodesUsedInTransitions = {};
 
     // Spezialbehandlung für Startpunkt (Origin)
     if (path.length >= 3) {
@@ -76,7 +78,8 @@ class SegmentsGenerator {
           path[path.length - 2],
           path.last,
         ];
-        path.removeLast();
+        // Entferne nur den Zielknoten aus dem Hauptpfad; die anderen Knoten können
+        // noch als Teil des Wegs vor dem Ziel genutzt werden
         path.removeLast();
       } else {
         destinationNodes = [path.first, path.last];
@@ -168,14 +171,32 @@ class SegmentsGenerator {
           path.sublist(startTransitionIndex, endTransitionIndex + 1),
         );
 
-        // Füge bis zu zwei Knoten nach der Treppe hinzu, wenn verfügbar
+        // Sammle nur den ERSTEN Knoten nach der Treppe für das Segment
+        NodeId? postTransitionNode;
+
+        // Füge den ersten Knoten nach der Treppe zum Segment hinzu
         if (endTransitionIndex + 1 < path.length) {
           transitionNodes.add(path[endTransitionIndex + 1]);
+          postTransitionNode = path[endTransitionIndex + 1];
+        }
 
-          // Füge einen zweiten Knoten nach der Treppe hinzu, wenn verfügbar
-          if (endTransitionIndex + 2 < path.length) {
-            transitionNodes.add(path[endTransitionIndex + 2]);
-          }
+        // Richtungsinformationen berechnen - WICHTIG: Wir brauchen zwei Knoten nach der Treppe
+        // Aber nur der erste wird im Segment behalten
+        String? direction;
+        if (endTransitionIndex + 2 < path.length) {
+          // Erstelle temporäre Knotenliste für die Richtungsberechnung
+          final directionNodes = [
+            // Letzter Treppenknoten
+            path[endTransitionIndex],
+            // Erster Knoten nach der Treppe
+            path[endTransitionIndex + 1],
+            // Zweiter Knoten nach der Treppe (nur für Richtungsberechnung)
+            path[endTransitionIndex + 2],
+          ];
+          direction = _calculateTurnDirection(directionNodes, graph);
+          dev.log(
+            "Richtung nach Treppe berechnet mit Knoten ${directionNodes.join(', ')}: $direction",
+          );
         }
 
         // Segment erstellen (nur wenn es mindestens 2 Knoten hat)
@@ -184,13 +205,55 @@ class SegmentsGenerator {
               bp.type == BreakpointType.staircase
                   ? SegmentType.stairs
                   : SegmentType.elevator;
-          segments.add(_createSegment(transitionNodes, transitionType, graph));
+          final segment = _createSegment(
+            transitionNodes,
+            transitionType,
+            graph,
+          );
+
+          // Füge die berechnete Richtung hinzu, wenn verfügbar
+          if (direction != null) {
+            segment.metadata[MetadataKeys.direction] = direction;
+          }
+
+          segments.add(segment);
           lastProcessedNode = path[endTransitionIndex];
+
+          // Markiere Treppen/Aufzug-Knoten und den ersten Knoten danach als verwendet
+          for (int i = startTransitionIndex; i <= endTransitionIndex; i++) {
+            nodesUsedInTransitions.add(path[i]);
+          }
+
+          // Der erste Knoten nach der Treppe wird auch markiert
+          if (postTransitionNode != null) {
+            nodesUsedInTransitions.add(postTransitionNode);
+          }
         }
 
         // Aktualisiere startIndex für das nächste Segment
-        startIndex = endTransitionIndex + 1;
+        // Überspringe NUR DEN ERSTEN Knoten nach der Treppe/Aufzug
+        startIndex =
+            endTransitionIndex + 2; // +2 weil wir nur einen Knoten überspringen
+
+        // Log zur Fehlerbehebung
+        if (postTransitionNode != null) {
+          dev.log(
+            "Überspringe nur den ersten Knoten nach Treppe/Aufzug: $postTransitionNode",
+          );
+          dev.log(
+            "Nächstes Segment beginnt bei Index $startIndex: ${startIndex < path.length ? path[startIndex] : 'Ende des Pfads'}",
+          );
+        }
       } else if (bp.type == BreakpointType.turn) {
+        // Überprüfe, ob der aktuelle Breakpoint-Knoten bereits in einem Treppe/Aufzug-Segment verwendet wurde
+        if (nodesUsedInTransitions.contains(path[endIndex])) {
+          dev.log(
+            "Abbiegung bei ${path[endIndex]} wurde bereits in einem Treppen-/Aufzugssegment verwendet, überspringe...",
+          );
+          startIndex = endIndex + 1;
+          continue;
+        }
+
         if (endIndex > 0 && startIndex >= endIndex) {
           startIndex = endIndex - 1;
         }
@@ -233,6 +296,15 @@ class SegmentsGenerator {
         startIndex = endIndex;
       } else if (bp.type == BreakpointType.typeChange ||
           bp.type == BreakpointType.specialDoor) {
+        // Überprüfe, ob der aktuelle Breakpoint-Knoten bereits verwendet wurde
+        if (nodesUsedInTransitions.contains(path[endIndex])) {
+          dev.log(
+            "Typwechsel bei ${path[endIndex]} wurde bereits verwendet, überspringe...",
+          );
+          startIndex = endIndex + 1;
+          continue;
+        }
+
         if (endIndex > startIndex) {
           final List<NodeId> segmentNodes = path.sublist(startIndex, endIndex);
           if (segmentNodes.length >= 2 &&
@@ -289,7 +361,27 @@ class SegmentsGenerator {
 
     // Letztes Segment verarbeiten
     if (startIndex < path.length) {
-      final List<NodeId> lastSegmentNodes = path.sublist(startIndex);
+      // Entferne Knoten, die bereits in Treppen/Aufzugssegmenten verwendet wurden
+      final List<NodeId> lastSegmentNodes =
+          path
+              .sublist(startIndex)
+              .where((nodeId) => !nodesUsedInTransitions.contains(nodeId))
+              .toList();
+
+      // Verbinde mit den Knoten des Destination-Segments (außer dem letzten),
+      // wenn es ein Destination-Segment gibt
+      if (destinationNodes.isNotEmpty && destinationNodes.length >= 3) {
+        // Füge die ersten beiden Knoten vom Destination-Segment hinzu
+        // (wenn sie nicht schon Teil des letzten Segments sind)
+        for (int i = 0; i < 2; i++) {
+          final nodeId = destinationNodes[i];
+          if (!lastSegmentNodes.contains(nodeId) &&
+              !nodesUsedInTransitions.contains(nodeId)) {
+            lastSegmentNodes.add(nodeId);
+          }
+        }
+      }
+
       if (lastSegmentNodes.length >= 2) {
         final SegmentType lastNodeType = _determineSegmentType(
           lastSegmentNodes.last,
