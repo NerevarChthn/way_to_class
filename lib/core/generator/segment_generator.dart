@@ -1148,7 +1148,7 @@ class SegmentsGenerator {
       return crossProduct > 0
           ? "links"
           : crossProduct == 0
-          ? "geradeaus"
+          ? "direkt gegenüber"
           : "rechts";
     } else {
       // Fallback to a simpler heuristic if we don't have direction information
@@ -1162,14 +1162,14 @@ class SegmentsGenerator {
         return dy > 0
             ? "rechts"
             : dy == 0
-            ? "geradeaus"
+            ? "direkt gegenüber"
             : "links";
       } else {
         // Corridor runs vertically
         return dx > 0
             ? "rechts"
             : dx == 0
-            ? "geradeaus"
+            ? "direkt gegenüber"
             : "links";
       }
     }

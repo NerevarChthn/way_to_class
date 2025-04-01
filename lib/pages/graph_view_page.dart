@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:math' show max;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -16,7 +17,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
   final Graph graph = Graph()..isTree = false;
   Map<String, Node> nodes = {};
   bool isLoading = true;
-  String selectedFloor = 'f1';
+  String selectedFloor = 'f0';
   String selectedBuilding = 'b';
   Map<String, dynamic>? graphData;
   TransformationController transformationController =
@@ -38,6 +39,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
       final String jsonData = await rootBundle.loadString(
         'assets/haus_$selectedBuilding/haus_${selectedBuilding}_$selectedFloor.json',
       );
+
       graphData = jsonDecode(jsonData);
 
       // Clear existing nodes and edges
@@ -180,9 +182,7 @@ class _GraphViewScreenState extends State<GraphViewScreen> {
                                 color: theme.primaryColor,
                               ),
                               items:
-                                  ['f0', 'f1', 'f2', 'f3', 'f4'].map((
-                                    String value,
-                                  ) {
+                                  ['f0', 'f1', 'f2', 'f3'].map((String value) {
                                     return DropdownMenuItem<String>(
                                       value: value,
                                       child: Text(
@@ -415,7 +415,7 @@ class ModernGraphPainter extends CustomPainter {
               // Special connection styling
               if (sourceType == 3 && targetType == 3) {
                 // Staircase connection
-                linePaint.color = Colors.green.withValues(alpha: 0.6);
+                linePaint.color = Colors.green.withAlpha(153);
                 linePaint.strokeWidth = 2.5;
                 _drawDashedLine(
                   canvas,
@@ -427,7 +427,7 @@ class ModernGraphPainter extends CustomPainter {
                 );
               } else if (sourceType == 4 && targetType == 4) {
                 // Elevator connection
-                linePaint.color = Colors.amber.withValues(alpha: 0.6);
+                linePaint.color = Colors.amber.withAlpha(153);
                 linePaint.strokeWidth = 2.5;
                 _drawDashedLine(
                   canvas,
@@ -439,10 +439,10 @@ class ModernGraphPainter extends CustomPainter {
                 );
               } else if (sourceType == 2 && targetType == 2) {
                 // Corridor to corridor
-                linePaint.color = Colors.grey.withValues(alpha: 0.4);
+                linePaint.color = Colors.grey.withAlpha(102);
               } else {
                 // Other connections
-                linePaint.color = Colors.blueGrey.withValues(alpha: 0.5);
+                linePaint.color = Colors.blueGrey.withAlpha(128);
               }
 
               // Draw the line
@@ -542,6 +542,42 @@ class ModernGraphPainter extends CustomPainter {
           strokeColor = Colors.blue[700]!;
         }
 
+        // Text style based on node importance
+        final bool isImportantNode = nodeType != 2;
+
+        final textStyle = TextStyle(
+          color: isImportantNode ? Colors.black87 : Colors.black54,
+          fontSize: isImportantNode ? 13 : 11,
+          fontWeight: isImportantNode ? FontWeight.bold : FontWeight.normal,
+        );
+
+        final textSpan = TextSpan(
+          text: nodeData['name'].toString(),
+          style: textStyle,
+        );
+        final textPainter = TextPainter(
+          text: textSpan,
+          textDirection: TextDirection.ltr,
+        );
+
+        textPainter.layout(
+          minWidth: 0,
+          maxWidth: 500,
+        ); // Allow more width for measurement
+
+        // Calculate rectangle size based on text dimensions
+        // Add padding to ensure text fits comfortably
+        final double textWidth = textPainter.width;
+        final double textHeight = textPainter.height;
+        final double rectWidth = max(
+          textWidth + 20,
+          size * 1.2,
+        ); // Minimum width with padding
+        final double rectHeight = max(
+          textHeight + 16,
+          size,
+        ); // Minimum height with padding
+
         // Modern node style
         final Paint fillPaint =
             Paint()
@@ -572,21 +608,25 @@ class ModernGraphPainter extends CustomPainter {
         } else {
           // Use rounded rectangles for other nodes
           final RRect roundedRect = RRect.fromRectAndRadius(
-            Rect.fromCenter(center: position, width: size * 2.2, height: size),
+            Rect.fromCenter(
+              center: position,
+              width: rectWidth,
+              height: rectHeight,
+            ),
             Radius.circular(8.0),
           );
 
           // Add shadow effect
           final Paint shadowPaint =
               Paint()
-                ..color = Colors.black.withValues(alpha: 0.2)
+                ..color = Colors.black.withAlpha(51)
                 ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 2);
 
           final RRect shadowRect = RRect.fromRectAndRadius(
             Rect.fromCenter(
               center: Offset(position.dx, position.dy + 2),
-              width: size * 3.0,
-              height: size,
+              width: rectWidth + 4, // slightly larger for shadow
+              height: rectHeight,
             ),
             Radius.circular(8.0),
           );
@@ -608,23 +648,7 @@ class ModernGraphPainter extends CustomPainter {
           }
         }
 
-        // Text style based on node importance
-        final bool isImportantNode = nodeType != 2;
-
-        final textStyle = TextStyle(
-          color: isImportantNode ? Colors.black87 : Colors.black54,
-          fontSize: isImportantNode ? 13 : 11,
-          fontWeight: isImportantNode ? FontWeight.bold : FontWeight.normal,
-        );
-
-        final textSpan = TextSpan(text: nodeId, style: textStyle);
-        final textPainter = TextPainter(
-          text: textSpan,
-          textDirection: TextDirection.ltr,
-        );
-
-        textPainter.layout(minWidth: 0, maxWidth: size * 2.8);
-
+        // Recenter text with new rectangle dimensions
         final textOffset = Offset(
           position.dx - textPainter.width / 2,
           position.dy - textPainter.height / 2,
@@ -647,7 +671,7 @@ class ModernGraphPainter extends CustomPainter {
   ) {
     final Paint gridPaint =
         Paint()
-          ..color = Colors.grey.withValues(alpha: 0.1)
+          ..color = Colors.grey.withAlpha(26)
           ..strokeWidth = 0.5;
 
     // Draw horizontal grid lines

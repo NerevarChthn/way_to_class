@@ -272,11 +272,18 @@ class InstructionGenerator {
 
     // Get absolute floor change and format with floor synonym
     final int absFloorChange = floorChange.abs();
-    final String floorSynonym = _getUniqueRandomValue('floorSynonym', [
-      'Stockwerke',
-      'Etagen',
-      'Geschosse',
-    ]);
+    final String floorSynonym =
+        absFloorChange > 1
+            ? _getUniqueRandomValue('floorSynonym', [
+              'Geschosse',
+              'Etagen',
+              'Stockwerke',
+            ])
+            : _getUniqueRandomValue('floorSynonym', [
+              'Geschoss',
+              'Etage',
+              'Stockwerk',
+            ]);
 
     // Check if direction exists and is not straight
     final String? direction = seg.metadata[MetadataKeys.direction];
