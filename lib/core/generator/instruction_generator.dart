@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:math' show Random;
 
 import 'package:way_to_class/constants/instruction_templates.dart';
@@ -251,12 +250,55 @@ class InstructionGenerator {
   }
 
   String _generateStairsInstruction(RouteSegment seg) {
-    final template = _getRandomTemplate(InstructionTemplates.stairs);
-    log('Metadata: ${seg.metadata}');
+    // Get floor change and determine vertical direction with synonyms
+    final int floorChange = seg.metadata[MetadataKeys.floorChange] ?? 0;
+    final bool goingUp = floorChange > 0;
+
+    // Randomly select up/down synonym
+    final String vertical =
+        goingUp
+            ? _getUniqueRandomValue('upSynonym', [
+              'nach oben',
+              'hoch',
+              'hinauf',
+              'aufwärts',
+            ])
+            : _getUniqueRandomValue('downSynonym', [
+              'nach unten',
+              'runter',
+              'hinab',
+              'abwärts',
+            ]);
+
+    // Get absolute floor change and format with floor synonym
+    final int absFloorChange = floorChange.abs();
+    final String floorSynonym = _getUniqueRandomValue('floorSynonym', [
+      'Stockwerke',
+      'Etagen',
+      'Geschosse',
+    ]);
+
+    // Check if direction exists and is not straight
+    final String? direction = seg.metadata[MetadataKeys.direction];
+    final bool hasDirectionChange =
+        direction != null &&
+        direction != MetadataKeys.straightDirection &&
+        direction.isNotEmpty;
+
+    final String template = _getRandomTemplate(InstructionTemplates.stairs);
+
     final replacements = <String, String>{
-      '{direction}': seg.metadata[MetadataKeys.direction] ?? _unknown,
+      '{middleConnector}': _getRandomMiddleConnector(),
+      '{floors}': '$absFloorChange $floorSynonym',
+      '{vertical}': vertical,
     };
-    return _replacePlaceholders(template, replacements);
+
+    // Only add direction if needed
+    if (hasDirectionChange) {
+      return '${_replacePlaceholders(template, replacements)} und biege $direction ab';
+    } else {
+      return _replacePlaceholders(template, replacements);
+    }
   }
 
   String _generateSegmentInstruction(RouteSegment seg) {

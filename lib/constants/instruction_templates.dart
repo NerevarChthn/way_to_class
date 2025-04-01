@@ -49,9 +49,9 @@ class InstructionTemplates {
 
   // STAIRS TEMPLATES
   static const Set<String> stairs = {
-    'Nimm {middleConnector} die Treppe {direction}',
-    'Gehe {middleConnector} die Treppe {direction}',
-    'Benutze {middleConnector} die Treppe, um {direction} zu gelangen',
+    'Nimm {middleConnector} die Treppe {floors} {vertical}',
+    'Gehe {middleConnector} die Treppe {floors} {vertical}',
+    'Benutze {middleConnector} die Treppe, um {floors} {vertical} zu gelangen',
   };
 
   // ELEVATOR TEMPLATES

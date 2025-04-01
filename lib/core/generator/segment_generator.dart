@@ -168,9 +168,14 @@ class SegmentsGenerator {
           path.sublist(startTransitionIndex, endTransitionIndex + 1),
         );
 
-        // Füge einen Knoten nach der Treppe hinzu, wenn verfügbar
+        // Füge bis zu zwei Knoten nach der Treppe hinzu, wenn verfügbar
         if (endTransitionIndex + 1 < path.length) {
           transitionNodes.add(path[endTransitionIndex + 1]);
+
+          // Füge einen zweiten Knoten nach der Treppe hinzu, wenn verfügbar
+          if (endTransitionIndex + 2 < path.length) {
+            transitionNodes.add(path[endTransitionIndex + 2]);
+          }
         }
 
         // Segment erstellen (nur wenn es mindestens 2 Knoten hat)
@@ -762,15 +767,34 @@ class SegmentsGenerator {
     final endNode = graph.getNodeById(nodes.last);
 
     if (startNode != null && endNode != null) {
-      // Direction (up/down)
-      if (startNode.floorCode < endNode.floorCode) {
-        metadata[MetadataKeys.direction] = 'hoch';
-        metadata['floorChange'] = endNode.floorNumber - startNode.floorNumber;
-        metadata['targetFloor'] = endNode.floorNumber;
-      } else {
-        metadata[MetadataKeys.direction] = 'runter';
-        metadata['floorChange'] = startNode.floorNumber - endNode.floorNumber;
-        metadata['targetFloor'] = endNode.floorNumber;
+      metadata['floorChange'] = endNode.floorNumber - startNode.floorNumber;
+      metadata['targetFloor'] = endNode.floorNumber;
+
+      // Calculate turn direction after exiting stairs
+      // We need at least 2 nodes after the last stair node for direction calculation
+      if (nodes.length >= 3) {
+        // Find the last stair node
+        int lastStairNodeIndex = -1;
+        for (int i = nodes.length - 1; i >= 0; i--) {
+          final node = graph.getNodeById(nodes[i]);
+          if (node != null && node.isStaircase) {
+            lastStairNodeIndex = i;
+            break;
+          }
+        }
+
+        // If we have a stair node and at least 2 nodes after it
+        if (lastStairNodeIndex >= 0 && lastStairNodeIndex + 2 < nodes.length) {
+          final directionNodes = [
+            nodes[lastStairNodeIndex],
+            nodes[lastStairNodeIndex + 1],
+            nodes[lastStairNodeIndex + 2],
+          ];
+          metadata[MetadataKeys.direction] = _calculateTurnDirection(
+            directionNodes,
+            graph,
+          );
+        }
       }
 
       // Accessibility
