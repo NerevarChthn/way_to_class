@@ -1028,8 +1028,8 @@ class SegmentsGenerator {
     const String straight = 'geradeaus';
     const minNodeCount = 3;
     const double minDirectionAngle = 10.0;
-    const double slightTurnThreshold = 30.0;
-    const double sharpTurnThreshold = 110.0;
+    //const double slightTurnThreshold = 30.0;
+    //const double sharpTurnThreshold = 110.0;
 
     // Early return for insufficient nodes
     if (nodes.length < minNodeCount) return straight;
@@ -1066,14 +1066,14 @@ class SegmentsGenerator {
       return straight;
     } else if (signedAngle > 0) {
       // Left turns
-      if (signedAngle < slightTurnThreshold) return "leicht links";
-      if (signedAngle < sharpTurnThreshold) return "links";
-      return "links halten";
+      //if (signedAngle < slightTurnThreshold) return "leicht links";
+      //if (signedAngle < sharpTurnThreshold) return "links";
+      return "links";
     } else {
       // Right turns
-      if (signedAngle > -slightTurnThreshold) return "leicht rechts";
-      if (signedAngle > -sharpTurnThreshold) return "rechts";
-      return "rechts halten";
+      //if (signedAngle > -slightTurnThreshold) return "rechts";
+      //if (signedAngle > -sharpTurnThreshold) return "rechts";
+      return "rechts";
     }
   }
 
