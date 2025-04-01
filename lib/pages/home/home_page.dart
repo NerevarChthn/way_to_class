@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
               n.contains('Flur') ||
               n.contains('Aufzug') ||
               n.contains('Treppe') ||
-              n.contains('Eingang'),
+              n == 'Eingang',
         );
         log('Graph geladen: ${graph.nodeNames.length} Knoten');
       });

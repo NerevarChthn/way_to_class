@@ -1145,7 +1145,11 @@ class SegmentsGenerator {
       final crossProduct = directionX * roomVectorY - directionY * roomVectorX;
 
       // If cross product is positive, room is on the left; if negative, on the right
-      return crossProduct > 0 ? "links" : "rechts";
+      return crossProduct > 0
+          ? "links"
+          : crossProduct == 0
+          ? "geradeaus"
+          : "rechts";
     } else {
       // Fallback to a simpler heuristic if we don't have direction information
       // This is less accurate but better than nothing
@@ -1155,10 +1159,18 @@ class SegmentsGenerator {
       // Assume corridor orientation based on which dimension has greater difference
       if (dx.abs() > dy.abs()) {
         // Corridor runs horizontally
-        return dy > 0 ? "rechts" : "links";
+        return dy > 0
+            ? "rechts"
+            : dy == 0
+            ? "geradeaus"
+            : "links";
       } else {
         // Corridor runs vertically
-        return dx > 0 ? "rechts" : "links";
+        return dx > 0
+            ? "rechts"
+            : dx == 0
+            ? "geradeaus"
+            : "links";
       }
     }
   }
