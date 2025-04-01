@@ -552,7 +552,7 @@ class ModernGraphPainter extends CustomPainter {
         );
 
         final textSpan = TextSpan(
-          text: nodeData['name'].toString(),
+          text: '${nodeData['name']} ($nodeId)',
           style: textStyle,
         );
         final textPainter = TextPainter(
