@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:toastification/toastification.dart';
 import 'package:way_to_class/core/utils/injection.dart';
 import 'package:way_to_class/pages/home/home_page.dart';
 import 'package:way_to_class/service/campus_graph_service.dart';
@@ -15,7 +14,7 @@ void main() async {
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeManager(),
-      child: ToastificationWrapper(child: const CampusNavigator()),
+      child: const CampusNavigator(),
     ),
   );
 }
