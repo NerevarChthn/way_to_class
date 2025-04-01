@@ -249,6 +249,58 @@ class InstructionGenerator {
     return _replacePlaceholders(template, replacements);
   }
 
+  String _generateStairsInstruction(RouteSegment seg) {
+    // Get floor change and determine vertical direction with synonyms
+    final int floorChange = seg.metadata[MetadataKeys.floorChange] ?? 0;
+    final bool goingUp = floorChange > 0;
+
+    // Randomly select up/down synonym
+    final String vertical =
+        goingUp
+            ? _getUniqueRandomValue('upSynonym', [
+              'nach oben',
+              'hoch',
+              'hinauf',
+              'aufwärts',
+            ])
+            : _getUniqueRandomValue('downSynonym', [
+              'nach unten',
+              'runter',
+              'hinab',
+              'abwärts',
+            ]);
+
+    // Get absolute floor change and format with floor synonym
+    final int absFloorChange = floorChange.abs();
+    final String floorSynonym = _getUniqueRandomValue('floorSynonym', [
+      'Stockwerke',
+      'Etagen',
+      'Geschosse',
+    ]);
+
+    // Check if direction exists and is not straight
+    final String? direction = seg.metadata[MetadataKeys.direction];
+    final bool hasDirectionChange =
+        direction != null &&
+        direction != MetadataKeys.straightDirection &&
+        direction.isNotEmpty;
+
+    final String template = _getRandomTemplate(InstructionTemplates.stairs);
+
+    final replacements = <String, String>{
+      '{middleConnector}': _getRandomMiddleConnector(),
+      '{floors}': '$absFloorChange $floorSynonym',
+      '{vertical}': vertical,
+    };
+
+    // Only add direction if needed
+    if (hasDirectionChange) {
+      return '${_replacePlaceholders(template, replacements)} und biege $direction ab';
+    } else {
+      return _replacePlaceholders(template, replacements);
+    }
+  }
+
   String _generateSegmentInstruction(RouteSegment seg) {
     switch (seg.type) {
       case SegmentType.origin:
@@ -257,8 +309,10 @@ class InstructionGenerator {
         return _generateHallwayInstruction(seg);
       case SegmentType.destination:
         return _generateDestinationInstruction(seg);
+      case SegmentType.stairs:
+        return _generateStairsInstruction(seg);
       default:
-        return '{Segment noch unbekannt}';
+        return 'Fehler: Segment konnte nicht identifiziert werden. Vorhandene Daten: ${seg.metadata.keys}';
     }
   }
 
@@ -291,6 +345,8 @@ extension StringExtension on String {
     bool lastWasSpace =
         true; // Startet true, um führende Leerzeichen zu entfernen
     bool needsPeriod = true;
+    int nonSpaceLength =
+        0; // Länge ohne Berücksichtigung von Leerzeichen am Ende
 
     // Durchlaufe den String einmal und führe alle Optimierungen durch
     for (int i = 0; i < length; i++) {
@@ -313,6 +369,9 @@ extension StringExtension on String {
       }
 
       lastWasSpace = false;
+      nonSpaceLength =
+          buffer
+              .length; // Aktualisiere die Länge des Textes ohne Leerzeichen am Ende
 
       // Prüfe, ob der String bereits mit einem Satzzeichen endet
       if (i == length - 1 && (char == '.' || char == '!' || char == '?')) {
@@ -320,11 +379,14 @@ extension StringExtension on String {
       }
     }
 
-    // Füge einen Punkt hinzu, falls nötig
-    if (needsPeriod && buffer.isNotEmpty) {
-      buffer.write('.');
-    }
+    // Entferne Leerzeichen am Ende
+    final String result = buffer.toString();
+    final String trimmed = result.substring(0, nonSpaceLength);
 
-    return buffer.toString();
+    // Füge einen Punkt hinzu, falls nötig
+    if (needsPeriod) {
+      return '$trimmed.';
+    }
+    return trimmed;
   }
 }

@@ -88,7 +88,7 @@ class CampusGraph {
       if (node == null) continue;
 
       // Wenn wir einen Raum, eine Treppe, einen Aufzug oder eine Toilette gefunden haben
-      if (!node.isCorridor) {
+      if (!node.isCorridor && !node.isDoor) {
         // Gefundener gültiger Knoten als potenziellen nächsten betrachten
         if (nearest == null || distanceSoFar < nearestDistance) {
           nearest = node;

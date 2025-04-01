@@ -330,13 +330,19 @@ class _PersonsPageState extends State<PersonsPage> {
     final buildingMatch = RegExp(r'Haus\s+([A-Za-z])').firstMatch(roomInfo);
     final buildingLetter = buildingMatch?.group(1) ?? '';
 
-    // Extract room number (e.g., "203" from "Haus A (Tinz) / 203")
-    final roomMatch = RegExp(r'\/\s*(\d+)').firstMatch(roomInfo);
-    final roomNumber = roomMatch?.group(1) ?? '';
+    // Extract room number (e.g., "203" from "Haus A (Tinz) / 203" or "A203" from "Haus A (Tinz) / A203")
+    final roomMatch = RegExp(r'\/\s*(([A-Za-z])?\d+)').firstMatch(roomInfo);
+    final roomNumberWithPossibleLetter = roomMatch?.group(1) ?? '';
 
-    if (buildingLetter.isNotEmpty && roomNumber.isNotEmpty) {
-      // Return in format that will match navigation list (e.g., "Seminarraum A203")
-      return buildingLetter + roomNumber;
+    if (roomNumberWithPossibleLetter.isNotEmpty) {
+      // Check if the room number already starts with a letter
+      if (RegExp(r'^[A-Za-z]').hasMatch(roomNumberWithPossibleLetter)) {
+        // Room number already contains the building letter, return as is
+        return roomNumberWithPossibleLetter;
+      } else if (buildingLetter.isNotEmpty) {
+        // Room number doesn't have letter, but we found building letter, so combine them
+        return buildingLetter + roomNumberWithPossibleLetter;
+      }
     }
 
     return roomInfo; // Return original if parsing fails

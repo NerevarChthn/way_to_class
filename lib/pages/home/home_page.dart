@@ -48,10 +48,6 @@ class _HomePageState extends State<HomePage> {
   // Cache-Einstellung
   bool _isCacheEnabled = true;
 
-  // Callback für Room-Selection vom ProfTablePage
-  final GlobalKey<ProfTablePageState> _profTableKey =
-      GlobalKey<ProfTablePageState>();
-
   @override
   void initState() {
     super.initState();
@@ -81,7 +77,8 @@ class _HomePageState extends State<HomePage> {
           (n) =>
               n.contains('Flur') ||
               n.contains('Aufzug') ||
-              n.contains('Treppe'),
+              n.contains('Treppe') ||
+              n.contains('Eingang'),
         );
         log('Graph geladen: ${graph.nodeNames.length} Knoten');
       });
@@ -199,6 +196,12 @@ class _HomePageState extends State<HomePage> {
           () => resultText = 'Leider konnte keine Toilette gefunden werden.',
         );
         return;
+      } else {
+        log('Nächste Toilette gefunden: $nearestBathroomId');
+        setState(() {
+          _zielValue =
+              _graphService.currentGraph!.getNodeById(nearestBathroomId)!.name;
+        });
       }
 
       _findPathAndGenerateInstructions(
@@ -230,6 +233,12 @@ class _HomePageState extends State<HomePage> {
           () => resultText = 'Leider konnte kein Notausgang gefunden werden.',
         );
         return;
+      } else {
+        log('Nächster Notausgang gefunden: $nearestExitId');
+        setState(() {
+          _zielValue =
+              _graphService.currentGraph!.getNodeById(nearestExitId)!.name;
+        });
       }
 
       _findPathAndGenerateInstructions(
@@ -261,6 +270,11 @@ class _HomePageState extends State<HomePage> {
           () => resultText = 'Leider konnte keine Mensa gefunden werden.',
         );
         return;
+      } else {
+        log('Nächste Mensa gefunden: $canteenId');
+        setState(() {
+          _zielValue = _graphService.currentGraph!.getNodeById(canteenId)!.name;
+        });
       }
 
       _findPathAndGenerateInstructions(startId: startId, targetId: canteenId);
@@ -460,6 +474,16 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(
+            themeManager.themeMode == ThemeMode.dark
+                ? Icons.light_mode
+                : Icons.dark_mode,
+          ),
+          onPressed: () => themeManager.toggleTheme(),
+          tooltip: 'Dunkles/Helles Design',
+        ),
+        title: const Center(child: Text('Campus Navigator')),
         elevation: 0,
         actions: [
           SettingsMenu(
@@ -489,10 +513,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           _buildNavigationPage(),
           const MapViewToggle(),
-          ProfTablePage(
-            key: _profTableKey,
-            onRoomSelected: _handleRoomSelected,
-          ),
+          ProfTablePage(onRoomSelected: _handleRoomSelected),
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
