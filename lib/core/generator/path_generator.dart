@@ -3,6 +3,19 @@ import 'package:way_to_class/constants/types.dart';
 import 'package:way_to_class/core/models/campus_graph.dart';
 
 class PathGenerator {
+  /// Berechnet den kürzesten Weg zwischen zwei Knoten mittels bidirektionaler Breitensuche.
+  ///
+  /// Diese Methode implementiert eine bidirektionale Breitensuche, die gleichzeitig vom
+  /// Start- und Zielknoten aus sucht, um den kürzesten Weg zwischen ihnen zu finden.
+  ///
+  /// Parameter:
+  /// - [path]: Ein Tupel aus Start- und ZielknotenID
+  /// - [graph]: Der Campus-Graph, der die Knoten und ihre Verbindungen enthält
+  /// - [visualize]: Wenn true, werden Debug-Logs für die Visualisierung ausgegeben
+  ///
+  /// Returns:
+  /// Eine Liste von KnotenIDs, die den kürzesten Weg vom Start zum Ziel darstellen.
+  /// Leere Liste, wenn kein Pfad gefunden wurde.
   List<NodeId> calculatePath(
     Path path,
     CampusGraph graph, {
@@ -15,15 +28,19 @@ class PathGenerator {
       throw Exception("Start- oder Zielknoten nicht gefunden.");
     }
 
+    // Initialisiere Besuchsverzeichnisse für beide Suchrichtungen
+    // Die Werte speichern jeweils den Vorgängerknoten
     var forwardVisited = <NodeId, NodeId>{startNode.id: ''};
     var backwardVisited = <NodeId, NodeId>{endNode.id: ''};
 
+    // Initialisiere die Suchschlangen für beide Richtungen
     var forwardQueue = <NodeId>[startNode.id];
     var backwardQueue = <NodeId>[endNode.id];
 
+    // Führe bidirektionale Suche durch, bis eine Richtung keine Knoten mehr zu besuchen hat
     while (forwardQueue.isNotEmpty && backwardQueue.isNotEmpty) {
-      if (visualize) dev.log('→ Vorwärtssuche: ${forwardQueue.join(", ")}');
-      final forwardIntersection = _searchStep(
+      // Führe einen Suchschritt in Vorwärtsrichtung durch
+      final String? forwardIntersection = _searchStep(
         forwardQueue,
         forwardVisited,
         backwardVisited,
@@ -31,12 +48,13 @@ class PathGenerator {
         visualize,
         true,
       );
+      // Wenn ein Schnittpunkt gefunden wurde, baue den Pfad auf und gib ihn zurück
       if (forwardIntersection != null) {
         return _buildPath(forwardVisited, backwardVisited, forwardIntersection);
       }
 
-      if (visualize) dev.log('← Rückwärtssuche: ${backwardQueue.join(", ")}');
-      final backwardIntersection = _searchStep(
+      // Führe einen Suchschritt in Rückwärtsrichtung durch
+      final String? backwardIntersection = _searchStep(
         backwardQueue,
         backwardVisited,
         forwardVisited,
@@ -44,6 +62,7 @@ class PathGenerator {
         visualize,
         false,
       );
+      // Wenn ein Schnittpunkt gefunden wurde, baue den Pfad auf und gib ihn zurück
       if (backwardIntersection != null) {
         return _buildPath(
           forwardVisited,
@@ -53,6 +72,7 @@ class PathGenerator {
       }
     }
 
+    // Kein Pfad gefunden
     return [];
   }
 
