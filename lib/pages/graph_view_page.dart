@@ -565,18 +565,17 @@ class ModernGraphPainter extends CustomPainter {
           maxWidth: 500,
         ); // Allow more width for measurement
 
-        // Calculate rectangle size based on text dimensions
-        // Add padding to ensure text fits comfortably
+        // Rechteckgröße basierend auf Textgröße + kleines Padding
         final double textWidth = textPainter.width;
         final double textHeight = textPainter.height;
         final double rectWidth = max(
           textWidth + 20,
-          size * 1.2,
-        ); // Minimum width with padding
+          size * 1.2, // Minimale Breite
+        );
         final double rectHeight = max(
           textHeight + 16,
-          size,
-        ); // Minimum height with padding
+          size, // Minimale Höhe
+        );
 
         // Modern node style
         final Paint fillPaint =
