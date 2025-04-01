@@ -108,57 +108,57 @@ Die Anwendung verwendet mehrere Datenquellen:
 
 ### Woche 1 (20.–26. Februar 2025)
 
-#### Plan (Planen)
-- **Kartenintegration**: Methode zur Verarbeitung von PNG-Karten entwickeln  
+#### Plan 
+- **Kartenintegration**: Methode zur Verarbeitung von PNG-Dateien entwickeln  
 - **API-Anbindung**: Gemini-API in das System integrieren  
 - **UI-Funktionalität**: Interaktive Kartendarstellung mit Zoom und Dragging hinzufügen  
 - **Benutzerinteraktion**: Raumauswahl über Dropdown und Chat-Integration mit Gemini  
 
-#### Do (Umsetzen)
+#### Do 
 - PNG-Karten erfolgreich in Bytecode umgewandelt  
 - API-Service für Gemini-Requests implementiert  
 - Erste Version der UI mit `InteractiveViewer` für Kartensteuerung  
 - Zwei `FloatingActionButtons` für Chat und Professorenliste ergänzt  
 - Markdown-Widget für die Darstellung des Gemini-Responses integriert  
 
-#### Check (Überprüfen)
+#### Check
 - Tests zur Prompt-Generierung für bessere Wegbeschreibungen  
 - Erste Optimierung der Text-Prompts durchgeführt  
 - Error-Handling für API-Anfragen implementiert  
 - Verschiedene Gemini-Modelle getestet, um bestes Ergebnis zu ermitteln  
 
-#### Act (Anpassen)
-- Verbesserungen an der Prompt-Generierung für klarere Antworten  
+#### Act 
+- Verbesserungen an der Prompt-Generierung für deutlichere Antworten  
 - Fehlerhandling optimiert, um Limits der API besser zu handhaben  
 - UI-Elemente an Feedback angepasst (z. B. Darstellung der API-Antworten)  
 
 ### Woche 2 (27. Februar – 5. März 2025)
 
-#### Plan (Planen)
+#### Plan 
 - **Graph-Implementierung**: Erstellung eines Campus-Graphen mit JSON-Nodes und Edges  
 - **Algorithmus-Entwicklung**: Implementierung von Dijkstra und A\*-Algorithmus zur Pfadberechnung  
 - **Navigation & Optimierung**: Verbesserte Routenführung mit Schritt-/Distanzabschätzung  
 - **Graph-Visualisierung**: Separate Ansicht zur Überprüfung der Graphstruktur  
 - **Nutzerfreundlichkeit**: Autocomplete für Start- und Zielauswahl, Caching für schnellere Berechnungen  
-- **UI-Anpassungen**: Einstellungen, farbliche Gruppierung, und eine Legende zur besseren Orientierung  
+- **UI-Anpassungen**: Einstellungen, farbliche Gruppierung und Legende zur besseren Orientierung  
 
-#### Do (Umsetzen)
+#### Do 
 - Campus-Graph als JSON-Struktur erstellt und visualisiert  
 - Dijkstra und A\*-Algorithmus zur Navigation implementiert  
 - Routenoptimierung mit sinnvoller Segmentierung der Flurabschnitte  
 - Generative AI (`google_generative_ai`-Paket) für Wegbeschreibungen genutzt  
 - Debugging und Fehlerbehebung für Routenberechnung durchgeführt  
 - Einstellungsseite für Nutzer erstellt  
-- Farbgruppen und Legende zur Raumklassifizierung hinzugefügt  
+- Farbgruppen und Legende zur Raumklassifizierung hinzugefügt (in GoodNotes) 
 - A- und E-Gebäude überprüft und dokumentiert  
 
-#### Check (Überprüfen)
+#### Check 
 - Routenberechnungen getestet und Fehler identifiziert  
 - Debugging-Tools verbessert, um Probleme schneller zu finden  
 - Farbliche Gruppierung und Legende auf Verständlichkeit geprüft  
 - Navigationsergebnisse mit realen Wegen abgeglichen  
 
-#### Act (Anpassen)
+#### Act 
 - Optimierungen am Graphen und Algorithmus basierend auf Debugging-Ergebnissen  
 - Anpassung der Farbzuordnung für bessere Übersichtlichkeit  
 - Verbesserte UI in den Einstellungen für einfachere Bedienung  
@@ -166,7 +166,7 @@ Die Anwendung verwendet mehrere Datenquellen:
 
 ### Woche 3 (6.-12. März 2025)
 
-#### Plan (Planen)
+#### Plan 
 - **Theme-Manager**: Implementierung eines Theme-Management-Systems mit Light- und Dark-Mode  
 - **Professoren-Tabelle**: Extraktion und Umwandlung von HTML-Tabellen zur interaktiven Darstellung  
 - **Wegbeschreibungsgenerierung**: Einführung einer strukturierten Generierung mit `PathGenerator`, `SegmentsGenerator` und `InstructionGenerator`  
@@ -175,7 +175,7 @@ Die Anwendung verwendet mehrere Datenquellen:
 - **Segment-Merging**: Zusammenführen angrenzender Segmente zur Vereinheitlichung der Routenbeschreibung  
 - **JSON-Tool**: Entwicklung eines Skriptes zur Erstellung von JSON-Dateien für Raum- und Graphdaten  
 
-#### Do (Umsetzen)
+#### Do 
 - **Theme-Management** als `ChangeNotifier` mit `Provider`-Pattern integriert  
 - **Professoren-Tabelle** mit Echtzeit-Suche, Sortierung und interaktiven Elementen umgesetzt  
 - **Neue Wegbeschreibungsgenerierung** mit strukturierten Segmenten implementiert  
@@ -183,14 +183,14 @@ Die Anwendung verwendet mehrere Datenquellen:
 - **Logging-Mechanismus** für den A*-Algorithmus implementiert und visuell aufbereitet  
 - **JSON-Daten** für Räume erstellt, Gitter-Koordinaten definiert und falsche Raumdaten korrigiert  
 
-#### Check (Überprüfen)
-- **Themenwechsel getestet** und UI-Anpassungen vorgenommen  
+#### Check 
+- **Theme-Wechsel getestet** und UI-Anpassungen vorgenommen  
 - **Wegbeschreibung validiert**: Generierte Anweisungen mit realen Wegen abgeglichen  
 - **A*-Optimierung überprüft**: Performance und Routenqualität analysiert  
 - **Logging-Visualisierung evaluiert**: Fehlerhafte Berechnungen durch Logs nachvollzogen  
 - **Raumdaten abgeglichen** und fehlerhafte Informationen korrigiert  
 
-#### Act (Anpassen)
+#### Act 
 - **Feinabstimmung des A*-Algorithmus** durch Anpassung der Gewichtungen  
 - **Optimierung der JSON-Daten** für eine effizientere Verarbeitung  
 - **Segment-Merging verbessert**, um noch präzisere Anweisungen zu erzeugen  
@@ -199,54 +199,54 @@ Die Anwendung verwendet mehrere Datenquellen:
 
 ### Woche 4 (13.–19. März 2025)
 
-#### Plan (Planen)
-- **Gebäudezeichnungen**: Fertigstellung aller Gebäudezeichnungen für verschiedene Etagen  
+#### Plan 
+- **Gebäudezeichnungen**: Fertigstellung aller Gebäudezeichnungen für jede Etage 
 - **JSON-Daten**: Erstellung der JSON-Dateien für das E- und A-Gebäude  
 - **InstructionGenerator**: Entwicklung einer Klasse zur Generierung natürlicher Sprach-Anweisungen für die Navigation  
 - **Visuelle Darstellung**: Tests zur optimalen Anzeige der Karten in der App  
 
-#### Do (Umsetzen)
+#### Do 
 - **Alle Gebäudezeichnungen fertiggestellt**  
 - **JSON-Dateien für E-Gebäude (1. & 2. OG) und A-Gebäude (EG – 3. OG) erstellt**  
 - **InstructionGenerator implementiert** mit zufälliger Satzbaustein-Auswahl basierend auf Segmenttypen  
-- **Korrekturen an JSON-Daten für A-Gebäude vorgenommen**  
+- **Korrekturen an JSON-Dateien für A-Gebäude vorgenommen**  
 - **Erste Tests zur Kartendarstellung in der App durchgeführt**  
 
-#### Check (Überprüfen)
+#### Check 
 - **Gebäudezeichnungen überprüft**: Vergleich mit realen Grundrissen und Anpassung kleiner Details  
 - **JSON-Daten validiert**: Strukturelle Fehler und fehlende Daten identifiziert und korrigiert  
 - **InstructionGenerator getestet**: Generierte Wegbeschreibungen hinsichtlich Verständlichkeit und Natürlichkeit geprüft  
 - **Kartendarstellung evaluiert**: Erste visuelle Tests zur Anzeige von Karten in der App  
 
-#### Act (Anpassen)
-- **JSON-Korrekturen** für das A-Gebäude durchgeführt  
+#### Act 
+- **JSON-Korrekturen** für das A-Gebäude angepasst  
 - **InstructionGenerator weiter verfeinert**, um noch natürlichere Wegbeschreibungen zu erzeugen  
 - **Erste Anpassungen an der Kartenvisualisierung vorgenommen**, um eine bessere Darstellung in der App zu gewährleisten  
 
 ### Woche 5 (20.-26. März 2025)
 
-#### Plan (Planen)
+#### Plan 
 - **String Extensions**: Implementierung nützlicher String-Methoden für die Verarbeitung von Texten  
-- **Finalisierung des InstructionGenerators**: Erweiterung der Navigationsanweisungen durch Platzhalter-Ersetzung und optimierte Logik  
+- **Fertigstellung des InstructionGenerators**: Erweiterung der Navigationsanweisungen durch Placeholder-Ersetzung und optimierte Logik  
 - **Optimierung der Raumsuche**: Verbesserung der Suchfunktion, sodass sie auch bei fehlenden Nullen korrekt arbeitet  
 - **Treppen- und Aufzugserkennung**: Entwicklung eines Erkennungsmechanismus für vertikale Verbindungen  
 - **Bevorzugung von Treppen**: Anpassung des Routing-Algorithmus zur priorisierten Nutzung von Treppen  
 
-#### Do (Umsetzen)
+#### Do 
 - **String Extensions implementiert** (`capitalize()`, `addPeriod()`, `normalizeSpaces()`)  
-- **InstructionGenerator finalisiert** mit präziseren Anweisungen und logischen Verbesserungen  
+- **InstructionGenerator fertiggestellt** mit präziseren Anweisungen und logischen Verbesserungen  
 - **Raumsuche verbessert**, sodass sie auch unvollständige Eingaben erkennt  
 - **Treppen- und Aufzugserkennung umgesetzt**, inklusive direkter ID-Analyse zur besseren Zuordnung  
 - **Routing-Algorithmus angepasst**, um Treppen bevorzugt zu nutzen, wenn sie verfügbar sind  
 
-#### Check (Überprüfen)
+#### Check 
 - **Test der String Extensions** auf verschiedene Anwendungsfälle  
 - **InstructionGenerator validiert** durch Testläufe mit generierten Anweisungen  
 - **Raumsuche überprüft** mit realen Eingaben und variierenden Suchmustern  
 - **Treppen-/Aufzugslogik getestet** durch Simulation unterschiedlicher Gebäudewechsel  
 - **Routing-Algorithmus analysiert**, ob Treppen in den meisten Fällen korrekt bevorzugt werden  
 
-#### Act (Anpassen)
+#### Act 
 - **String Extensions optimiert**, um weitere Randfälle abzudecken  
 - **InstructionGenerator leicht angepasst**, um inkonsistente Formulierungen zu vermeiden  
 - **Raumsuche weiter verfeinert**, um zusätzliche Schreibvarianten zu erkennen  
@@ -254,7 +254,7 @@ Die Anwendung verwendet mehrere Datenquellen:
 
 ### Woche 6 (27. März – 2. April 2025)
 
-#### Plan (Planen)
+#### Plan 
 - **Entwickler-Panel & Debugging-Tools**: Erstellung einer UI mit Werkzeugen zur Validierung und Fehlerbehebung  
 - **Routen-Validator**: Entwicklung eines Tools zur Überprüfung aller Pfade im Graphen  
 - **Verschlüsselungstests & Cache-Analyse**: Überprüfung der Cache-Verschlüsselung und Implementierung einer Statistik-Oberfläche  
@@ -264,7 +264,7 @@ Die Anwendung verwendet mehrere Datenquellen:
 - **Breakpoint-Optimierung & Treppensegmentierung**: Verbesserung der Erkennung von Treppen und anderen Breakpoints  
 - **MapViewToggle Widget**: Integration eines UI-Elements zum Umschalten zwischen Karten- und Graphenansicht  
 
-#### Do (Umsetzen)
+#### Do 
 - **Entwickler-Panel mit TabBar-UI implementiert**  
 - **Routen-Validator entwickelt und getestet** mit detaillierter Ergebnisanzeige  
 - **Cache-Statistiken & Verschlüsselungstests in die Developer-UI integriert**  
@@ -274,14 +274,14 @@ Die Anwendung verwendet mehrere Datenquellen:
 - **Breakpoint-Typen & zusammenhängende Treppensegmente erkannt und verarbeitet**  
 - **MapViewToggle Widget & State Management für Ansichtsmodi entwickelt**  
 
-#### Check (Überprüfen)
+#### Check 
 - **Debugging-Tools getestet** auf verschiedene Fehlerfälle  
 - **Performance getestet**, insbesondere Ladezeiten und Speichernutzung  
 - **Bidirektionale Suche validiert** mit Testfällen und Vergleichen zur A*-Methode  
 - **Logging analysiert**, ob die neuen Mechanismen redundante Einträge vermeiden  
 - **UI-Navigation überprüft**, ob das Umschalten zwischen Karten- und Graphansicht reibungslos funktioniert  
 
-#### Act (Anpassen)
+#### Act 
 - **Verbesserungen am Entwickler-Panel**, um zusätzliche Debugging-Optionen hinzuzufügen  
 - **Logging weiter optimiert**, um spezifischere Debug-Informationen zu liefern  
 - **Treppensegment-Erkennung angepasst**, um komplexere Szenarien abzudecken  
